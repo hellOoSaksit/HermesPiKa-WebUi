@@ -1,22 +1,32 @@
 #!/command/with-contenv sh
 # SPDX-License-Identifier: MIT AND LicenseRef-Commons-Clause-1.0
-# HPK Console service (s6), as the hermes user. It serves other machines only in
-# team mode (HPK_OWNER on first start, or hpk team init) and only with TLS or
-# behind a proxy that adds it.
+# HPK Console service (s6), as the hermes user.
+#
+# Solo mode (the default, HPK_MODE=solo): one person on this computer. hpk
+# serves with --container: Docker publishes the port on the host's loopback
+# only, and every API request needs the Console key from a one-time link,
+# kept in /opt/data/hpk/console-link (it names HPK_LINK_ADDR, default
+# 127.0.0.1:<port>).
+#
+# Team mode (HPK_MODE=team, with HPK_OWNER on the first start, or hpk team
+# init): sign-in for everyone, and only with TLS or behind a proxy that adds it.
 export HOME=/opt/data HERMES_HOME=/opt/data HPK_HOME=/opt/data
 cd /opt/data
 addr="${HPK_ADDR:-0.0.0.0:7878}"
 
-if [ ! -f /opt/data/hpk/team.yaml ]; then
-  echo "[hpk] not serving: set HPK_OWNER (first start) or run hpk team init, then restart" >&2
+if [ -f /opt/data/hpk/team.yaml ]; then
+  if [ -n "${HPK_TLS_CERT:-}" ]; then
+    set -- serve --addr "$addr" --tls-cert "$HPK_TLS_CERT" --tls-key "${HPK_TLS_KEY:?set HPK_TLS_KEY}"
+  elif [ "${HPK_BEHIND_PROXY:-}" = 1 ]; then
+    set -- serve --addr "$addr" --insecure-http
+  else
+    set -- serve --addr "$addr"
+  fi
+elif [ "${HPK_MODE:-solo}" = team ]; then
+  echo "[hpk] not serving: team mode needs HPK_OWNER (first start) or hpk team init, then restart" >&2
   exit 0
-fi
-if [ -n "${HPK_TLS_CERT:-}" ]; then
-  set -- serve --addr "$addr" --tls-cert "$HPK_TLS_CERT" --tls-key "${HPK_TLS_KEY:?set HPK_TLS_KEY}"
-elif [ "${HPK_BEHIND_PROXY:-}" = 1 ]; then
-  set -- serve --addr "$addr" --insecure-http
 else
-  set -- serve --addr "$addr"
+  set -- serve --addr "$addr" --container --link-addr "${HPK_LINK_ADDR:-127.0.0.1:${addr##*:}}"
 fi
 [ "$(id -u)" = 0 ] || exec hpk "$@"
 exec s6-setuidgid hermes hpk "$@"

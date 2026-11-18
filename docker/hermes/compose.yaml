@@ -1,12 +1,16 @@
-# Hermes Agent + hpk in one container (docs/docker.md).
+# Hermes Agent + hpk in one container, built from this checkout (docs/docker.md).
 #
 #   CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o ../../dist/docker/hpk-linux-amd64 ../../cmd/hpk
-#   docker compose up -d --build
-#   docker compose exec hermes cat /opt/data/hpk/owner-token        # once, then delete it
+#   docker compose -f compose.yaml -f compose.local.yaml up -d --build
+#   docker compose -f compose.yaml -f compose.local.yaml exec hermes cat /opt/data/hpk/console-link
 #   docker compose exec -u hermes hermes hermes auth add <provider>  # Hermes needs a model account
 #
-# The Hermes gateway (messaging, cron) is the main process; HPK Console runs beside
-# it. Put your TLS proxy in front, or give hpk a certificate (HPK_TLS_CERT/KEY).
+# Solo mode (one person): team mode is off for now. To turn it on later, set
+# HPK_MODE: team, HPK_OWNER (first start) and HPK_BEHIND_PROXY: "1", and put a
+# TLS proxy in front (docs/team.md).
+#
+# The Hermes gateway (messaging, cron) is the main process; HPK Console runs
+# beside it.
 services:
   hermes:
     image: hpk-hermes:local
@@ -14,12 +18,12 @@ services:
       context: ../..
       dockerfile: docker/hermes/Dockerfile
     environment:
-      HPK_OWNER: owner@example.com # first start only
-      HPK_BEHIND_PROXY: "1"
+      HPK_MODE: solo
       HERMES_UID: "10000"
       HERMES_GID: "10000"
     volumes:
       - hermes-data:/opt/data # Hermes home: config, sessions, hpk projects and wikis
+      - ${HPK_PROJECTS:-./projects}:/projects # your project folders
     expose:
       - "7878"
     restart: unless-stopped

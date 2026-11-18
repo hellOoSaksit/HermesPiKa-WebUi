@@ -7,10 +7,11 @@ A release is a tag. CI does the building; a person checks and publishes.
    then GoReleaser builds every platform and creates a **draft** GitHub release.
    The `docker` job then pushes the image to GHCR (`:<version>`, and `:latest`
    only for a tag without a `-` such as `-rc1`).
-2. **Check the draft assets.** `hpk.exe`, six archives (`hpk_<version>_{linux,darwin}_{amd64,arm64}.tar.gz`,
-   `hpk_<version>_windows_{amd64,arm64}.zip`), `install.sh`, `install.ps1`,
-   `compose.release.yaml`, `checksums.txt` and the SBOMs. Download one archive and run
-   `sha256sum --ignore-missing -c checksums.txt`.
+2. **Check the draft assets.** Four archives (`hpk_<version>_{linux,darwin}_{amd64,arm64}.tar.gz`),
+   `install.sh`, `install.ps1`, `compose.release.yaml`, `checksums.txt` and the
+   SBOMs. There is no Windows binary on purpose: antivirus flags unsigned
+   Windows builds of hpk, so Windows runs the Docker image (`install.ps1` sets
+   it up). Download one archive and run `sha256sum --ignore-missing -c checksums.txt`.
 3. **Make the GHCR package public (once).** A package pushed for the first time
    is private, so `docker compose` could not pull it. On GitHub open your profile
    or organisation, **Packages**, `hpk-hermes`, **Package settings**, then

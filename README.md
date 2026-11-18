@@ -23,14 +23,17 @@ Status: **M9** — team mode: people, roles (owner, maintainer, member, viewer),
 hpk is one program, and HPK Console is a web app, so it works the same on
 Windows, macOS and Linux. Pick one way:
 
-**Windows.** Download `hpk.exe` from the
-[Releases page](https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest)
-and double-click it (your browser may ask you to Keep the file, and SmartScreen may warn: More info, then Run anyway). Or, in
-PowerShell:
+**Windows** runs hpk in Docker (Hermes Agent and hpk together; nothing is
+installed on Windows itself). Start [Docker Desktop](https://www.docker.com/products/docker-desktop/),
+then in PowerShell:
 
 ```powershell
 irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/install.ps1 | iex
 ```
+
+It starts the container in solo mode (one person, this computer only) and
+opens the Console with a one-time link. Your `Documents` folder is
+`/projects` there. Team mode is off for now.
 
 **macOS / Linux:**
 
@@ -41,13 +44,14 @@ curl -fsSL https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/down
 **Docker** (Hermes Agent and hpk together). In an empty folder, download the
 compose file (macOS/Linux; on Windows PowerShell use
 `irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml -OutFile compose.release.yaml`),
-change `HPK_OWNER` in it to your email, then run these in that folder:
+optionally put `HPK_PROJECTS=<your projects folder>` in a `.env` next to it,
+then run these in that folder:
 
 ```sh
 curl -fsSLO https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml
 docker compose -f compose.release.yaml up -d
-docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
-# then open http://127.0.0.1:7878 and paste the token
+docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/console-link
+# then open that one-time link in your browser
 ```
 
 hpk installs itself for your user (no administrator rights), adds itself to

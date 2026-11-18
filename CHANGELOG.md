@@ -1,6 +1,32 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.1
+
+Windows runs hpk in Docker, in solo mode. Team mode is off for now.
+
+**Install**
+- No Windows binary in the release any more. Antivirus flagged the unsigned
+  `hpk.exe` as a trojan (a heuristic match on its self-install, PATH change
+  and start at login), so it could not be installed on most Windows PCs.
+- `install.ps1` now sets hpk up in Docker: it downloads `compose.release.yaml`,
+  checks its SHA-256, writes `HPK_PROJECTS` to a `.env` next to it in
+  `%USERPROFILE%\hpk`, starts the container and opens the Console with a
+  one-time link. It needs Docker Desktop.
+- `compose.release.yaml` mounts your projects folder (`HPK_PROJECTS`, default
+  `./projects`) at `/projects`, so the Console can add projects from your
+  computer (`/projects/<folder name>`).
+
+**Solo mode in a container**
+- `hpk serve --container`: solo mode inside a container whose port Docker
+  publishes on the host's loopback. Every API request, reads too, needs the
+  Console key (the cookie from the one-time link), so a port published on a
+  network by mistake shows nothing. `--link-addr` names the host side in the
+  link.
+- The Hermes + hpk image starts in solo mode (`HPK_MODE=solo`) and writes the
+  one-time link to `/opt/data/hpk/console-link`. `HPK_MODE=team` with
+  `HPK_OWNER` brings team mode back.
+
+## 0.1.0
 
 First public release. hpk is an independent add-on for Hermes Agent, tested
 against Hermes v0.23.1.

@@ -99,12 +99,11 @@ jobs:
             grep -q "  $(basename "$1")\$" checksums.txt || { echo "NOT IN checksums.txt: $1"; missing=1; }
           }
           for os in linux darwin; do for a in amd64 arm64; do archive "hpk_*_${os}_${a}.tar.gz"; done; done
-          for a in amd64 arm64; do archive "hpk_*_windows_${a}.zip"; done
-          # The bare exe is built into its own folder and uploaded as hpk.exe;
-          # the scripts and compose file are uploaded from the repo. Each must
+          # No Windows binary ships (Windows uses Docker via install.ps1).
+          if ls | grep -qiE 'windows|\.exe$'; then echo "UNEXPECTED Windows asset"; missing=1; fi
+          # The scripts and compose file are uploaded from the repo. Each must
           # exist and be listed in checksums.txt.
-          [ -n "$(find . -name hpk.exe -path '*hpk-exe*' | head -n 1)" ] || { echo "MISSING: hpk.exe build"; missing=1; }
-          for f in hpk.exe install.sh install.ps1 compose.release.yaml; do
+          for f in install.sh install.ps1 compose.release.yaml; do
             grep -q "  $f\$" checksums.txt || { echo "NOT IN checksums.txt: $f"; missing=1; }
           done
           for f in ../install.sh ../install.ps1 ../docker/compose.release.yaml; do

@@ -1,12 +1,14 @@
 # Try it on this machine: the Console on http://127.0.0.1:7880, reachable from
-# this computer only (no proxy, no TLS).
+# this computer only.
 #
 #   docker compose -f compose.yaml -f compose.local.yaml up -d --build
-#   docker compose -f compose.yaml -f compose.local.yaml exec hermes cat /opt/data/hpk/owner-token
+#   docker compose -f compose.yaml -f compose.local.yaml exec hermes cat /opt/data/hpk/console-link
 #
-# For a server, use compose.yaml behind a TLS proxy instead (docs/docker.md).
+# Open that one-time link in your browser.
 name: hpk-hermes
 services:
   hermes:
+    environment:
+      HPK_LINK_ADDR: 127.0.0.1:7880 # the one-time link names the host side
     ports:
       - "127.0.0.1:7880:7878"

@@ -50,6 +50,13 @@ type Options struct {
 	// Team mode on a network: TLS, or plain HTTP only when a proxy adds TLS in front.
 	TLSCert, TLSKey string
 	InsecureHTTP    bool
+	// Container: solo mode inside a container, whose port Docker publishes on
+	// the host's loopback. hpk must listen beyond the container's loopback for
+	// that, so every API request, reads too, needs the Console key: a port
+	// published on a network by mistake shows nothing. LinkAddr is the address
+	// the one-time link names (the host side, e.g. 127.0.0.1:7878).
+	Container bool
+	LinkAddr  string
 	// Ready is called once the daemon listens (`hpk` opens the browser then).
 	Ready func(base string)
 }
@@ -63,6 +70,7 @@ type Server struct {
 	logins  *logins
 	pers    personal     // built-in browser + vault (own machine only)
 	keys    *consoleKeys // solo mode: changes need a browser hpk opened (consolekey.go)
+	boxed   bool         // solo in a container: reads need the Console key too
 	life    life         // run file, hpk stop, first-run setup (setupapi.go)
 	devs    devStore     // team server: invite codes and joined devices
 	link    linkState    // own machine: the team server it joined
@@ -121,7 +129,12 @@ func Run(ctx context.Context, o Options) error {
 	if tls && (o.TLSCert == "" || o.TLSKey == "") {
 		return errors.New("hpk serve: give both --tls-cert and --tls-key")
 	}
-	if !isLoopback(o.Addr) {
+	if o.Container {
+		if s.TeamEnabled() {
+			return errors.New("hpk serve: --container is for solo mode, and team mode is on")
+		}
+		s.boxed = true
+	} else if !isLoopback(o.Addr) {
 		// Beyond this machine only with sign-in (team mode) and TLS, or behind a
 		// proxy that adds TLS (--insecure-http says so out loud).
 		if !s.TeamEnabled() {
@@ -156,6 +169,9 @@ func Run(ctx context.Context, o Options) error {
 		s.writeAgentFile(ln.Addr().String())
 		s.keys = newConsoleKeys(s.home)
 		s.keys.addr = ln.Addr().String()
+		if o.LinkAddr != "" {
+			s.keys.addr = o.LinkAddr
+		}
 		link := s.keys.fresh()
 		go func() { // a new link now and then, so one left on screen goes stale
 			t := time.NewTicker(linkTTL)

@@ -8,8 +8,8 @@ uses).
 ## Quick start (one person, one computer)
 
 Use the released image with `compose.release.yaml`, which is attached to every
-release (`ghcr.io/helloosaksit/hpk-hermes:0.1.0`, Hermes Agent and hpk
-together, the Console on http://127.0.0.1:7878). In an empty folder, download
+release (`ghcr.io/helloosaksit/hpk-hermes:0.1.1`, Hermes Agent and hpk
+together in solo mode, the Console on http://127.0.0.1:7878). In an empty folder, download
 it (macOS/Linux):
 
 ```bash
@@ -22,24 +22,33 @@ On Windows (PowerShell):
 irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml -OutFile compose.release.yaml
 ```
 
-Change `HPK_OWNER` in the file to your email, then run these in that folder:
+On Windows, `install.ps1` does all of this for you (docs/install.md, step 2).
+
+Put `HPK_PROJECTS=<the folder that holds your projects>` in a `.env` file next
+to it (default: a `projects` folder next to the compose file). That folder
+is `/projects` in the container, so a project in it is added in the Console as
+`/projects/<folder name>`. Then run these in that folder:
 
 ```bash
 docker compose -f compose.release.yaml up -d
 ```
 
-Wait a few seconds for it to start. If the token file is missing, wait a
-little and run it again:
+Wait a few seconds for it to start, then print the one-time link. If the file
+is missing, wait a little and run it again:
 
 ```bash
-docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
+docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/console-link
 ```
 
-Open http://127.0.0.1:7878 and paste the token, then delete the token file:
+Open that link in your browser. It works once, within 10 minutes, and signs
+that browser in for 30 days.
 
-```bash
-docker compose -f compose.release.yaml exec hermes rm /opt/data/hpk/owner-token
-```
+This is **solo mode**: one person, no accounts. hpk listens inside the
+container with `hpk serve --container`, and Docker publishes the port on the
+host's 127.0.0.1 only. In that mode every API request, reads too, needs the
+browser cookie from the one-time link, so a port published on a network by
+mistake shows nothing. Keep the port on 127.0.0.1 anyway. Team mode is off for
+now (`HPK_MODE=team` turns it on; see below).
 
 Hermes needs a model account:
 
@@ -142,13 +151,16 @@ On every start, before Hermes' services:
    Running it again changes nothing; a backup is kept the first time.
 2. The hooks are allowed in Hermes (you chose this image, so its hooks are
    expected). `tools/hermes-consent.py` does it with Hermes' own functions.
-3. On the first start, `HPK_OWNER` turns team mode on; the token goes to
-   `/opt/data/hpk/owner-token`.
+3. Solo mode is the default (`HPK_MODE=solo`). Only with `HPK_MODE=team`
+   does `HPK_OWNER` turn team mode on at the first start; the token then goes
+   to `/opt/data/hpk/owner-token`.
 
 Then the Hermes gateway runs as the main process, and HPK Console runs beside
-it as an s6 service, as the `hermes` user. Without team mode the Console does
-not start, and says why in the log. `docker/hermes/compose.yaml` runs it behind
-a proxy.
+it as an s6 service, as the `hermes` user. In solo mode it serves with
+`--container` and writes the one-time link to `/opt/data/hpk/console-link`
+(`HPK_LINK_ADDR` sets the host address the link names, default
+`127.0.0.1:7878`). With `HPK_MODE=team` and no team yet, the Console does not
+start, and says why in the log.
 
 Hermes needs a model account before chats or jobs can run. An owner can add
 one from the Console: **Settings → AI accounts → Add an API key**. The page

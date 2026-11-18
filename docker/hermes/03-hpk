@@ -3,7 +3,8 @@
 # First-start setup for hpk in the Hermes image (runs as root, acts as hermes).
 #   - hpk install: hooks and skills into /opt/data/config.yaml (idempotent; a
 #     backup is kept). The image chose hpk, so its hooks are allowed here.
-#   - HPK_OWNER (first start): team mode on; the owner's token goes to
+#   - Solo mode is the default. With HPK_MODE=team and HPK_OWNER (first
+#     start): team mode on; the owner's token goes to
 #     /opt/data/hpk/owner-token (mode 600), never to the log.
 set -e
 export HOME=/opt/data HERMES_HOME=/opt/data HPK_HOME=/opt/data
@@ -14,7 +15,7 @@ as_hermes hpk install --yes > /dev/null
 as_hermes /opt/hermes/.venv/bin/python /opt/hpk/hermes-consent.py --refresh > /dev/null
 echo "[hpk] installed into Hermes; hooks allowed"
 
-if [ ! -f /opt/data/hpk/team.yaml ] && [ -n "${HPK_OWNER:-}" ]; then
+if [ "${HPK_MODE:-solo}" = team ] && [ ! -f /opt/data/hpk/team.yaml ] && [ -n "${HPK_OWNER:-}" ]; then
   if [ "${HPK_AUTH:-token}" = header ]; then
     as_hermes hpk team init --owner "$HPK_OWNER" --auth header --header "${HPK_HEADER:?set HPK_HEADER}" --proxy "${HPK_PROXY:?set HPK_PROXY}" > /dev/null
     echo "[hpk] team mode on; $HPK_OWNER signs in through the proxy"

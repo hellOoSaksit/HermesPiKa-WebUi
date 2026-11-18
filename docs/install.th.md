@@ -16,25 +16,25 @@ English: [install.md](install.md)
 
 ไม่ต้องใช้สิทธิ์ผู้ดูแลระบบ hpk ติดตั้งให้เฉพาะผู้ใช้ของคุณเท่านั้น
 
-### 2. Windows (ดับเบิลคลิก)
+### 2. Windows (Docker คำสั่งเดียว)
 
-1. เปิด https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest แล้วดาวน์โหลด `hpk.exe`
-2. ดับเบิลคลิก `hpk.exe`
-3. เบราว์เซอร์ (Edge หรือ Chrome) อาจเตือนว่า `hpk.exe` "isn't commonly downloaded" หรือ "could harm your device" โปรแกรมยังไม่ได้ลงลายเซ็น จึงเป็นเรื่องปกติ เปิดรายการดาวน์โหลด กด **...** ข้างไฟล์ เลือก **Keep** แล้วเลือก **Keep anyway** (ใน Chrome กด **Keep** อย่างเดียว)
-4. ถ้า Windows ขึ้น "Windows protected your PC" ให้กด **More info** แล้วกด **Run anyway** จะถามหนึ่งครั้ง
-5. hpk จะคัดลอกตัวเองไปที่ `%LOCALAPPDATA%\hpk\bin` เพิ่มโฟลเดอร์นั้นและโฟลเดอร์ของ Hermes (`%LOCALAPPDATA%\hpk\hermes\bin`) ใน PATH (รายชื่อโฟลเดอร์ที่ Windows ใช้หาโปรแกรม) เพิ่มทางลัดในเมนู Start ชื่อ "HPK Console" แล้วเปิด HPK Console ในเบราว์เซอร์
+บน Windows hpk รันใน Docker คือ Hermes Agent กับ hpk อยู่รวมกันในคอนเทนเนอร์เดียว ไม่มีโปรแกรมติดตั้งลง Windows เลย โปรแกรมแอนตี้ไวรัสจึงไม่มีอะไรให้จับ
 
-การดับเบิลคลิกจะมีหน้าต่างคอนโซลค้างอยู่ หน้าต่างนั้น**คือ**เซิร์ฟเวอร์ของ HPK Console ถ้าปิดมัน Console จะหยุดทำงาน จะเริ่มใหม่ให้ใช้ทางลัด "HPK Console" ในเมนู Start หรือพิมพ์ `hpk` ในเทอร์มินัลที่เปิดใหม่ ถ้าอยากให้เริ่มเองทุกครั้งที่ล็อกอิน ให้รัน `hpk autostart on` หรือเปิด **Start hpk when I log in** ใน Settings
-
-### 3. Windows / macOS / Linux (คำสั่งเดียว)
-
-Windows: เปิด PowerShell แล้วรัน:
+1. ติดตั้ง [Docker Desktop](https://www.docker.com/products/docker-desktop/) (ฟรีสำหรับใช้ส่วนตัวและธุรกิจขนาดเล็ก) เปิดมัน แล้วรอจนขึ้นว่ากำลังทำงาน
+2. เปิด PowerShell แล้วรัน:
 
 ```powershell
 irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/install.ps1 | iex
 ```
 
-macOS และ Linux: เปิดเทอร์มินัลแล้วรัน:
+3. สคริปต์จะดาวน์โหลด `compose.release.yaml` ตรวจกับค่า SHA-256 ที่ประกาศไว้ บันทึกไว้พร้อมการตั้งค่าของคุณใน `%USERPROFILE%\hpk` แล้วเปิดคอนเทนเนอร์ ครั้งแรกจะใช้เวลาสักสองสามนาที
+4. สคริปต์จะเปิด HPK Console ในเบราว์เซอร์ด้วยลิงก์ใช้ครั้งเดียว เบราว์เซอร์นั้นจะเข้าใช้ได้ 30 วัน hpk รันแบบคนเดียว (คนเดียว ใช้บนเครื่องนี้เท่านั้น) จึงไม่มีบัญชีหรือรหัสผ่าน
+
+โฟลเดอร์ `Documents` ของคุณคือโฟลเดอร์ `/projects` ใน Console ถ้าจะเพิ่มโปรเจคที่อยู่ใน `Documents\my-app` ให้ใส่ `/projects/my-app` ถ้าอยากใช้โฟลเดอร์อื่น ให้ตั้ง `HPK_PROJECTS` (เช่น `$env:HPK_PROJECTS='D:\work'`) ก่อนรันสคริปต์ครั้งแรก หรือแก้ `HPK_PROJECTS` ในไฟล์ `%USERPROFILE%\hpk\.env` แล้วรัน `docker compose -f compose.release.yaml up -d` ในโฟลเดอร์นั้น คอนเทนเนอร์จะเริ่มเองทุกครั้งที่ Docker Desktop ทำงาน
+
+### 3. macOS / Linux (คำสั่งเดียว)
+
+เปิดเทอร์มินัลแล้วรัน:
 
 ```sh
 curl -fsSL https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/install.sh | sh
@@ -67,25 +67,20 @@ curl -fsSLO https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/dow
 irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml -OutFile compose.release.yaml
 ```
 
-3. เปิด `compose.release.yaml` ด้วยโปรแกรมแก้ข้อความ แล้วแก้ `HPK_OWNER` เป็นอีเมลของคุณ ใช้เฉพาะตอนเริ่มครั้งแรก
+3. สร้างไฟล์ `.env` ไว้ข้างไฟล์ compose มีบรรทัดเดียวคือ `HPK_PROJECTS=<โฟลเดอร์ที่เก็บโปรเจคของคุณ>` Console จะเห็นโฟลเดอร์นั้นเป็น `/projects` ถ้าไม่สร้าง จะใช้โฟลเดอร์ `projects` ที่อยู่ข้างไฟล์ compose
 4. เริ่มทำงาน:
 
 ```sh
 docker compose -f compose.release.yaml up -d
 ```
 
-5. รอสักครู่ให้เริ่มทำงาน แล้วแสดง owner token (กุญแจเข้าระบบครั้งแรกของคุณ) ถ้าไม่พบไฟล์ token ให้รอสักครู่แล้วลองอีกครั้ง:
+5. รอสักครู่ให้เริ่มทำงาน แล้วแสดงลิงก์ใช้ครั้งเดียว ถ้าไม่พบไฟล์ ให้รอสักครู่แล้วลองอีกครั้ง:
 
 ```sh
-docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
+docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/console-link
 ```
 
-6. เปิด http://127.0.0.1:7878 ในเบราว์เซอร์แล้ววาง token จากนั้นลบไฟล์ token ทิ้ง:
-
-```sh
-docker compose -f compose.release.yaml exec hermes rm /opt/data/hpk/owner-token
-```
-
+6. เปิดลิงก์นั้นในเบราว์เซอร์ ลิงก์ใช้ได้ครั้งเดียวภายใน 10 นาที แล้วเบราว์เซอร์นั้นจะเข้าใช้ได้ 30 วัน ถ้าจะใช้เบราว์เซอร์อื่นให้แสดงลิงก์ใหม่
 7. เพิ่มบัญชีโมเดลในคอนเทนเนอร์:
 
 ```sh
@@ -131,7 +126,7 @@ hpk uninstall --yes
 - **"Port 7878 is in use"** มีโปรแกรมอื่นหรือ hpk อีกตัวใช้พอร์ตนี้อยู่ รัน `hpk stop` หรือเริ่มด้วยพอร์ตอื่น: `hpk --addr 127.0.0.1:7879`
 - **ติดตั้งแล้วแต่หา `hpk` ไม่เจอ** การเปลี่ยน PATH มีผลกับเทอร์มินัลที่เปิดหลังจากนั้นเท่านั้น ปิดเทอร์มินัลแล้วเปิดใหม่
 - **macOS แจ้งว่าเปิดแอปไม่ได้ (Gatekeeper)** ใช้การติดตั้งด้วยคำสั่งเดียว (ข้อ 3) ซึ่งลบเครื่องหมายให้ หรือรัน `xattr -d com.apple.quarantine <path to hpk>`
-- **Windows SmartScreen ขวางอยู่** กด **More info** แล้วกด **Run anyway**
+- **Windows ขึ้นว่า "Docker is not installed" หรือ "not running"** ติดตั้งหรือเปิด Docker Desktop รอจนขึ้นว่ากำลังทำงาน แล้วรันคำสั่งติดตั้งอีกครั้ง
 - **ใช้ผ่าน SSH (เครื่องนั้นไม่มีเบราว์เซอร์)** ส่งต่อพอร์ตแล้วเปิดที่อยู่บนเครื่องของคุณเอง: `ssh -L 7878:127.0.0.1:7878 you@host` แล้วเปิด http://127.0.0.1:7878 บนเครื่องคุณ
 - **ปัญหาอื่น** รัน `hpk doctor` มันตรวจ Hermes, hooks, โปรเจกต์ และ Console
 

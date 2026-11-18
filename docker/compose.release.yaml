@@ -1,35 +1,44 @@
 # SPDX-License-Identifier: MIT AND LicenseRef-Commons-Clause-1.0
 #
-# Hermes Agent + hpk from the released image, for one person on one computer.
-# No build, no proxy: the Console is on http://127.0.0.1:7878, reachable from this
-# computer only (plain HTTP on loopback).
+# Hermes Agent + hpk from the released image, for one person on one computer
+# (solo mode). The Console is on http://127.0.0.1:7878, reachable from this
+# computer only.
 #
-# Download it into an empty folder (it is attached to every release):
+# Windows: install.ps1 does all of this for you (docs/install.md). Elsewhere,
+# download it into an empty folder (it is attached to every release):
 #   curl -fsSLO https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml
-#   (Windows PowerShell: irm <same URL> -OutFile compose.release.yaml)
-#
 #   docker compose -f compose.release.yaml up -d
-#   (wait a few seconds; if the token file is missing in the next step, try again)
-#   docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
-#   open http://127.0.0.1:7878 and paste the token, then delete the token file:
-#   docker compose -f compose.release.yaml exec hermes rm /opt/data/hpk/owner-token
+#   (wait a few seconds; if the link file is missing in the next step, try again)
+#   docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/console-link
+# Open that link in your browser. It works once, for 10 minutes, and keeps that
+# browser signed in for 30 days; print it again for a new one.
 #
 # Hermes needs a model account:
 #   docker compose -f compose.release.yaml exec -u hermes hermes hermes auth add <provider>
 #
-# Change HPK_OWNER below to your email before the first start. For a server, use
-# docker/hermes/compose.yaml behind a TLS proxy instead (docs/docker.md).
+# Settings, in a .env file next to this one (install.ps1 writes it on Windows):
+#   HPK_PROJECTS=C:/Users/you/Documents
+#       the folder on your computer that holds your projects. Inside the
+#       container it is /projects, so in the Console a project there is
+#       /projects/<folder name>. Default: ./projects next to this file.
+#   HERMES_UID / HERMES_GID
+#       on Linux, your own (id -u / id -g), so the AI can write in your project
+#       folders and the files stay yours.
+#
+# Keep the port on 127.0.0.1. Solo mode has no sign-in for a network; for a
+# team server use docker/hermes/compose.yaml with HPK_MODE=team behind a TLS
+# proxy (docs/docker.md).
 name: hpk-hermes
 services:
   hermes:
-    image: ghcr.io/helloosaksit/hpk-hermes:0.1.0
+    image: ghcr.io/helloosaksit/hpk-hermes:0.1.1
     environment:
-      HPK_OWNER: you@example.com # first start only
-      HPK_BEHIND_PROXY: "1" # serve plain HTTP; safe here because the port is loopback-only
-      HERMES_UID: "10000"
-      HERMES_GID: "10000"
+      HPK_MODE: solo
+      HERMES_UID: ${HERMES_UID:-10000}
+      HERMES_GID: ${HERMES_GID:-10000}
     volumes:
       - hermes-data:/opt/data # Hermes home: config, sessions, hpk projects and wikis
+      - ${HPK_PROJECTS:-./projects}:/projects # your project folders
     ports:
       - "127.0.0.1:7878:7878"
     restart: unless-stopped

@@ -1,16 +1,22 @@
 # SPDX-License-Identifier: MIT AND LicenseRef-Commons-Clause-1.0
 #
-# One-command installer for hpk (Windows PowerShell 5.1 or newer):
+# One-command installer for hpk on Windows (PowerShell 5.1 or newer):
 #   irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/install.ps1 | iex
 #
-# It downloads the release archive for this PC, checks its SHA-256 against
-# checksums.txt (and stops if anything is off), then runs `hpk self-install`.
+# hpk runs on Windows in Docker (Hermes Agent and hpk together, one container,
+# solo mode), so no program is installed on Windows itself. The script
+# downloads the release's compose.release.yaml, checks its SHA-256 against
+# checksums.txt (and stops if anything is off), writes your settings next to
+# it, starts the container and opens HPK Console with a one-time link. You
+# need Docker Desktop.
 #
 # Optional environment:
-#   HPK_VERSION       install this version (e.g. 0.1.0) instead of the latest
+#   HPK_VERSION       use this version (e.g. 0.1.0) instead of the latest
 #   HPK_RELEASE_BASE  download from here instead of GitHub (testing / mirrors)
-#   HPK_DATA_DIR      where hpk keeps its files (default: %LOCALAPPDATA%\hpk)
-#   HPK_NO_START=1    install only; do not start hpk afterwards
+#   HPK_DIR           where the compose file and settings go (default: %USERPROFILE%\hpk)
+#   HPK_PROJECTS      the folder holding your projects (default: %USERPROFILE%\Documents);
+#                     the Console sees it as /projects
+#   HPK_NO_START=1    set up only; do not start the container
 #
 # Written as a function with throw/return so that piping it into iex never
 # closes the caller's PowerShell window.
@@ -19,18 +25,11 @@ function Install-Hpk {
     $ErrorActionPreference = 'Stop'
     $ProgressPreference = 'SilentlyContinue'   # progress bars make Invoke-WebRequest very slow on 5.1
     $repo = 'hellOoSaksit/HermesPiKa-WebUi'
+    $compose = 'compose.release.yaml'
     $tmp = $null
     try {
         # Windows PowerShell 5.1 does not offer TLS 1.2 by default; GitHub needs it.
         try { [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12 } catch { }
-
-        $cpu = $env:PROCESSOR_ARCHITEW6432
-        if (-not $cpu) { $cpu = $env:PROCESSOR_ARCHITECTURE }
-        switch ($cpu) {
-            'AMD64' { $arch = 'amd64' }
-            'ARM64' { $arch = 'arm64' }
-            default { throw "unsupported CPU '$cpu': hpk is built for amd64 and arm64" }
-        }
 
         $tmp = Join-Path ([IO.Path]::GetTempPath()) ('hpk-install-' + [Guid]::NewGuid().ToString('N'))
         New-Item -ItemType Directory -Path $tmp | Out-Null
@@ -51,10 +50,9 @@ function Install-Hpk {
         $base = $env:HPK_RELEASE_BASE
         if (-not $base) { $base = "https://github.com/$repo/releases/download/v$ver" }
         $base = $base.TrimEnd('/')
-        $archive = "hpk_${ver}_windows_$arch.zip"
 
-        Write-Host "Installing hpk $ver (windows/$arch)..."
-        foreach ($f in @($archive, 'checksums.txt')) {
+        Write-Host "Setting up hpk $ver in Docker..."
+        foreach ($f in @($compose, 'checksums.txt')) {
             $url = "$base/$f"
             try {
                 Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile (Join-Path $tmp $f)
@@ -67,36 +65,69 @@ function Install-Hpk {
         $expected = $null
         foreach ($line in (Get-Content -LiteralPath (Join-Path $tmp 'checksums.txt'))) {
             $parts = $line.Trim() -split '\s+', 2
-            if ($parts.Count -eq 2 -and ($parts[1] -eq $archive -or $parts[1] -eq "*$archive")) { $expected = $parts[0]; break }
+            if ($parts.Count -eq 2 -and ($parts[1] -eq $compose -or $parts[1] -eq "*$compose")) { $expected = $parts[0]; break }
         }
-        if (-not $expected) { throw "checksum for $archive is not listed in checksums.txt; refusing to install" }
+        if (-not $expected) { throw "checksum for $compose is not listed in checksums.txt; refusing to install" }
         if ($expected -notmatch '^[0-9a-fA-F]{64}$') { throw 'checksums.txt is malformed; refusing to install' }
-        $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $tmp $archive)).Hash
+        $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $tmp $compose)).Hash
         if ($actual.ToLower() -ne $expected.ToLower()) {
-            throw "checksum mismatch for $archive (expected $($expected.ToLower()), got $($actual.ToLower())); refusing to install"
+            throw "checksum mismatch for $compose (expected $($expected.ToLower()), got $($actual.ToLower())); refusing to install"
         }
         Write-Host 'Checksum OK.'
 
-        $x = Join-Path $tmp 'x'
-        Expand-Archive -LiteralPath (Join-Path $tmp $archive) -DestinationPath $x -Force
-        $exe = Join-Path $x 'hpk.exe'
-        if (-not (Test-Path -LiteralPath $exe)) { throw 'the archive does not contain hpk.exe' }
+        $dir = $env:HPK_DIR
+        if (-not $dir) { $dir = Join-Path $env:USERPROFILE 'hpk' }
+        New-Item -ItemType Directory -Force -Path $dir | Out-Null
+        Copy-Item -LiteralPath (Join-Path $tmp $compose) -Destination (Join-Path $dir $compose) -Force
 
-        & $exe self-install | Out-Host
-        if ($LASTEXITCODE -ne 0) { throw "hpk self-install failed (exit code $LASTEXITCODE)" }
-
-        $data = $env:HPK_DATA_DIR
-        if (-not $data) { $data = Join-Path $env:LOCALAPPDATA 'hpk' }
-        $target = Join-Path (Join-Path $data 'bin') 'hpk.exe'
+        # Settings go in .env next to the compose file. An existing one is kept,
+        # so running this again only updates the compose file (and the image).
+        $envFile = Join-Path $dir '.env'
+        if (-not (Test-Path -LiteralPath $envFile)) {
+            $projects = $env:HPK_PROJECTS
+            if (-not $projects) { $projects = Join-Path $env:USERPROFILE 'Documents' }
+            if (-not (Test-Path -LiteralPath $projects -PathType Container)) { throw "the projects folder '$projects' does not exist; set HPK_PROJECTS" }
+            $lines = @("HPK_PROJECTS=$($projects.Replace('\', '/'))")
+            [IO.File]::WriteAllLines($envFile, [string[]]$lines)   # UTF-8 without a BOM, which docker compose needs
+            Write-Host "Settings written to $envFile"
+        }
 
         if ($env:HPK_NO_START) {
-            Write-Host "Done. Start it any time with: $target"
-        } elseif (Test-Path -LiteralPath $target) {
-            Write-Host 'Done. Starting hpk (open a new terminal later and just type: hpk).'
-            Start-Process -FilePath $target
-        } else {
-            Write-Host 'Done. Open a new terminal and type: hpk'
+            Write-Host "Done. Start it any time in $dir with: docker compose -f $compose up -d"
+            return $true
         }
+        if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+            throw 'Docker is not installed. Install Docker Desktop (free for personal use and small businesses): https://www.docker.com/products/docker-desktop/ , start it, then run this again'
+        }
+        # PowerShell 5.1 turns a native command's redirected stderr into errors,
+        # which 'Stop' would make fatal; docker's own exit codes decide here.
+        $ErrorActionPreference = 'Continue'
+        & docker info *> $null
+        if ($LASTEXITCODE -ne 0) { throw 'Docker is installed but not running. Start Docker Desktop, wait until it says it is running, then run this again' }
+
+        Push-Location $dir
+        try {
+            Write-Host 'Downloading and starting the container (the first time takes a few minutes)...'
+            & docker compose -f $compose up -d | Out-Host
+            if ($LASTEXITCODE -ne 0) { throw "docker compose up failed (exit code $LASTEXITCODE); see the messages above" }
+
+            # A one-time link (valid 10 minutes) signs this browser in for 30 days.
+            $link = $null
+            for ($i = 0; $i -lt 40 -and -not $link; $i++) {
+                $t = & docker compose -f $compose exec -T hermes cat /opt/data/hpk/console-link 2>$null
+                if ($LASTEXITCODE -eq 0 -and "$t" -match 'http://127\.0\.0\.1:\d+/k/[0-9a-f]+') { $link = $Matches[0] } else { Start-Sleep -Seconds 3 }
+            }
+        } finally { Pop-Location }
+
+        $url = 'http://127.0.0.1:7878'
+        Write-Host ''
+        Write-Host "HPK Console is running at $url"
+        Write-Host 'To open it in another browser, print a new one-time link (valid 10 minutes):'
+        Write-Host "  cd `"$dir`"; docker compose -f $compose exec hermes cat /opt/data/hpk/console-link"
+        if ($link) { $url = $link } else { Write-Host 'The Console is still starting; run that command in a minute.' }
+        Write-Host "Your projects are in /projects inside the Console (your $((Get-Content -LiteralPath $envFile | Where-Object { $_ -like 'HPK_PROJECTS=*' }) -replace '^HPK_PROJECTS=', '') folder)."
+        Write-Host "Add a model account: cd `"$dir`"; docker compose -f $compose exec -u hermes hermes hermes auth add <provider>"
+        try { Start-Process $url } catch { }
         return $true
     } catch {
         [Console]::Error.WriteLine("hpk install: $($_.Exception.Message)")

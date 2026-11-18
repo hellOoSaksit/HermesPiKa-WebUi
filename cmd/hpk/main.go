@@ -83,12 +83,14 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		cert := fs.String("tls-cert", "", "TLS certificate (team mode on a network)")
 		key := fs.String("tls-key", "", "TLS private key")
 		plain := fs.Bool("insecure-http", false, "team mode without TLS (only behind a proxy that adds it)")
+		boxed := fs.Bool("container", false, "solo mode in a container whose port is published on the host's loopback; every API request needs the Console key")
+		linkAddr := fs.String("link-addr", "", "address the one-time Console link names (with --container: the host side, e.g. 127.0.0.1:7878)")
 		if err := fs.Parse(args[1:]); err != nil {
 			return 2
 		}
 		ctx, stop := signals()
 		defer stop()
-		if err := serve.Run(ctx, serve.Options{Addr: *addr, Console: consoleFS(), TLSCert: *cert, TLSKey: *key, InsecureHTTP: *plain}); err != nil {
+		if err := serve.Run(ctx, serve.Options{Addr: *addr, Console: consoleFS(), TLSCert: *cert, TLSKey: *key, InsecureHTTP: *plain, Container: *boxed, LinkAddr: *linkAddr}); err != nil {
 			fmt.Fprintln(stderr, err)
 			return 1
 		}

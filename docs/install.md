@@ -22,25 +22,25 @@ sections below it explain the details.
 
 You do not need administrator rights. hpk installs for your user only.
 
-### 2. Windows (double-click)
+### 2. Windows (Docker, one command)
 
-1. Open https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest and download `hpk.exe`.
-2. Double-click `hpk.exe`.
-3. Your browser (Edge or Chrome) may say that `hpk.exe` "isn't commonly downloaded" or "could harm your device". The program is not code-signed yet, so this is expected. Open the downloads list, click the **...** next to the file, choose **Keep**, then **Keep anyway** (in Chrome, just **Keep**).
-4. If Windows then shows "Windows protected your PC", click **More info**, then click **Run anyway**. It asks you once.
-5. hpk copies itself to `%LOCALAPPDATA%\hpk\bin`, adds that folder and the folder for Hermes (`%LOCALAPPDATA%\hpk\hermes\bin`) to your PATH (the list of folders where Windows looks for programs), adds a Start menu shortcut called "HPK Console", and opens HPK Console in your browser.
+On Windows, hpk runs in Docker: Hermes Agent and hpk together in one container. Nothing is installed on Windows itself, so antivirus has no program to flag.
 
-The double-click leaves a console window open. That window **is** the HPK Console server: if you close it, the Console stops. To start it again, use the Start menu shortcut "HPK Console", or type `hpk` in a new terminal. To have it start by itself when you log in, run `hpk autostart on` or turn on **Start hpk when I log in** in Settings.
-
-### 3. Windows / macOS / Linux (one command)
-
-Windows: open PowerShell and run:
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) (free for personal use and small businesses), start it, and wait until it says it is running.
+2. Open PowerShell and run:
 
 ```powershell
 irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/install.ps1 | iex
 ```
 
-macOS and Linux: open a terminal and run:
+3. The script downloads `compose.release.yaml`, checks it against the published SHA-256 checksum, saves it with your settings in `%USERPROFILE%\hpk`, and starts the container. The first time this takes a few minutes.
+4. It opens HPK Console in your browser with a one-time link. That signs this browser in for 30 days. hpk runs in solo mode (one person, this computer only), so there is no account or password.
+
+Your `Documents` folder is the Console's `/projects` folder. To add a project in `Documents\my-app`, enter `/projects/my-app`. To use another folder, set `HPK_PROJECTS` (for example `$env:HPK_PROJECTS='D:\work'`) before you run the script the first time, or change `HPK_PROJECTS` in `%USERPROFILE%\hpk\.env` and run `docker compose -f compose.release.yaml up -d` in that folder. The container starts again by itself whenever Docker Desktop runs.
+
+### 3. macOS / Linux (one command)
+
+Open a terminal and run:
 
 ```sh
 curl -fsSL https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/install.sh | sh
@@ -76,25 +76,20 @@ On Windows (PowerShell):
 irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml -OutFile compose.release.yaml
 ```
 
-3. Open `compose.release.yaml` in a text editor and change `HPK_OWNER` to your email. It is used on the first start only.
+3. Make a file `.env` next to it with one line, `HPK_PROJECTS=<the folder that holds your projects>`. The Console sees that folder as `/projects`. Without it, a `projects` folder next to the compose file is used.
 4. Start it:
 
 ```sh
 docker compose -f compose.release.yaml up -d
 ```
 
-5. Wait a few seconds for it to start, then print your owner token (your first sign-in key). If the token file is missing, wait a little and try again:
+5. Wait a few seconds for it to start, then print the one-time link. If the file is missing, wait a little and try again:
 
 ```sh
-docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
+docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/console-link
 ```
 
-6. Open http://127.0.0.1:7878 in your browser and paste the token. Then delete the token file:
-
-```sh
-docker compose -f compose.release.yaml exec hermes rm /opt/data/hpk/owner-token
-```
-
+6. Open that link in your browser. It works once, within 10 minutes, and signs that browser in for 30 days. For another browser, print a new link.
 7. Add a model account inside the container:
 
 ```sh
@@ -140,7 +135,7 @@ Then `hpk self-uninstall` removes hpk, its PATH entries, the Start menu shortcut
 - **"Port 7878 is in use".** Another program, or another hpk, is using the port. Run `hpk stop`, or start on another port: `hpk --addr 127.0.0.1:7879`.
 - **`hpk` is not found after installing.** PATH changes only reach terminals opened afterwards. Close the terminal and open a new one.
 - **macOS says the app cannot be opened (Gatekeeper).** Use the one-command install (step 3), which removes the mark. Or run `xattr -d com.apple.quarantine <path to hpk>`.
-- **Windows SmartScreen blocks it.** Click **More info**, then **Run anyway**.
+- **Windows: "Docker is not installed" or "not running".** Install or start Docker Desktop, wait until it says it is running, then run the install command again.
 - **Over SSH (no browser on that machine).** Forward the port, then open the address on your own computer: `ssh -L 7878:127.0.0.1:7878 you@host`, then open http://127.0.0.1:7878 locally.
 - **Something else.** Run `hpk doctor`. It checks Hermes, hooks, projects and the Console.
 

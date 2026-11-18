@@ -32,7 +32,6 @@ function build() {
   const stage = join(work, "stage");
   mkdirSync(stage);
   writeFileSync(join(stage, "hpk"), '#!/bin/sh\necho "$@" >> "$STUB_LOG"\n');
-  writeFileSync(join(stage, "hpk.exe"), "not a real exe");
   for (const sub of ["good", "bad"]) mkdirSync(join(work, "rel", sub), { recursive: true });
   const unixArch = ["linux_amd64", "linux_arm64", "darwin_amd64", "darwin_arm64"];
   if (haveSh) {
@@ -43,14 +42,8 @@ function build() {
       assert.equal(r.status, 0, String(r.stderr));
     }
   }
-  if (havePs) {
-    for (const a of ["amd64", "arm64"]) {
-      const out = join(work, "rel", "good", `hpk_${VER}_windows_${a}.zip`);
-      const r = spawnSync("powershell", ["-NoProfile", "-Command",
-        `Compress-Archive -Path '${join(stage, "hpk.exe")}' -DestinationPath '${out}'`], { encoding: "utf8" });
-      assert.equal(r.status, 0, r.stderr);
-    }
-  }
+  // Windows installs through Docker: install.ps1 fetches the compose file.
+  fs.copyFileSync(join(root, "docker", "compose.release.yaml"), join(work, "rel", "good", "compose.release.yaml"));
   // checksums.txt: right hashes in good/, wrong hashes in bad/.
   const { readdirSync, copyFileSync } = fs;
   for (const f of readdirSync(join(work, "rel", "good"))) {
@@ -106,7 +99,7 @@ async function runSh(sub, extra = {}) {
 function runPs(sub, extra = {}) {
   return run("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", join(root, "install.ps1")], {
     ...process.env, HPK_VERSION: VER, HPK_RELEASE_BASE: `${base}/${sub}`, HPK_NO_START: "1",
-    HPK_DATA_DIR: join(work, "data-ps"), HPK_SELFINSTALL_DRYRUN: "1", ...extra,
+    HPK_DIR: join(work, `dir-ps-${sub}`), HPK_PROJECTS: work, ...extra,
   });
 }
 
@@ -143,11 +136,23 @@ test("install.sh: no network gives a clear download message", { skip: !haveSh },
   assert.match(r.stderr, /download/i);
 });
 
+test("install.ps1 sets up the compose file and settings", { skip: !havePs }, async () => {
+  const r = await runPs("good");
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const dir = join(work, "dir-ps-good");
+  assert.deepEqual(readFileSync(join(dir, "compose.release.yaml")), readFileSync(join(root, "docker", "compose.release.yaml")));
+  const env = readFileSync(join(dir, ".env"), "utf8");
+  const lines = env.split(/\r?\n/);
+  assert.ok(!env.includes("HPK_OWNER"), "solo mode needs no owner");
+  assert.ok(lines.includes("HPK_PROJECTS=" + work.replaceAll("\\", "/")), env);
+  assert.notEqual(env.charCodeAt(0), 0xfeff, ".env must have no BOM");
+});
+
 test("install.ps1 refuses a bad checksum", { skip: !havePs }, async () => {
   const r = await runPs("bad");
   assert.notEqual(r.status, 0);
   assert.match(r.stderr + r.stdout, /checksum/i);
-  assert.ok(!existsSync(join(work, "data-ps", "bin", "hpk.exe")));
+  assert.ok(!existsSync(join(work, "dir-ps-bad", "compose.release.yaml")));
 });
 
 test("install.ps1: no network gives a clear download message", { skip: !havePs }, async () => {

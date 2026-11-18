@@ -149,6 +149,11 @@ func (s *Server) requireConsoleKey(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// reading is open, except the folder picker: it shows what is on this machine's disks
 		read := (r.Method == http.MethodGet || r.Method == http.MethodHead) && !strings.HasPrefix(r.URL.Path, "/api/fs/")
+		if s.boxed && read && strings.HasPrefix(r.URL.Path, "/api/") {
+			// in a container, reads need the key too; the page itself, health
+			// and "is a key needed" stay open so the Console can say how to get one
+			read = r.URL.Path == "/api/health" || r.URL.Path == "/api/console-key"
+		}
 		if s.keys == nil || s.teamConfig() != nil || read || keyExempt(r) {
 			next.ServeHTTP(w, r)
 			return
