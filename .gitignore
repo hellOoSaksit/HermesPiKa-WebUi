@@ -10,3 +10,4 @@
 /.claude/
 # Design tool working state (screenshots, reviews); DESIGN.md and PRODUCT.md hold the result.
 /.impeccable/
+.superpowers/
