@@ -1,5 +1,39 @@
 # Changelog
 
+## 0.1.2
+
+Fixes found while trying the Docker setup as a new user, and a Thai Console.
+
+**Thai**
+- The Thai interface is Thai throughout: 771 strings rewritten with Thai
+  transliteration for technical terms, and spellings made consistent.
+- The Console opens in the browser's language the first time (a Thai
+  browser opens in Thai); the language switch still overrides it.
+- Doc-health findings and chat errors are worded by the Console in the
+  person's language instead of showing the server's English text.
+
+**First run**
+- No AI account yet: the new-chat page and the chat say "add an AI account
+  first" with a button to Settings › AI accounts, before anything is sent.
+  Hermes' English "run hermes auth add" reply becomes a Thai callout.
+- Windows: `install.ps1` adds an **HPK Console** shortcut to the Start menu.
+  It starts the container if needed and opens a fresh one-time link.
+- In Docker, a browser that has not been let in sees how to get in (the
+  shortcut), never the sample data; the key banner no longer says
+  `hpk open`.
+- The folder picker starts at your projects folder (`/projects`) in
+  Docker; place names are translated.
+
+**Fixes**
+- Sessions page crashed when there were no chats yet (and the tab title
+  kept the previous page's name).
+- Doc-health rows put the message in the narrow icon column, one word per
+  line.
+- Settings tab bar showed a 1-pixel vertical scrollbar that caught the
+  mouse wheel.
+- A flaky test (`TestLocalOnlyRefusesRemoteSessions`) raced the temp
+  folder cleanup; it now waits for the turn it started.
+
 ## 0.1.1
 
 Windows runs hpk in Docker, in solo mode. Team mode is off for now.

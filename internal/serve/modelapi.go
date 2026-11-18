@@ -106,7 +106,7 @@ func (m *ACPManager) SwitchModel(p *project.Project, hpkID string, o modelswitch
 		ls.streaming = false
 		ls.endStream()
 		if err != nil {
-			ls.log = append(ls.log, &Msg{T: "note", At: now.UnixMilli(), Text: "The model did not change: " + err.Error()})
+			ls.log = append(ls.log, &Msg{T: "note", Kind: "modelError", At: now.UnixMilli(), Text: "The model did not change: " + err.Error()})
 		} else {
 			ls.model, ls.carry, ls.ctxUsed, ls.ctxSize = o.Model.ID, carry, 0, 0
 			ls.log = append(ls.log, &Msg{T: "switch", At: now.UnixMilli(), From: from, To: o.Model.ID, Way: o.Way, Fill: o.Fill})

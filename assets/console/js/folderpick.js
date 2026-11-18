@@ -59,7 +59,7 @@ export function pickFolder({ title, start } = {}) {
         ...trail.flatMap((c, i) => [
           h('span.fp-sep', '/'),
           i === trail.length - 1 ? h('strong.fp-crumb.now', { 'aria-current': 'location' }, c.name) : h('button.fp-crumb', { type: 'button', onclick: () => go(c.path) }, c.name)]));
-      const rows = cur.path ? cur.dirs.map((d) => ({ label: d.name, path: d.path })) : cur.places.map((p) => ({ label: p.label, path: p.path }));
+      const rows = cur.path ? cur.dirs.map((d) => ({ label: d.name, path: d.path })) : cur.places.map((p) => ({ label: p.key ? t('folders.place.' + p.key) : p.label, path: p.path }));
       list.replaceChildren(
         ...(cur.path && cur.parent ? [h('button.fp-item.up', { type: 'button', role: 'option', onclick: () => go(cur.parent) }, icon('up'), h('span', t('folders.up')))] : []),
         ...rows.map((r) => h('button.fp-item', { type: 'button', role: 'option', 'data-tip': r.path, onclick: () => go(r.path) }, icon('folder'), h('span.fp-name', r.label))));

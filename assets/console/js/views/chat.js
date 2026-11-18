@@ -15,6 +15,20 @@ import { h, s, icon, lamp, clock, rel, sessionStatus, avatar, person, toast, fmt
 // "anthropic:claude-opus" → "claude-opus"
 const shortModel = (id) => String(id || '').split(':').pop();
 
+// No AI account in Hermes yet: say what to do first, and the way there (no commands).
+function accountGate() {
+  const box = h('div.acc-gate');
+  const fill = () => box.replaceChildren(...(isLive() && api.noAccounts?.()
+    ? [h('div.callout.caution', icon('warn'), h('div', h('b', t('chat.noAccount.title')), h('p', t('chat.noAccount.body')),
+      h('a.btn.sm.primary', { href: '#/accounts' }, icon('plus'), t('chat.noAccount.add'))))]
+    : []));
+  fill();
+  bus.addEventListener('accounts', fill);
+  return { box, off: () => bus.removeEventListener('accounts', fill) };
+}
+// Hermes' own reply when it has no model account (English, names terminal commands).
+const NO_PROVIDER = /not connected to any AI provider/i;
+
 const MODELS = ['haiku', 'sonnet', 'opus'];
 const EFFORTS = ['low', 'medium', 'high', 'max'];
 const SLASH = ['new', 'split', 'mode', 'model', 'ask', 'effort', 'compress', 'goal', 'title', 'btw', 'stop', 'who', 'wiki', 'help'];
@@ -205,6 +219,11 @@ export default async function chatView({ params, go, rerender }) {
       setTimeout(() => ta.focus(), 0);
     } else {
       // Finished messages show tables, charts, code and the files they name (images, video, 3D, …).
+      if (m.who === 'agent' && !m.streaming && NO_PROVIDER.test(m.text || '')) {
+        bodyEl = h('div.m-body', h('div.callout.caution', icon('warn'), h('div', h('b', t('chat.noAccount.title')), h('p', t('chat.noAccount.sent')),
+          h('a.btn.sm.primary', { href: '#/accounts' }, icon('plus'), t('chat.noAccount.add')),
+          h('details.faint', h('summary', t('chat.noAccount.original')), h('p', m.text)))));
+      } else
       bodyEl = h('div.m-body', { class: m.streaming ? 'caret' : '' }, m.text ? (m.streaming ? md(m.text) : richBlocks(m.text, md)) : m.streaming ? h('span.typing', h('i'), h('i'), h('i')) : '');
       if (m.text && !m.streaming) { const media = mediaFor(m.text); if (media) bodyEl.append(media); }
     }
@@ -336,6 +355,10 @@ export default async function chatView({ params, go, rerender }) {
       const x = api.session(m.session);
       return h('div.chat-note', icon({ steered: 'steer', stopped: 'stop', retried: 'undo', merged: 'git' }[m.action] || 'info'), t('plan.note.' + m.action, { title: x ? x.title : m.session }));
     }
+    if (m.kind === 'turnError' || m.kind === 'modelError') {
+      return h('div.chat-note', icon('warn'), h('span', t('chat.note.' + m.kind)), ' ', h('span.faint', { title: m.text }, t('chat.note.details')));
+    }
+    if (m.kind === 'stopped' && m.text === 'Stopped.') return h('div.chat-note', icon('stop'), t('chat.note.stopped'));
     return h('div.chat-note', icon(m.kind === 'compressed' ? 'compress' : 'info'),
       m.kind === 'compressed' ? t('chat.compressed', { from: fmtTokens(m.from), to: fmtTokens(m.to) }) : m.text);
   };
@@ -744,9 +767,10 @@ export default async function chatView({ params, go, rerender }) {
   bus.addEventListener('chat-meta', onMeta);
   document.addEventListener('keydown', onKey);
 
-  page.append(h('section.chat', head, goalBox, log, composer), side);
+  const gate = accountGate();
+  page.append(h('section.chat', head, goalBox, log, gate.box, composer), side);
   setTimeout(() => { log.scrollTop = log.scrollHeight; if (canChat) input.focus({ preventScroll: true }); }, 0);
-  return { el: page, cleanup: () => { bus.removeEventListener('chat', onChat); bus.removeEventListener('chat-stream', onStream); bus.removeEventListener('chat-meta', onMeta); bus.removeEventListener('sessions', onSessions); clearTimeout(sessTimer); document.removeEventListener('keydown', onKey); } };
+  return { el: page, cleanup: () => { gate.off(); bus.removeEventListener('chat', onChat); bus.removeEventListener('chat-stream', onStream); bus.removeEventListener('chat-meta', onMeta); bus.removeEventListener('sessions', onSessions); clearTimeout(sessTimer); document.removeEventListener('keydown', onKey); } };
 }
 
 // ------------------------------------------------------------ new chat ----
@@ -763,6 +787,7 @@ function newChatView({ go }) {
   const src = (r) => h('span.tag.layer', t('setup.layer.' + r.from));
   const starters = ['plan', 'review', 'yesterday', 'tests'].map((k) => h('button.chip', { type: 'button', onclick: () => { first.value = t('chat.newc.starter.' + k + '.text'); first.focus(); } }, icon('sparkle'), t('chat.newc.starter.' + k + '.label')));
 
+  const ncGate = accountGate();
   let busy = false;
   const start = () => {
     if (busy) return;
@@ -792,6 +817,7 @@ function newChatView({ go }) {
     h('div.nc-hero',
       h('h1', t('chat.newc.ask')),
       h('p.lede', t('chat.newc.lede')),
+      ncGate.box,
       h('div.nc-box', first,
         h('div.nc-bar', h('span.faint.nc-note', t('chat.newc.splitNote')),
           startBtn)),
@@ -807,7 +833,7 @@ function newChatView({ go }) {
           h('div.field', h('label', { for: 'ncEffort' }, t('chat.effort.heading')), sel('ncEffort', EFFORTS.map((v) => [v, t('chat.effort.' + v)]), st.effort, (v) => (st.effort = v))),
           h('label.switch', h('input', { type: 'checkbox', checked: true, onchange: (e) => (st.worktree = e.target.checked) }), t('chat.newc.worktree'))))));
   setTimeout(() => first.focus(), 30);
-  return { el };
+  return { el, cleanup: ncGate.off };
 }
 
 // Team mode: choose who else may read this chat. The board shows every chat;

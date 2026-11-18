@@ -24,6 +24,8 @@ RUN chmod 0755 /opt/hpk \
  && touch /etc/s6-overlay/s6-rc.d/hpk/dependencies.d/base /etc/s6-overlay/s6-rc.d/user/contents.d/hpk
 
 ENV HPK_ADDR=0.0.0.0:7878
+# The person's projects folder, mounted by compose.release.yaml; the folder picker starts there.
+ENV HPK_PROJECTS_DIR=/projects
 # Inside the image hpk never installs itself into a data folder.
 ENV HPK_NO_SELFINSTALL=1
 EXPOSE 7878

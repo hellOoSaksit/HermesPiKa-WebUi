@@ -234,9 +234,13 @@ window.fetch = async (...args) => {
   const res = await nativeFetch(...args);
   if (res.status === 401 && res.headers.get('X-HPK-Need-Key') === '1' && !keyBanner) {
     const { t } = await import('./i18n.js');
+    // In Docker there is no `hpk open`: the Start menu shortcut opens a fresh link.
+    const boxed = await nativeFetch('/api/console-key').then((r) => r.json()).then((j) => !!j.container).catch(() => false);
+    if (keyBanner) return res;
     keyBanner = h('div.key-banner', { role: 'alert' },
       s('svg', { viewBox: '0 0 20 20', 'aria-hidden': 'true' }, s('circle', { cx: 7, cy: 10, r: 3.5 }), s('path', { d: 'M10.5 10H18M15 10v3M17.5 10v2' })),
-      h('div', h('b', t('key.title')), h('p', t('key.body'), ' ', h('code', 'hpk open'))),
+      boxed ? h('div', h('b', t('key.boxedTitle')), h('p', t('key.boxedBody')))
+        : h('div', h('b', t('key.title')), h('p', t('key.body'), ' ', h('code', 'hpk open'))),
       h('button.icon-btn.sm', { type: 'button', 'aria-label': t('common.close'), onclick: () => { keyBanner.remove(); keyBanner = null; } }, '×'));
     document.body.append(keyBanner);
   }

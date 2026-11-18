@@ -24,6 +24,7 @@ type fsEntry struct {
 type fsPlace struct {
 	Label string `json:"label"`
 	Path  string `json:"path"`
+	Key   string `json:"key,omitempty"` // projects | home | documents | desktop | root: the Console words it
 }
 
 // hiddenDir: places the folder picker never shows or opens: system folders
@@ -61,22 +62,29 @@ func (s *Server) hiddenDir(p string) bool {
 
 func (s *Server) fsPlaces() []fsPlace {
 	var out []fsPlace
-	add := func(label, p string) {
+	add := func(label, p, key string) {
 		if st, err := os.Stat(p); err == nil && st.IsDir() && !s.hiddenDir(p) {
-			out = append(out, fsPlace{label, p})
+			out = append(out, fsPlace{label, p, key})
 		}
 	}
+	// In Docker the person's projects folder is mounted here (HPK_PROJECTS_DIR,
+	// /projects); the container's own home is the Hermes home, not theirs.
+	if d := os.Getenv("HPK_PROJECTS_DIR"); d != "" {
+		add("Projects", d, "projects")
+		add("/", "/", "root")
+		return out
+	}
 	if h, err := os.UserHomeDir(); err == nil {
-		add("Home", h)
-		add("Documents", filepath.Join(h, "Documents"))
-		add("Desktop", filepath.Join(h, "Desktop"))
+		add("Home", h, "home")
+		add("Documents", filepath.Join(h, "Documents"), "documents")
+		add("Desktop", filepath.Join(h, "Desktop"), "desktop")
 	}
 	if runtime.GOOS == "windows" {
 		for c := 'A'; c <= 'Z'; c++ {
-			add(string(c)+":", string(c)+":\\")
+			add(string(c)+":", string(c)+":\\", "")
 		}
 	} else {
-		add("/", "/")
+		add("/", "/", "root")
 	}
 	return out
 }

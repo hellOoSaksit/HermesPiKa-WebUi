@@ -30,6 +30,7 @@ type Msg struct {
 	Author    string  `json:"author,omitempty"`
 	At        int64   `json:"at"`
 	Text      string  `json:"text,omitempty"`
+	Kind      string  `json:"kind,omitempty"` // note: turnError | stopped (the Console words it in the person's language)
 	How       string  `json:"how,omitempty"`
 	Streaming bool    `json:"streaming,omitempty"`
 	Name      string  `json:"name,omitempty"`    // tool
@@ -315,9 +316,9 @@ func (m *ACPManager) run(c *acp.Client, ls *liveSession, text string) {
 	ls.streaming = false
 	ls.endStream()
 	if err != nil {
-		ls.log = append(ls.log, &Msg{T: "note", At: time.Now().UnixMilli(), Text: "The turn ended with an error: " + err.Error()})
+		ls.log = append(ls.log, &Msg{T: "note", Kind: "turnError", At: time.Now().UnixMilli(), Text: "The turn ended with an error: " + err.Error()})
 	} else if reason == "cancelled" {
-		ls.log = append(ls.log, &Msg{T: "note", At: time.Now().UnixMilli(), Text: "Stopped."})
+		ls.log = append(ls.log, &Msg{T: "note", Kind: "stopped", At: time.Now().UnixMilli(), Text: "Stopped."})
 	}
 	proj, hpkID := ls.project, ls.hpkID
 	m.mu.Unlock()

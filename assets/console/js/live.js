@@ -322,6 +322,8 @@ function patchPages() {
     return res;
   };
   api.credentials().catch(() => {}); // fills the badge and the account shown in chat
+  // true once Hermes' pool was read and holds no account (unknown counts as "has one", so no false alarm)
+  api.noAccounts = () => accountsLoaded && store.accounts.length === 0;
 
   // Structure: Hermes profiles are real; hpk has one process (its defaults) until processes ship.
   api.loadStructure = async () => {
@@ -389,6 +391,9 @@ export async function connect() {
   try {
     const health = await getJSON('/api/health');
     if (health.status !== 'ok') return false;
+    // hpk in Docker answers nothing to a browser it hasn't let in: show how to get in, never sample data.
+    const key = await getJSON('/api/console-key').catch(() => ({}));
+    if (key.container && !key.ok) { location.replace('/needkey-docker.html'); return new Promise(() => {}); }
     const me = await getJSON('/api/me').catch(() => ({}));
     teamOn = !!me.team;
     if (me.team && me.signedIn === false) { signin = me.auth || 'token'; return false; }

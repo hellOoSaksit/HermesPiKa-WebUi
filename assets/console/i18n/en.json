@@ -211,7 +211,9 @@
       "claimNote": "Before it starts, hpk checks the board. If someone already holds this work, you will be asked what to do.",
       "start": "Start session",
       "started": "Started “{title}”. It will appear on the board once it claims its paths."
-    }
+    },
+    "empty": "No chats yet. Start one and its sub-tasks will show up here.",
+    "emptyStart": "Start a chat"
   },
   "chat": {
     "logAria": "Conversation",
@@ -539,6 +541,19 @@
       "started": "{m} is on it. The answer comes back here as a summary.",
       "crossTitle": "Ask a model from another provider?",
       "crossBody": "Asking {m} sends the question and this chat's brief to {p}, another provider. This chat stays on its own model."
+    },
+    "noAccount": {
+      "title": "Add an AI account first",
+      "body": "Hermes has no AI account yet, so the agent cannot answer. Add one in Settings › AI accounts, then start the chat.",
+      "sent": "Hermes has no AI account yet, so this message was not answered. Add an account, then send it again.",
+      "add": "Add an AI account",
+      "original": "Hermes' original message"
+    },
+    "note": {
+      "turnError": "This turn stopped with an error. Send the message again; if it keeps happening, check Settings › AI accounts.",
+      "modelError": "The model did not change. The chat goes on with the model it had.",
+      "details": "(details)",
+      "stopped": "Stopped."
     }
   },
   "approvals": {
@@ -1837,7 +1852,7 @@
     },
     "noSources": "No documents found to read. You can still add the project.",
     "priceNote": "Estimate at ${price} per million tokens; the real price depends on the model.",
-    "healthLede": "Checks the project's own documents against its files: missing READMEs, broken links, paths that no longer exist. 0 tokens.",
+    "healthLede": "Checks the project's documents against its real files: missing README, broken links, paths that no longer exist. Uses 0 tokens.",
     "healthClean": "No problems found in the documents.",
     "health": {
       "no-readme": "no README",
@@ -1919,7 +1934,14 @@
     "notifyTest": "Send a test",
     "notifySent": "Sent. Check the channel.",
     "runNowConfirm": "Run the {name} job now? Its script runs first (0 tokens); if there is new work, Hermes runs a model, up to {budget} tokens.",
-    "editRedactHint": "This is the copy that goes to the shared wiki. Remove anything that points back to this project. Text that looks like a secret is refused."
+    "editRedactHint": "This is the copy that goes to the shared wiki. Remove anything that points back to this project. Text that looks like a secret is refused.",
+    "healthMsg": {
+      "no-readme": "The project has no README at its root.",
+      "broken-link": "Links to {target}, which does not exist.",
+      "missing-file": "Mentions {target}, which is not in the project.",
+      "duplicate-rule": "\"{target}\" is repeated in {files}. Keep it in one place.",
+      "undocumented": "No document mentions {target}."
+    }
   },
   "git": {
     "title": "Git",
@@ -2646,7 +2668,9 @@
   },
   "key": {
     "title": "This browser can look but not change anything",
-    "body": "Changes need the Console opened from hpk. In a terminal run"
+    "body": "Changes need the Console opened from hpk. In a terminal run",
+    "boxedTitle": "Open HPK Console from its shortcut first",
+    "boxedBody": "This browser has not been let in yet. Open \"HPK Console\" from the Start menu: it starts hpk if needed and lets this browser in for 30 days."
   },
   "folders": {
     "title": "Choose a folder",
@@ -2674,6 +2698,13 @@
       "label": "Recordings location",
       "hint": "Browser recordings move to the new folder. Stop the browser first.",
       "apply": "Move recordings here"
+    },
+    "place": {
+      "projects": "My projects",
+      "home": "Home",
+      "documents": "Documents",
+      "desktop": "Desktop",
+      "root": "Whole system (/)"
     }
   },
   "files": {

@@ -34,7 +34,7 @@ irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/in
 ```
 
 3. The script downloads `compose.release.yaml`, checks it against the published SHA-256 checksum, saves it with your settings in `%USERPROFILE%\hpk`, and starts the container. The first time this takes a few minutes.
-4. It opens HPK Console in your browser with a one-time link. That signs this browser in for 30 days. hpk runs in solo mode (one person, this computer only), so there is no account or password.
+4. It opens HPK Console in your browser with a one-time link. That signs this browser in for 30 days. hpk runs in solo mode (one person, this computer only), so there is no account or password. Next time, open it from the Start menu: **HPK Console**. The shortcut starts hpk if needed and opens a fresh link, so you never type a command.
 
 Your `Documents` folder is the Console's `/projects` folder. To add a project in `Documents\my-app`, enter `/projects/my-app`. To use another folder, set `HPK_PROJECTS` (for example `$env:HPK_PROJECTS='D:\work'`) before you run the script the first time, or change `HPK_PROJECTS` in `%USERPROFILE%\hpk\.env` and run `docker compose -f compose.release.yaml up -d` in that folder. The container starts again by itself whenever Docker Desktop runs.
 

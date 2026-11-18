@@ -35,6 +35,14 @@ export function newChildDrawer(parentId) {
 
 export default async function sessionsView({ go }) {
   const [list, lanes, approvals, claims] = await Promise.all([api.sessions(), api.lanes(), api.approvals(), api.claims()]);
+  // No chats yet: say so and offer the one next step, instead of a tree with nothing to select.
+  if (!list.length) {
+    return { el: h('div.page',
+      pageHead(t('sessions.title'), t('sessions.lede')),
+      h('section.panel', h('div.empty',
+        h('p', t('sessions.empty')),
+        h('a.btn.primary', { href: '#/chat/new' }, icon('plus'), t('sessions.emptyStart'))))) };
+  }
   const kids = buildTree(list);
   let selected = list.find((x) => x.status === 'waiting')?.id || list[0].id;
   let tab = 'tree';

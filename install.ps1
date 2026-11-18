@@ -119,11 +119,29 @@ function Install-Hpk {
             }
         } finally { Pop-Location }
 
+        # Start menu shortcut "HPK Console": starts the container if needed and
+        # opens the Console with a fresh one-time link, so nobody types a command.
+        # A plain -Command (no hidden window, no execution-policy bypass).
+        $open = "Set-Location -LiteralPath '$($dir.Replace("'", "''"))'; Write-Host 'Opening HPK Console...'; " +
+            "docker compose -f $compose up -d; " +
+            "for (`$i = 0; `$i -lt 40; `$i++) { `$l = (docker compose -f $compose exec -T hermes cat /opt/data/hpk/console-link) -join ''; " +
+            "if (`$l -match 'http://127\.0\.0\.1:\d+/k/[0-9a-f]+') { Start-Process `$Matches[0]; exit }; Start-Sleep -Seconds 3 }; " +
+            "Write-Host 'HPK Console did not start. Is Docker Desktop running?'; Read-Host 'Enter'"
+        try {
+            $lnk = Join-Path ([Environment]::GetFolderPath('Programs')) 'HPK Console.lnk'
+            $sc = (New-Object -ComObject WScript.Shell).CreateShortcut($lnk)
+            $sc.TargetPath = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+            $sc.Arguments = '-NoProfile -Command "' + $open.Replace('"', '\"') + '"'
+            $sc.WorkingDirectory = $dir
+            $sc.Description = 'Open HPK Console'
+            $sc.Save()
+            Write-Host 'Added "HPK Console" to the Start menu.'
+        } catch { Write-Host "Could not add a Start menu shortcut ($($_.Exception.Message))." }
+
         $url = 'http://127.0.0.1:7878'
         Write-Host ''
         Write-Host "HPK Console is running at $url"
-        Write-Host 'To open it in another browser, print a new one-time link (valid 10 minutes):'
-        Write-Host "  cd `"$dir`"; docker compose -f $compose exec hermes cat /opt/data/hpk/console-link"
+        Write-Host 'Next time, open it from the Start menu: "HPK Console".'
         if ($link) { $url = $link } else { Write-Host 'The Console is still starting; run that command in a minute.' }
         Write-Host "Your projects are in /projects inside the Console (your $((Get-Content -LiteralPath $envFile | Where-Object { $_ -like 'HPK_PROJECTS=*' }) -replace '^HPK_PROJECTS=', '') folder)."
         Write-Host "Add a model account: cd `"$dir`"; docker compose -f $compose exec -u hermes hermes hermes auth add <provider>"

@@ -8,7 +8,7 @@ uses).
 ## Quick start (one person, one computer)
 
 Use the released image with `compose.release.yaml`, which is attached to every
-release (`ghcr.io/helloosaksit/hpk-hermes:0.1.1`, Hermes Agent and hpk
+release (`ghcr.io/helloosaksit/hpk-hermes:0.1.2`, Hermes Agent and hpk
 together in solo mode, the Console on http://127.0.0.1:7878). In an empty folder, download
 it (macOS/Linux):
 

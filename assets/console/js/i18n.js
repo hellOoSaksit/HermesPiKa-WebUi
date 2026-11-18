@@ -22,7 +22,9 @@ async function load(code) {
 export async function initI18n() {
   fallback = await load(DEFAULT);
   const fromUrl = new URLSearchParams(location.search).get('lang');
-  const saved = fromUrl || read();
+  // Nothing chosen yet: start in the browser's language when we have it (a Thai browser opens in Thai).
+  const browser = (navigator.languages || [navigator.language || '']).map((x) => String(x).slice(0, 2).toLowerCase()).find((c) => LANGS.some((l) => l.code === c));
+  const saved = fromUrl || read() || browser;
   lang = LANGS.some((l) => l.code === saved) ? saved : DEFAULT;
   dict = lang === DEFAULT ? fallback : await load(lang).catch(() => fallback);
   document.documentElement.lang = lang;

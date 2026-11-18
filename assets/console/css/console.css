@@ -904,7 +904,7 @@ html[data-motion="off"] .blk-flow, html[data-motion="off"] .blk-alarm { display:
 
 /* ---------- Distill pass: fewer, clearer surfaces ---------- */
 /* Section tabs: one row above pages that share a nav item. */
-.section-tabs { max-width: 1440px; margin: -6px auto 20px; display: flex; gap: 4px; border-bottom: 1px solid var(--seam); overflow-x: auto; }
+.section-tabs { max-width: 1440px; margin: -6px auto 20px; display: flex; gap: 4px; border-bottom: 1px solid var(--seam); overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
 .section-tabs a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 12px; margin-bottom: -1px; color: var(--text-2); text-decoration: none; font-size: var(--fs-13); font-weight: 600; border-bottom: 2px solid transparent; white-space: nowrap; }
 .section-tabs a:hover { color: var(--text); }
 .section-tabs .nav-off { display: inline-flex; align-items: center; gap: 8px; padding: 9px 12px; margin-bottom: -1px; color: var(--text-3, var(--text-2)); opacity: .55; cursor: not-allowed; font-size: var(--fs-13); font-weight: 600; white-space: nowrap; }

@@ -316,7 +316,9 @@ async function liveWizard({ go }) {
       const list = st.scan.health || [];
       body.replaceChildren(h('h2', t('wizard.health.title')), h('p.muted', t('live.healthLede')),
         list.length ? h('ul.signals', { style: { border: '1px solid var(--seam)', borderRadius: '8px', background: 'var(--panel)' } }, list.map((f) => h('li.signal-item',
-          h('div.s-title', f.detail),
+          // three columns: mark · finding (in the person's language) · kind
+          h('span.sig', lamp(f.kind === 'no-readme' || f.kind === 'undocumented' ? 'route' : 'caution')),
+          h('div.s-title', f.target || f.kind === 'no-readme' ? t('live.healthMsg.' + f.kind, { target: f.target || '', files: (f.files || []).join(', ') }) : f.detail),
           h('span.tag', { class: f.kind === 'no-readme' || f.kind === 'undocumented' ? 'route' : 'caution' }, t('live.health.' + f.kind)),
           f.file ? h('div.s-meta', h('code', f.file + (f.line ? ':' + f.line : ''))) : null)))
           : h('div.callout', icon('check'), h('div', t('live.healthClean'))),

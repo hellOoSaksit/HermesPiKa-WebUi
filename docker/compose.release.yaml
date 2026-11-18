@@ -31,7 +31,7 @@
 name: hpk-hermes
 services:
   hermes:
-    image: ghcr.io/helloosaksit/hpk-hermes:0.1.1
+    image: ghcr.io/helloosaksit/hpk-hermes:0.1.2
     environment:
       HPK_MODE: solo
       HERMES_UID: ${HERMES_UID:-10000}

@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"hpk.local/hpk/internal/acp"
 	"hpk.local/hpk/internal/project"
@@ -173,4 +174,14 @@ func TestLocalOnlyRefusesRemoteSessions(t *testing.T) {
 	if res.StatusCode != 200 || !launched {
 		t.Fatalf("a local model may start: %d %v", res.StatusCode, out)
 	}
+	// The started turn keeps writing into the project folder (log, notice) in the
+	// background; let it finish so removing the temp folder does not race it.
+	id := fmt.Sprint(out["id"])
+	for i := 0; i < 100; i++ {
+		if _, ok, streaming := s.acp.Transcript(id); !ok || !streaming {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	time.Sleep(300 * time.Millisecond)
 }

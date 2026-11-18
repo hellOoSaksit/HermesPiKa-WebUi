@@ -23,6 +23,11 @@ type Finding struct {
 	File   string `json:"file,omitempty"`
 	Line   int    `json:"line,omitempty"`
 	Detail string `json:"detail"`
+	// Target is what the finding is about (a link, a path, a folder or a
+	// repeated rule), and Files where a rule repeats, so the Console can word
+	// the finding in the person's language instead of showing Detail.
+	Target string   `json:"target,omitempty"`
+	Files  []string `json:"files,omitempty"`
 }
 
 var (
@@ -35,6 +40,9 @@ func Health(r scan.Result) []Finding {
 	var out []Finding
 	add := func(kind, file string, line int, detail string) {
 		out = append(out, Finding{Kind: kind, File: file, Line: line, Detail: detail})
+	}
+	about := func(target string, files ...string) { // fills in the last finding added
+		out[len(out)-1].Target, out[len(out)-1].Files = target, files
 	}
 	exists := func(rel string) bool {
 		_, err := os.Stat(filepath.Join(r.Root, filepath.FromSlash(rel)))
@@ -93,12 +101,14 @@ func Health(r scan.Result) []Finding {
 				rel := path.Clean(path.Join(dir, target))
 				if !strings.HasPrefix(rel, "../") && !exists(rel) {
 					add("broken-link", s.Path, i+1, "links to "+target+", which does not exist")
+					about(target)
 				}
 			}
 			for _, m := range codePath.FindAllStringSubmatch(line, -1) {
 				p := m[1]
 				if !mentioned(p) && !exists(path.Join(dir, p)) {
 					add("missing-file", s.Path, i+1, "mentions "+p+", which is not in the project")
+					about(p)
 				}
 			}
 		}
@@ -106,15 +116,20 @@ func Health(r scan.Result) []Finding {
 	if !hasReadme {
 		add("no-readme", "", 0, "the project has no README at its root")
 	}
-	var dups []string
+	type dup struct {
+		text, line string
+		files      []string
+	}
+	var dups []dup
 	for line, files := range controlLines {
 		if len(files) >= 2 {
-			dups = append(dups, fmt.Sprintf("%q is repeated in %s", truncate(line, 80), strings.Join(files, ", ")))
+			dups = append(dups, dup{fmt.Sprintf("%q is repeated in %s", truncate(line, 80), strings.Join(files, ", ")), truncate(line, 80), files})
 		}
 	}
-	sort.Strings(dups)
+	sort.Slice(dups, func(i, j int) bool { return dups[i].text < dups[j].text })
 	for _, d := range dups {
-		add("duplicate-rule", "", 0, d+" — keep it in one place")
+		add("duplicate-rule", "", 0, d.text+" — keep it in one place")
+		about(d.line, d.files...)
 	}
 	docs := allDocs.String()
 	for _, d := range r.TopDirs {
@@ -123,6 +138,7 @@ func Health(r scan.Result) []Finding {
 		}
 		if !strings.Contains(docs, strings.ToLower(d)+"/") && !strings.Contains(docs, "`"+strings.ToLower(d)+"`") {
 			add("undocumented", d+"/", 0, "no document mentions "+d+"/")
+			about(d + "/")
 		}
 	}
 	sort.SliceStable(out, func(i, j int) bool { return out[i].Kind < out[j].Kind })

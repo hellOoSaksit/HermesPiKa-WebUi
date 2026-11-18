@@ -185,7 +185,8 @@ func (s *Server) consoleKeyRoutes(mux *http.ServeMux) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	})
 	mux.HandleFunc("GET /api/console-key", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, map[string]any{"needed": s.keys != nil && s.teamConfig() == nil, "ok": s.keys != nil && s.keys.valid(r)})
+		// container: hpk runs in Docker, so the way to a new link is the "HPK Console" shortcut, not `hpk open`
+		writeJSON(w, map[string]any{"needed": s.keys != nil && s.teamConfig() == nil, "ok": s.keys != nil && s.keys.valid(r), "container": s.boxed})
 	})
 	mux.HandleFunc("POST /api/console-key/forget", func(w http.ResponseWriter, r *http.Request) {
 		if s.keys != nil {
