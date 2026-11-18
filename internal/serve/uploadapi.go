@@ -14,7 +14,9 @@ import (
 	"strings"
 
 	"hpk.local/hpk/internal/folders"
+	"hpk.local/hpk/internal/places"
 	"hpk.local/hpk/internal/project"
+	"hpk.local/hpk/internal/safepath"
 )
 
 const defaultUploadMax = int64(2 << 30) // 2 GB per file
@@ -28,56 +30,13 @@ func uploadMax(p *project.Project) int64 {
 	return v
 }
 
-// uploadName checks a name sent by the browser: one plain file name, nothing hidden,
-// nothing Windows would reinterpret, no key or credential files.
+// uploadName checks a name sent by the browser: one plain file name by the
+// same rules as every project path (safepath.Name).
 func uploadName(name string) error {
-	if name == "" || strings.ContainsAny(name, "/\\:\x00<>\"|?*") || strings.ContainsFunc(name, func(r rune) bool { return r < 32 }) {
-		return errors.New("that file name is not allowed")
+	if err := safepath.Name(name); err != nil {
+		return errors.New("that file name is not allowed: " + err.Error())
 	}
-	if name == "." || name == ".." {
-		return errors.New("that file name is not allowed")
-	}
-	return allowedParts(name)
-}
-
-// uploadDir resolves a project-relative folder for writing: it must stay inside
-// the project after following links, and is created when missing.
-func uploadDir(root, rel string) (string, error) {
-	realRoot, err := filepath.EvalSymlinks(root)
-	if err != nil {
-		return "", err
-	}
-	if rel == "" {
-		return realRoot, nil
-	}
-	if err := allowedParts(rel); err != nil {
-		return "", err
-	}
-	dest := filepath.Join(realRoot, filepath.FromSlash(rel))
-	// the nearest folder that already exists must not lead out of the project
-	probe := dest
-	for {
-		if _, err := os.Lstat(probe); err == nil {
-			break
-		}
-		next := filepath.Dir(probe)
-		if next == probe {
-			return "", errors.New("that folder is outside the project")
-		}
-		probe = next
-	}
-	real, err := filepath.EvalSymlinks(probe)
-	if err != nil || (real != realRoot && !strings.HasPrefix(real, realRoot+string(filepath.Separator))) {
-		return "", errors.New("that folder is outside the project")
-	}
-	if err := os.MkdirAll(dest, 0o755); err != nil {
-		return "", err
-	}
-	real, err = filepath.EvalSymlinks(dest)
-	if err != nil || (real != realRoot && !strings.HasPrefix(real, realRoot+string(filepath.Separator))) {
-		return "", errors.New("that folder is outside the project")
-	}
-	return real, nil
+	return nil
 }
 
 // numbered returns "name (n).ext" for n >= 2.
@@ -182,9 +141,14 @@ func saveOne(w http.ResponseWriter, part io.Reader, dir, name string, max int64)
 
 // POST /api/files/upload?project=: multipart, field "file" (repeatable). Each file
 // goes to the folder the approved folder rules name for its extension, else the
-// project root. Never overwrites. Solo mode only, like the folder picker.
+// project root. Never overwrites. Solo mode only, like the folder picker. When a
+// file fails part-way through, the error answer still lists the files saved
+// before it ({error, files}).
 // GET /api/files/list?project=&path=: the visible entries of a project folder,
 // each file marked with the rule folder it belongs in.
+//
+// Both act on the project folder as checked again now (places.Root) and reach
+// folders inside it only through safepath, which never follows a link or junction.
 func (s *Server) uploadAPI(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/files/upload", func(w http.ResponseWriter, r *http.Request) {
 		if !s.personalOn() {
@@ -196,8 +160,9 @@ func (s *Server) uploadAPI(mux *http.ServeMux) {
 			writeErr(w, http.StatusNotFound, err)
 			return
 		}
-		if p.Root == "" {
-			writeErr(w, http.StatusBadRequest, errors.New("this project has no folder"))
+		root, err := places.Root(s.home, p)
+		if err != nil {
+			writeErr(w, http.StatusBadRequest, err)
 			return
 		}
 		mr, err := r.MultipartReader()
@@ -208,13 +173,16 @@ func (s *Server) uploadAPI(mux *http.ServeMux) {
 		rules, state := folders.Load(s.home, p)
 		max := uploadMax(p)
 		out := []uploaded{}
+		fail := func(code int, err error) {
+			writeJSON2(w, code, map[string]any{"error": err.Error(), "files": out})
+		}
 		for {
 			part, err := mr.NextPart()
 			if err == io.EOF {
 				break
 			}
 			if err != nil {
-				writeErr(w, http.StatusBadRequest, errors.New("the upload was cut off"))
+				fail(http.StatusBadRequest, errors.New("the upload was cut off"))
 				return
 			}
 			if part.FormName() != "file" {
@@ -224,25 +192,25 @@ func (s *Server) uploadAPI(mux *http.ServeMux) {
 			_, params, _ := mime.ParseMediaType(part.Header.Get("Content-Disposition"))
 			name := params["filename"]
 			if err := uploadName(name); err != nil {
-				writeErr(w, http.StatusBadRequest, err)
+				fail(http.StatusBadRequest, fmt.Errorf("%q: %w", name, err))
 				return
 			}
 			folder := ""
 			if state == folders.OK {
 				folder, _ = rules.For(name)
 			}
-			dir, err := uploadDir(p.Root, folder)
+			dir, err := safepath.Dir(root, folder, true)
 			if err != nil {
-				writeErr(w, http.StatusBadRequest, err)
+				fail(http.StatusBadRequest, fmt.Errorf("the folder %s: %w", folder, err))
 				return
 			}
 			got, err := saveOne(w, part, dir, name, max)
 			if err != nil {
 				var tooBig *http.MaxBytesError
 				if errors.As(err, &tooBig) {
-					writeErr(w, http.StatusRequestEntityTooLarge, fmt.Errorf("%s is larger than the limit of %d bytes", name, max))
+					fail(http.StatusRequestEntityTooLarge, fmt.Errorf("%s is larger than the limit of %d bytes", name, max))
 				} else {
-					writeErr(w, http.StatusBadRequest, errors.New("the upload was cut off"))
+					fail(http.StatusBadRequest, errors.New("the upload was cut off"))
 				}
 				return
 			}
@@ -265,31 +233,16 @@ func (s *Server) uploadAPI(mux *http.ServeMux) {
 			writeErr(w, http.StatusNotFound, err)
 			return
 		}
-		if p.Root == "" {
-			writeErr(w, http.StatusBadRequest, errors.New("this project has no folder"))
+		root, err := places.Root(s.home, p)
+		if err != nil {
+			writeErr(w, http.StatusBadRequest, err)
 			return
 		}
 		rel := strings.Trim(strings.ReplaceAll(r.URL.Query().Get("path"), "\\", "/"), "/")
-		realRoot, err := filepath.EvalSymlinks(p.Root)
+		dir, err := safepath.Dir(root, rel, false)
 		if err != nil {
-			writeErr(w, http.StatusNotFound, err)
+			writeErr(w, http.StatusBadRequest, fmt.Errorf("no such folder in the project: %w", err))
 			return
-		}
-		dir := realRoot
-		if rel != "" {
-			if strings.ContainsAny(rel, "~:\x00") {
-				writeErr(w, http.StatusBadRequest, errors.New("give the folder's plain path"))
-				return
-			}
-			if err := allowedParts(rel); err != nil {
-				writeErr(w, http.StatusBadRequest, err)
-				return
-			}
-			dir, err = filepath.EvalSymlinks(filepath.Join(realRoot, filepath.FromSlash(rel)))
-			if err != nil || (dir != realRoot && !strings.HasPrefix(dir, realRoot+string(filepath.Separator))) {
-				writeErr(w, http.StatusBadRequest, errors.New("no such folder in the project"))
-				return
-			}
 		}
 		ents, err := os.ReadDir(dir)
 		if err != nil {
@@ -306,11 +259,11 @@ func (s *Server) uploadAPI(mux *http.ServeMux) {
 		}
 		list := []entry{}
 		for _, e := range ents {
-			if allowedParts(e.Name()) != nil || e.Type()&os.ModeSymlink != 0 {
+			if safepath.Name(e.Name()) != nil {
 				continue
 			}
 			fi, err := e.Info()
-			if err != nil {
+			if err != nil || safepath.IsLink(filepath.Join(dir, e.Name()), fi) {
 				continue
 			}
 			en := entry{Name: e.Name(), Dir: fi.IsDir(), Mtime: fi.ModTime().Unix()}

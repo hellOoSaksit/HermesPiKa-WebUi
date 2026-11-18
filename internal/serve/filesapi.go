@@ -8,18 +8,19 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
+
+	"hpk.local/hpk/internal/places"
+	"hpk.local/hpk/internal/safepath"
 )
 
 // GET /api/files?project=<name>&path=<path in the project>
 //
 // Lets the chat show what the agent made (a render, an .fbx with its textures,
 // a video, a chart's CSV) straight from the project folder. Read only, and only
-// inside the project's root after following links; hidden files and folders
-// (.git, .env, …) and key files are never served. Responses are sandboxed so an
-// SVG or HTML file cannot run script on the Console's origin.
-var secretFileRE = regexp.MustCompile(`(?i)(^id_[a-z0-9_]+(\.pub)?$|\.(pem|key|p12|pfx|kdbx|keystore|jks|env|tfstate|tfvars|ppk|asc|gpg)$|\.tfstate\.|^credentials|^service-?account.*\.json$|secrets?\.(json|ya?ml|toml)$|^\.?(npmrc|pypirc|netrc|pgpass|htpasswd)$)`)
+// inside the project's root, never through a link or junction; hidden files and
+// folders (.git, .env, …) and key files are never served (safepath). Responses
+// are sandboxed so an SVG or HTML file cannot run script on the Console's origin.
 
 const maxAttachments = 20
 
@@ -37,45 +38,24 @@ func registerFileTypes() {
 	}
 }
 
-// projectFile resolves rel inside root, refusing anything outside it or hidden.
+// projectFile resolves rel inside root by safepath: plain names only (no
+// hidden, key, device or 8.3 names, no alternate streams), and no link or
+// junction anywhere on the way.
 func projectFile(root, rel string) (string, os.FileInfo, error) {
 	if root == "" {
 		return "", nil, errors.New("this project has no folder")
 	}
-	rel = filepath.FromSlash(strings.TrimPrefix(strings.ReplaceAll(rel, "\\", "/"), "/"))
-	if rel == "" || filepath.IsAbs(rel) || strings.Contains(rel, "\x00") {
+	rel = strings.TrimPrefix(strings.ReplaceAll(rel, "\\", "/"), "/")
+	if rel == "" || filepath.IsAbs(rel) {
 		return "", nil, errors.New("give a path inside the project")
 	}
-	// Windows tricks: 8.3 short names (GIT~1), alternate streams (a::$DATA),
-	// names Win32 trims (x.pem. / "x.pem "). Refused outright.
-	if strings.ContainsAny(rel, "~:") {
-		return "", nil, errors.New("give the file's plain path")
-	}
-	if err := allowedParts(rel); err != nil {
-		return "", nil, err
-	}
-	realRoot, err := filepath.EvalSymlinks(root)
+	realRoot, err := safepath.Root(root)
 	if err != nil {
 		return "", nil, err
 	}
-	full, err := filepath.EvalSymlinks(filepath.Join(realRoot, rel))
+	full, fi, err := safepath.File(realRoot, rel)
 	if err != nil {
-		return "", nil, errors.New("no such file in the project")
-	}
-	if full != realRoot && !strings.HasPrefix(full, realRoot+string(filepath.Separator)) {
-		return "", nil, errors.New("that file is outside the project")
-	}
-	// a link inside the project may point at .env or .git/config: check where it lands
-	inside, err := filepath.Rel(realRoot, full)
-	if err != nil {
-		return "", nil, errors.New("that file is outside the project")
-	}
-	if err := allowedParts(inside); err != nil {
 		return "", nil, err
-	}
-	fi, err := os.Stat(full)
-	if err != nil || fi.IsDir() {
-		return "", nil, errors.New("no such file in the project")
 	}
 	if fi.Size() > maxServe {
 		return "", nil, errors.New("file is larger than 1 GB")
@@ -90,7 +70,12 @@ func (s *Server) filesAPI(mux *http.ServeMux) {
 			writeErr(w, http.StatusNotFound, err)
 			return
 		}
-		full, fi, err := projectFile(p.Root, r.URL.Query().Get("path"))
+		root, err := places.Root(s.home, p)
+		if err != nil {
+			writeErr(w, http.StatusNotFound, err)
+			return
+		}
+		full, fi, err := projectFile(root, r.URL.Query().Get("path"))
 		if err != nil {
 			writeErr(w, http.StatusNotFound, err)
 			return
@@ -119,43 +104,4 @@ func (s *Server) filesAPI(mux *http.ServeMux) {
 		}
 		http.ServeContent(w, r, fi.Name(), fi.ModTime(), f)
 	})
-}
-
-// allowedParts refuses hidden components, components Windows would trim, and
-// key/credential file names, anywhere in a project-relative path.
-// reservedDevice reports Windows device names (CON, NUL, COM1, AUX.txt …); refused
-// on every OS so a project folder stays usable on Windows.
-func reservedDevice(part string) bool {
-	base := strings.ToUpper(part)
-	if i := strings.IndexByte(base, '.'); i >= 0 {
-		base = base[:i]
-	}
-	base = strings.TrimRight(base, " ")
-	switch base {
-	case "CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$":
-		return true
-	}
-	if len(base) == 4 && (strings.HasPrefix(base, "COM") || strings.HasPrefix(base, "LPT")) && base[3] >= '0' && base[3] <= '9' {
-		return true
-	}
-	return false
-}
-
-func allowedParts(rel string) error {
-	parts := strings.Split(filepath.ToSlash(rel), "/")
-	for _, part := range parts {
-		if part == ".." || strings.HasPrefix(part, ".") {
-			return errors.New("hidden files and folders are not shown")
-		}
-		if reservedDevice(part) {
-			return errors.New("that name is reserved on Windows")
-		}
-		if strings.HasSuffix(part, ".") || strings.HasSuffix(part, " ") {
-			return errors.New("give the file's plain path")
-		}
-	}
-	if secretFileRE.MatchString(parts[len(parts)-1]) {
-		return errors.New("key and credential files are not shown")
-	}
-	return nil
 }

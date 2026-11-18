@@ -2711,6 +2711,16 @@
       "one": "Put 1 file back",
       "other": "Put {n} files back"
     },
+    "undoTitle": "Undo the last tidy",
+    "undoHint": "These files go back where they were. A file changed since the tidy stays where it is.",
+    "undoConfirm": {
+      "one": "Move 1 file back",
+      "other": "Move {n} files back"
+    },
+    "uploadPartial": {
+      "one": "1 file was saved before the error",
+      "other": "{n} files were saved before the error"
+    },
     "tidy": {
       "button": "Tidy",
       "title": "Tidy files",

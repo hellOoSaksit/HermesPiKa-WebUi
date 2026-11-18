@@ -201,7 +201,13 @@ function patch() {
     x.responseType = 'json';
     x.upload.onprogress = (e) => { if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total); };
     x.onerror = () => reject(new Error('network'));
-    x.onload = () => (x.status >= 200 && x.status < 300 ? resolve(x.response || { files: [] }) : reject(new Error((x.response && x.response.error) || x.statusText)));
+    x.onload = () => {
+      if (x.status >= 200 && x.status < 300) { resolve(x.response || { files: [] }); return; }
+      // a failure part-way through still says which files were saved before it
+      const e = new Error((x.response && x.response.error) || x.statusText);
+      e.files = (x.response && x.response.files) || [];
+      reject(e);
+    };
     x.send(fd);
   });
   api.listFiles = (project, path = '') => getJSON('/api/files/list?' + new URLSearchParams({ ...(project ? { project } : {}), path }));
@@ -216,7 +222,9 @@ function patch() {
     return { state: 'ok', ...out };
   };
   api.tidyApply = (project, moves) => postJSON('/api/files/tidy', { project, moves });
-  api.tidyUndo = (project) => postJSON('/api/files/tidy/undo', { project });
+  // Undo shows what it would put back first; the POST names that round (at).
+  api.tidyUndoPlan = (project) => getJSON('/api/files/tidy/undo' + pq(project));
+  api.tidyUndo = (project, at) => postJSON('/api/files/tidy/undo', { project, at });
 
   // Model switching: hpk serve plans with Hermes' model list and models.dev facts.
   const sp = (sid) => `/api/sessions/${encodeURIComponent(sid)}`;

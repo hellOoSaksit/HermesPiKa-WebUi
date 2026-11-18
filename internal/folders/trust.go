@@ -7,11 +7,15 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"hpk.local/hpk/internal/isolate"
+	"hpk.local/hpk/internal/places"
 	"hpk.local/hpk/internal/project"
+	"hpk.local/hpk/internal/safepath"
 	"hpk.local/hpk/internal/wiki"
 )
 
@@ -25,12 +29,15 @@ const (
 	Changed State = "changed" // the page differs from the approved one, or was never approved
 )
 
-// TrustedDir holds the approved hashes. The AI's account gets it read-only.
-func TrustedDir(home string) string { return filepath.Join(home, "hpk", "trusted") }
+// TrustedDir holds the approved hashes for the AI's side. The AI's account gets
+// it read-only; hpk itself reads its own copy (isolate.OwnTrustedDir).
+func TrustedDir(home string) string { return isolate.TrustedDir(home) }
 
-// TrustFile is where the approved hash of project name's rules page is kept.
+func trustName(name string) string { return "folders-" + name + ".sha256" }
+
+// TrustFile is the AI's-side copy of the approved hash of project name's rules page.
 func TrustFile(home, name string) string {
-	return filepath.Join(TrustedDir(home), "folders-"+name+".sha256")
+	return filepath.Join(TrustedDir(home), trustName(name))
 }
 
 func pagePath(p *project.Project) string {
@@ -49,7 +56,8 @@ func bodyOf(raw []byte) string {
 	return string(raw)
 }
 
-// Load returns the rules and their state. Rules are usable only when the state is OK.
+// Load returns the rules and their state. Rules are usable only when the state
+// is OK: the page's hash equals the one saved when the person approved it.
 func Load(home string, p *project.Project) (Rules, State) {
 	raw, err := os.ReadFile(pagePath(p))
 	if err != nil {
@@ -63,7 +71,7 @@ func Load(home string, p *project.Project) (Rules, State) {
 		return Rules{}, None
 	}
 	r := Parse(bodyOf(raw))
-	want, err := os.ReadFile(TrustFile(home, p.Name))
+	want, err := isolate.ReadTrusted(home, trustName(p.Name))
 	if err != nil || strings.TrimSpace(string(want)) != sum(raw) {
 		return r, Changed
 	}
@@ -76,29 +84,26 @@ func Trust(home string, p *project.Project) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(TrustedDir(home), 0o755); err != nil {
-		return err
-	}
-	return os.WriteFile(TrustFile(home, p.Name), []byte(sum(raw)+"\n"), 0o644)
+	return isolate.WriteTrusted(home, trustName(p.Name), []byte(sum(raw)+"\n"))
 }
 
-// Ensure creates the missing folders of the rules under root.
+// Ensure creates the missing folders of the rules under root (already
+// resolved, see places.Root). Every folder on the way is checked with
+// safepath, so a link or junction in the project never sends it elsewhere.
 func Ensure(root string, r Rules) (created []string, err error) {
 	for _, row := range r.Rows {
 		if why := SafeFolder(row.Folder); why != "" {
 			return created, fmt.Errorf("folder %q: %s", row.Folder, why)
 		}
-		dir := filepath.Join(root, filepath.FromSlash(row.Folder))
-		if st, e := os.Stat(dir); e == nil {
-			if !st.IsDir() {
-				return created, fmt.Errorf("folder %q: a file with this name exists", row.Folder)
-			}
+		_, e := safepath.Dir(root, row.Folder, false)
+		if e == nil {
 			continue
-		} else if !errors.Is(e, os.ErrNotExist) {
-			return created, e
 		}
-		if err := os.MkdirAll(dir, 0o755); err != nil {
-			return created, err
+		if !errors.Is(e, fs.ErrNotExist) {
+			return created, fmt.Errorf("folder %q: %w", row.Folder, e)
+		}
+		if _, err := safepath.Dir(root, row.Folder, true); err != nil {
+			return created, fmt.Errorf("folder %q: %w", row.Folder, err)
 		}
 		created = append(created, row.Folder)
 	}
@@ -126,7 +131,14 @@ func AfterApprove(home string, p *project.Project, res []wiki.Result) error {
 		return err
 	}
 	rules := Parse(bodyOf(raw))
-	created, err := Ensure(p.Root, rules)
+	var created []string
+	if p.Root != "" {
+		// project.yaml is in the AI's reach: its root is checked again here
+		var root string
+		if root, err = places.Root(home, p); err == nil {
+			created, err = Ensure(root, rules)
+		}
+	}
 	detail := fmt.Sprintf("%s rules=%d created=%d", p.Name, len(rules.Rows), len(created))
 	if aerr := project.Audit(p.Dir, "folders.approved", detail); err == nil {
 		err = aerr

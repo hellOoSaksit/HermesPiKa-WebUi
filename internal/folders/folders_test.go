@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -111,4 +112,57 @@ func TestTrustAndState(t *testing.T) {
 	if _, st := Load(t.TempDir(), p); st != Changed {
 		t.Fatalf("want changed (no trusted hash), got %s", st)
 	}
+}
+
+// A rule may only name a folder upload and the file browser would accept.
+func TestParseRejectsNamesUploadRefuses(t *testing.T) {
+	body := "| Folder | What goes here | Extensions |\n|---|---|---|\n" +
+		"| .git/hooks | x | .a |\n| GIT~1 | x | .b |\n| CON | x | .c |\n| keys/credentials | x | .d |\n| bad\x1bname | x | .e |\n| tail. | x | .f |\n| Export/ | models | .fbx |\n"
+	r := Parse(body)
+	if len(r.Bad) != 6 || len(r.Rows) != 1 || r.Rows[0].Folder != "Export" {
+		t.Fatalf("rows=%v bad=%v", r.Rows, r.Bad)
+	}
+}
+
+// While the AI is isolated, a hash it writes into <home>/hpk/trusted does not
+// make a page it changed "approved": hpk reads its own copy in the private
+// folder. And approval creates folders only under a root the AI was given.
+func TestIsolatedTrustIgnoresTheAIsCopy(t *testing.T) {
+	home, priv := t.TempDir(), t.TempDir()
+	cfg := filepath.Join(t.TempDir(), "isolation.json")
+	t.Setenv("HPK_ISOLATION_FILE", cfg)
+	os.WriteFile(cfg, []byte(`{"mode":"user","user":"hpk-ai","home":`+strconv.Quote(home)+`,"private":`+strconv.Quote(priv)+`}`), 0o600)
+	root := filepath.Join(t.TempDir(), "orbit-app") // not shared with the AI
+	os.MkdirAll(root, 0o755)
+	p, err := project.Create(home, "orbit-app", root, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	w := wiki.Open(p.WikiDir())
+	w.Init(p.Name, assets.WikiTemplates())
+	d, _ := w.CreateDraft(wiki.DraftInput{Target: Page, Title: "Folders", Sources: []string{"chat"}, Summary: "s", Author: "me", Body: hdr + "| Export | x | .fbx |\n"})
+	res, _ := w.Approve([]int{d.N}, "me")
+	if err := AfterApprove(home, p, res); err == nil {
+		t.Fatal("folders created under a root the AI was not given")
+	}
+	if _, err := os.Stat(filepath.Join(root, "Export")); err == nil {
+		t.Fatal("made a folder there")
+	}
+	if _, st := Load(home, p); st != OK {
+		t.Fatalf("want ok, got %s", st)
+	}
+	page := filepath.Join(p.WikiDir(), "decisions", "folders.md")
+	forged := []byte(strings.Replace(string(must(os.ReadFile(page))), "Export", "scripts", 1))
+	os.WriteFile(page, forged, 0o644)
+	os.WriteFile(TrustFile(home, p.Name), []byte(sum(forged)+"\n"), 0o644)
+	if _, st := Load(home, p); st != Changed {
+		t.Fatalf("the AI's own hash was believed: %s", st)
+	}
+}
+
+func must(b []byte, err error) []byte {
+	if err != nil {
+		panic(err)
+	}
+	return b
 }

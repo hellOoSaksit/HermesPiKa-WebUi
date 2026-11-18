@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"hpk.local/hpk/internal/safepath"
 )
 
 // Page is the wiki page that holds the rules.
@@ -68,9 +70,16 @@ func isAlign(c []string) bool {
 	return len(c) > 0
 }
 
-// SafeFolder reports why a folder cannot be created under the project, or "".
+// Folder normalizes a rule's folder cell: forward slashes, no trailing slash.
+func Folder(cell string) string {
+	return strings.TrimRight(strings.ReplaceAll(strings.TrimSpace(cell), `\`, "/"), "/")
+}
+
+// SafeFolder reports why a folder cannot be used under the project, or "". It
+// takes the same name rules as upload and the file browser (safepath), so a
+// rule never names a folder hpk would refuse to write to.
 func SafeFolder(f string) string {
-	f = filepath.ToSlash(strings.TrimSpace(f))
+	f = Folder(f)
 	switch {
 	case f == "":
 		return "folder is empty"
@@ -81,6 +90,9 @@ func SafeFolder(f string) string {
 		if seg == ".." {
 			return "folder must stay inside the project (no ..)"
 		}
+	}
+	if err := safepath.Rel(f); err != nil {
+		return "folder name not allowed: " + err.Error()
 	}
 	return ""
 }
@@ -113,7 +125,7 @@ func Parse(body string) Rules {
 			r.Bad = append(r.Bad, fmt.Sprintf("row %q needs 3 columns: Folder | What goes here | Extensions", strings.TrimSpace(line)))
 			continue
 		}
-		folder := filepath.ToSlash(c[0])
+		folder := Folder(c[0])
 		if why := SafeFolder(folder); why != "" {
 			r.Bad = append(r.Bad, fmt.Sprintf("row %q: %s", folder, why))
 			continue

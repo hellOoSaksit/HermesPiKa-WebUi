@@ -7,11 +7,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"runtime"
-	"strings"
 
 	"hpk.local/hpk/internal/isolate"
-	"hpk.local/hpk/internal/launch"
+	"hpk.local/hpk/internal/places"
 	"hpk.local/hpk/internal/project"
 	"hpk.local/hpk/internal/relocate"
 )
@@ -31,71 +29,12 @@ func (m *ACPManager) busy(name string) bool {
 // projectBusy: a session linked to the project is working, so its files must stay put.
 func (s *Server) projectBusy(name string) bool { return s.acp.busy(name) }
 
-func samePath(a, b string) bool {
-	a, b = filepath.Clean(a), filepath.Clean(b)
-	if runtime.GOOS == "windows" {
-		return strings.EqualFold(a, b)
-	}
-	return a == b
-}
-
-func within(dir, p string) bool {
-	if samePath(dir, p) {
-		return true
-	}
-	d := filepath.Clean(dir) + string(filepath.Separator)
-	p = filepath.Clean(p)
-	if runtime.GOOS == "windows" {
-		return strings.HasPrefix(strings.ToLower(p), strings.ToLower(d))
-	}
-	return strings.HasPrefix(p, d)
-}
-
-// forbiddenLocation refuses a folder hpk must not hand to the AI or build on:
-// the Hermes home's own files, the trusted folder, the person's private
-// folder and hpk's data folder; a folder that holds any of them is refused too.
-// A wiki (wiki=true) may not be anywhere in the Hermes home either, except the
-// default place (moving back); it may sit inside its own project's folder, not
-// inside another project's.
-func forbiddenLocation(home string, self *project.Project, dir string, wiki bool) error {
-	if wiki && self != nil && samePath(dir, filepath.Join(self.Dir, "wiki")) {
-		return nil // moving back to the default place
-	}
-	guarded := []string{home, filepath.Join(home, "hpk", "trusted"), isolate.PrivateDir(home), launch.DataDir()}
-	for i, g := range guarded {
-		if g == "" {
-			continue
-		}
-		if within(dir, g) {
-			return errors.New("that folder is, or holds, hpk's own files; choose another")
-		}
-		// a project folder may live inside the Hermes home; its own files may not
-		// inside the project's own folder is fine even when that folder is in the home
-		inOwnRoot := wiki && i == 0 && self != nil && self.Root != "" && within(self.Root, dir)
-		if within(g, dir) && (wiki || i > 0) && !inOwnRoot {
-			return errors.New("that folder is inside hpk's own files; choose another")
-		}
-	}
-	if !wiki {
-		return nil
-	}
-	all, _ := project.List(home)
-	for _, o := range all {
-		if o.Root == "" {
-			continue
-		}
-		if self != nil && o.Name == self.Name {
-			if within(dir, o.Root) {
-				return errors.New("a wiki cannot be the project folder itself or hold it")
-			}
-			continue
-		}
-		if within(o.Root, dir) || within(dir, o.Root) {
-			return errors.New("that folder belongs to another project")
-		}
-	}
-	return nil
-}
+// One copy of the location rules, shared with the folder and tidy code (places).
+var (
+	samePath          = places.SamePath
+	within            = places.Within
+	forbiddenLocation = places.Forbidden
+)
 
 // stillNeeded reports whether dir must keep the AI's access: it is the Hermes
 // home or inside it, or another project's root or wiki is equal to, inside or

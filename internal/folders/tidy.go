@@ -18,10 +18,21 @@ import (
 	"time"
 
 	"hpk.local/hpk/internal/project"
+	"hpk.local/hpk/internal/safepath"
 )
 
-// LastFile is the record of the last tidy round, beside project.yaml.
-const LastFile = "tidy-last.json"
+// UndoFile is where the last tidy round of project name is kept, under dir.
+// The caller picks a dir out of the AI's reach (the person's private folder):
+// Undo moves whatever the record names.
+func UndoFile(dir, name string) string { return filepath.Join(dir, "tidy", name+".json") }
+
+// Area is where a tidy may act.
+type Area struct {
+	Root   string   // the project folder, resolved (places.Root)
+	Skip   []string // folders inside Root a tidy never enters: wikis, other projects
+	Record string   // the undo record (UndoFile)
+	Audit  string   // the project's hpk folder, for audit.log
+}
 
 // Move is one file going to its rule folder. Paths are project-relative, with
 // forward slashes.
@@ -50,29 +61,56 @@ func underFolder(rel, folder string) bool {
 	return strings.HasPrefix(fold(rel), fold(strings.Trim(folder, "/"))+"/")
 }
 
-// skipName: names a tidy never touches. Hidden entries, node_modules, and
-// names the file browser refuses (keys, credentials, Windows device names).
+// skipName: names a tidy never touches: node_modules, and every name the file
+// browser and upload refuse (safepath.Name: hidden, keys and credentials,
+// device names, control characters …).
 func skipName(name string) bool {
-	if name == "node_modules" || strings.HasPrefix(name, ".") {
-		return true
+	return name == "node_modules" || safepath.Name(name) != nil
+}
+
+// planOK: a project-relative path a tidy may move from or to.
+func planOK(rel string) bool {
+	if safepath.Rel(rel) != nil {
+		return false
 	}
-	if strings.HasSuffix(name, ".") || strings.HasSuffix(name, " ") {
-		return true
-	}
-	l := strings.ToLower(name)
-	for _, ext := range []string{".pem", ".key", ".p12", ".pfx", ".kdbx"} {
-		if strings.HasSuffix(l, ext) {
-			return true
+	for _, part := range strings.Split(rel, "/") {
+		if skipName(part) {
+			return false
 		}
 	}
-	if strings.HasPrefix(l, "id_rsa") || strings.HasPrefix(l, "id_ed25519") || strings.HasPrefix(l, "credentials") {
-		return true
+	return true
+}
+
+// skipRels turns skip into paths relative to root, for those inside it ("" is
+// root itself: nothing may move).
+func skipRels(root string, skip []string) []string {
+	var out []string
+	for _, s := range skip {
+		if s == "" {
+			continue
+		}
+		if r, err := filepath.EvalSymlinks(s); err == nil {
+			s = r
+		}
+		rel, err := filepath.Rel(root, filepath.Clean(s))
+		switch {
+		case err != nil || filepath.IsAbs(rel) || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)):
+			continue
+		case rel == ".":
+			out = append(out, "")
+		default:
+			out = append(out, filepath.ToSlash(rel))
+		}
 	}
-	base := strings.ToLower(strings.SplitN(name, ".", 2)[0])
-	switch base {
-	case "con", "prn", "aux", "nul", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9",
-		"lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9":
-		return true
+	return out
+}
+
+// inSkipped reports whether rel is one of the skipped folders or below one.
+func inSkipped(rel string, skips []string) bool {
+	for _, s := range skips {
+		if s == "" || fold(rel) == fold(s) || underFolder(rel, s) {
+			return true
+		}
 	}
 	return false
 }
@@ -124,9 +162,17 @@ func gitTracked(root, rel string) bool {
 	return gitCmd(root, nil, "--literal-pathspecs", "ls-files", "--error-unmatch", "--", rel).Run() == nil
 }
 
-// PlanTidy lists the files that are not in the folder their extension's rule names.
-func PlanTidy(root string, r Rules) (Plan, error) {
+// PlanTidy lists the files that are not in the folder their extension's rule
+// names. Links and junctions are never entered, nor the folders in a.Skip.
+func PlanTidy(a Area, r Rules) (Plan, error) {
 	plan := Plan{Moves: []Move{}, Homeless: []string{}}
+	root := a.Root
+	skips := skipRels(root, a.Skip)
+	for _, s := range skips {
+		if s == "" {
+			return plan, nil // the whole folder is someone else's
+		}
+	}
 	type cand struct {
 		rel string
 		fi  fs.FileInfo
@@ -142,24 +188,23 @@ func PlanTidy(root string, r Rules) (Plan, error) {
 		if p == root {
 			return nil
 		}
-		if skipName(d.Name()) {
-			if d.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		if d.Type()&fs.ModeSymlink != 0 || d.IsDir() {
-			return nil // links are never followed
-		}
-		fi, err := d.Info()
-		if err != nil || !fi.Mode().IsRegular() {
-			return nil
-		}
 		rel, err := filepath.Rel(root, p)
 		if err != nil {
 			return nil
 		}
-		files = append(files, cand{filepath.ToSlash(rel), fi})
+		rel = filepath.ToSlash(rel)
+		fi, ierr := d.Info()
+		isDir := d.IsDir() || (ierr == nil && fi.IsDir())
+		if ierr != nil || skipName(d.Name()) || inSkipped(rel, skips) || safepath.IsLink(p, fi) {
+			if isDir {
+				return filepath.SkipDir // links and junctions are never followed
+			}
+			return nil
+		}
+		if isDir || !fi.Mode().IsRegular() {
+			return nil
+		}
+		files = append(files, cand{rel, fi})
 		return nil
 	})
 	if err != nil {
@@ -183,57 +228,15 @@ func PlanTidy(root string, r Rules) (Plan, error) {
 		if underFolder(f.rel, folder) {
 			continue
 		}
-		plan.Moves = append(plan.Moves, Move{From: f.rel, To: strings.Trim(folder, "/") + "/" + name, Size: f.fi.Size(), MTime: f.fi.ModTime()})
+		to := strings.Trim(folder, "/") + "/" + name
+		if inSkipped(to, skips) {
+			continue
+		}
+		plan.Moves = append(plan.Moves, Move{From: f.rel, To: to, Size: f.fi.Size(), MTime: f.fi.ModTime()})
 	}
 	sort.Slice(plan.Moves, func(i, j int) bool { return plan.Moves[i].From < plan.Moves[j].From })
 	sort.Strings(plan.Homeless)
 	return plan, nil
-}
-
-// relOK refuses a path that is not a plain project-relative path.
-func relOK(rel string) bool {
-	if rel == "" || strings.HasPrefix(rel, "/") || strings.ContainsAny(rel, "\\:\x00") || filepath.IsAbs(rel) {
-		return false
-	}
-	for _, seg := range strings.Split(rel, "/") {
-		if seg == "" || seg == "." || seg == ".." {
-			return false
-		}
-	}
-	return true
-}
-
-func inside(root, p string) bool {
-	return p == root || strings.HasPrefix(p, root+string(filepath.Separator))
-}
-
-// destDir resolves a project-relative folder for writing, creating it when
-// missing. It must stay inside the project after following links.
-func destDir(realRoot, rel string) (string, error) {
-	dest := filepath.Join(realRoot, filepath.FromSlash(rel))
-	probe := dest
-	for {
-		if _, err := os.Lstat(probe); err == nil {
-			break
-		}
-		next := filepath.Dir(probe)
-		if next == probe {
-			return "", errors.New("outside the project")
-		}
-		probe = next
-	}
-	real, err := filepath.EvalSymlinks(probe)
-	if err != nil || !inside(realRoot, real) {
-		return "", errors.New("outside the project")
-	}
-	if err := os.MkdirAll(dest, 0o755); err != nil {
-		return "", err
-	}
-	real, err = filepath.EvalSymlinks(dest)
-	if err != nil || !inside(realRoot, real) {
-		return "", errors.New("outside the project")
-	}
-	return real, nil
 }
 
 func numbered(name string, n int) string {
@@ -296,38 +299,36 @@ func place(root, src, dir, name string, tracked bool) (string, error) {
 	return "", errors.New("too many files with that name")
 }
 
+// lastRound is the undo record. Root binds it to the folder it was made in.
 type lastRound struct {
 	At    time.Time `json:"at"`
+	Root  string    `json:"root"`
 	Moves []Move    `json:"moves"` // From = where it was, To = where it is now
 }
 
-// relocate moves one file by its project-relative paths, checking links and that
-// the file is still the one that was planned. It returns the final relative path.
-func relocate(root, realRoot, from, to string, size int64, mtime time.Time) (string, error) {
-	if !relOK(from) || !relOK(to) {
+// relocate moves one file by its project-relative paths. Every folder on the
+// way is checked with safepath (no link, no junction), the file must still be
+// the one that was planned, and neither path may be in a skipped folder. It
+// returns the final relative path.
+func relocate(realRoot string, skips []string, from, to string, size int64, mtime time.Time) (string, error) {
+	if !planOK(from) || !planOK(to) || inSkipped(from, skips) || inSkipped(to, skips) {
 		return "", errors.New("not a plain project path")
 	}
-	src := filepath.Join(realRoot, filepath.FromSlash(from))
-	fi, err := os.Lstat(src)
-	if err != nil || !fi.Mode().IsRegular() {
-		return "", errors.New("not a regular file")
+	src, fi, err := safepath.File(realRoot, from)
+	if err != nil {
+		return "", err
 	}
 	if fi.Size() != size || !fi.ModTime().Equal(mtime) {
 		return "", errors.New("changed since it was planned")
-	}
-	if real, err := filepath.EvalSymlinks(filepath.Dir(src)); err != nil || !inside(realRoot, real) {
-		return "", errors.New("outside the project")
 	}
 	slash := strings.LastIndex(to, "/")
 	dirRel, name := "", to
 	if slash >= 0 {
 		dirRel, name = to[:slash], to[slash+1:]
 	}
-	dir := realRoot
-	if dirRel != "" {
-		if dir, err = destDir(realRoot, dirRel); err != nil {
-			return "", err
-		}
+	dir, err := safepath.Dir(realRoot, dirRel, true)
+	if err != nil {
+		return "", err
 	}
 	got, err := place(realRoot, src, dir, name, gitTracked(realRoot, from))
 	if err != nil {
@@ -341,26 +342,25 @@ func relocate(root, realRoot, from, to string, size int64, mtime time.Time) (str
 
 // ApplyTidy moves the files the person confirmed. A file that changed since the
 // plan, or whose folder leads out of the project, is skipped. The round is
-// saved in projectDir/tidy-last.json so it can be undone.
-func ApplyTidy(root, projectDir string, moves []Move) (done []Move, skipped []string, err error) {
+// saved in a.Record so it can be undone.
+func ApplyTidy(a Area, moves []Move) (done []Move, skipped []string, err error) {
 	done, skipped = []Move{}, []string{}
-	realRoot, err := filepath.EvalSymlinks(root)
-	if err != nil {
-		return done, skipped, err
-	}
+	skips := skipRels(a.Root, a.Skip)
 	for _, m := range moves {
-		to, e := relocate(root, realRoot, m.From, m.To, m.Size, m.MTime)
+		to, e := relocate(a.Root, skips, m.From, m.To, m.Size, m.MTime)
 		if e != nil {
 			skipped = append(skipped, m.From)
 			continue
 		}
 		done = append(done, Move{From: m.From, To: to, Size: m.Size, MTime: m.MTime})
-		_ = project.Audit(projectDir, "tidy", m.From+" -> "+to)
+		_ = project.Audit(a.Audit, "tidy", m.From+" -> "+to)
 	}
 	if len(done) > 0 {
-		raw, e := json.MarshalIndent(lastRound{At: time.Now().UTC(), Moves: done}, "", "  ")
+		raw, e := json.MarshalIndent(lastRound{At: time.Now().UTC(), Root: a.Root, Moves: done}, "", "  ")
 		if e == nil {
-			e = os.WriteFile(filepath.Join(projectDir, LastFile), raw, 0o644)
+			if e = os.MkdirAll(filepath.Dir(a.Record), 0o700); e == nil {
+				e = os.WriteFile(a.Record, raw, 0o600)
+			}
 		}
 		if e != nil {
 			err = fmt.Errorf("the files moved, but the undo record could not be saved: %w", e)
@@ -369,45 +369,66 @@ func ApplyTidy(root, projectDir string, moves []Move) (done []Move, skipped []st
 	return done, skipped, err
 }
 
-// CanUndo reports whether a last round is saved.
-func CanUndo(projectDir string) bool {
-	_, err := os.Stat(filepath.Join(projectDir, LastFile))
-	return err == nil
+// Undo is what an undo would put back, for the person to confirm.
+type Undo struct {
+	At    time.Time `json:"at"`
+	Moves []Move    `json:"moves"`
 }
 
-// UndoTidy puts the last round back. A file changed since the move stays where
-// it is and is reported in skipped.
-func UndoTidy(root, projectDir string) (done, skipped []string, err error) {
-	done, skipped = []string{}, []string{}
-	file := filepath.Join(projectDir, LastFile)
-	raw, err := os.ReadFile(file)
+// ReadUndo returns the last round, when there is one made in a.Root.
+func ReadUndo(a Area) (Undo, error) {
+	raw, err := os.ReadFile(a.Record)
 	if err != nil {
-		return done, skipped, errors.New("there is no tidy to undo")
+		return Undo{}, errors.New("there is no tidy to undo")
 	}
 	var last lastRound
 	if err := json.Unmarshal(raw, &last); err != nil {
-		return done, skipped, errors.New("the undo record is damaged")
+		return Undo{}, errors.New("the undo record is damaged")
 	}
-	realRoot, err := filepath.EvalSymlinks(root)
+	if last.Root == "" || fold(filepath.Clean(last.Root)) != fold(filepath.Clean(a.Root)) {
+		return Undo{}, errors.New("the last tidy was made in another folder; it cannot be undone here")
+	}
+	if last.Moves == nil {
+		last.Moves = []Move{}
+	}
+	return Undo{At: last.At, Moves: last.Moves}, nil
+}
+
+// CanUndo reports whether a last round can be undone.
+func CanUndo(a Area) bool {
+	_, err := ReadUndo(a)
+	return err == nil
+}
+
+// UndoTidy puts the last round back, if it is the round made at at (the list
+// the person saw and confirmed). A file changed since the move stays where it
+// is and is reported in skipped.
+func UndoTidy(a Area, at time.Time) (done, skipped []string, err error) {
+	done, skipped = []string{}, []string{}
+	last, err := ReadUndo(a)
 	if err != nil {
 		return done, skipped, err
 	}
+	if !last.At.Equal(at) {
+		return done, skipped, errors.New("the tidy to undo has changed; look at the list again")
+	}
+	skips := skipRels(a.Root, a.Skip)
 	for i := len(last.Moves) - 1; i >= 0; i-- {
 		m := last.Moves[i]
-		back, e := relocate(root, realRoot, m.To, m.From, m.Size, m.MTime)
+		back, e := relocate(a.Root, skips, m.To, m.From, m.Size, m.MTime)
 		if e != nil {
 			skipped = append(skipped, m.To)
 			continue
 		}
 		done = append(done, back)
-		_ = project.Audit(projectDir, "tidy-undo", m.To+" -> "+back)
+		_ = project.Audit(a.Audit, "tidy-undo", m.To+" -> "+back)
 	}
 	// done is reported in the order the files were first moved
 	for i, j := 0, len(done)-1; i < j; i, j = i+1, j-1 {
 		done[i], done[j] = done[j], done[i]
 	}
 	sort.Strings(skipped)
-	if err := os.Remove(file); err != nil {
+	if err := os.Remove(a.Record); err != nil {
 		return done, skipped, err
 	}
 	return done, skipped, nil

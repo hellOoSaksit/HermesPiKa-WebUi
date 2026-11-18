@@ -160,6 +160,7 @@ export default async function files() {
       toast(t('files.uploaded', { n: (res.files || []).length }) + ' · ' + Object.entries(where).map(([k, v]) => `${k} ${v}`).join(' · '));
     } catch (err) {
       toast(t('files.uploadFailed', { err: err.message }), null, 'deny');
+      if (err.files?.length) toast(t('files.uploadPartial', { n: err.files.length }));
     } finally {
       progress.hidden = true; uploadBtn.disabled = false;
       refresh();
@@ -221,13 +222,28 @@ export default async function files() {
     if (p.moves.length) sync();
   }
 
+  // ---- undo drawer: what goes back is shown first; nothing moves without Confirm ----
   async function undo() {
+    let u;
     try {
-      const res = isLive() ? await api.tidyUndo(project) : { done: [], skipped: [] };
-      toast(t('files.undone', { n: res.done.length }));
-      if (res.skipped?.length) toast(t('files.tidy.skipped', { n: res.skipped.length }), null, 'deny');
-    } catch (err) { toast(err.message, null, 'deny'); }
-    refresh();
+      u = isLive() ? await api.tidyUndoPlan(project) : { at: new Date(now).toISOString(), moves: demoPlan().moves };
+    } catch (err) { toast(err.message, null, 'deny'); refresh(); return; }
+    const go = h('button.btn.primary', { type: 'button', disabled: !u.moves.length || null, onclick: () => run() },
+      icon('undo'), t('files.undoConfirm', { n: u.moves.length }));
+    const body = h('div.fl-tidy',
+      h('p.faint', t('files.undoHint')),
+      h('ul.fl-moves', u.moves.map((m) => h('li', h('span.fl-file.mono', { title: m.to }, m.to), h('span.faint.mono', { title: m.from }, '→ ' + m.from)))));
+    async function run() {
+      go.disabled = true;
+      try {
+        const res = isLive() ? await api.tidyUndo(project, u.at) : { done: u.moves.map((m) => m.from), skipped: [] };
+        closeDrawer();
+        toast(t('files.undone', { n: res.done.length }));
+        if (res.skipped?.length) toast(t('files.tidy.skipped', { n: res.skipped.length }), null, 'deny');
+      } catch (err) { toast(err.message, null, 'deny'); go.disabled = false; return; }
+      refresh();
+    }
+    openDrawer(t('files.undoTitle'), body, [h('button.btn.ghost', { type: 'button', onclick: closeDrawer }, t('common.cancel')), go]);
   }
 
   // ---- drop anywhere on the view ----
