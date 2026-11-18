@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"hpk.local/hpk/internal/board"
+	"hpk.local/hpk/internal/folders"
 	"hpk.local/hpk/internal/gates"
 	"hpk.local/hpk/internal/project"
 	"hpk.local/hpk/internal/session"
@@ -184,6 +185,11 @@ func (s *Server) api(mux *http.ServeMux) {
 				}
 			}
 			res, err = wk.Approve(in.Nums, s.who(r).ID)
+			if err == nil {
+				if ferr := folders.AfterApprove(s.home, p, res); ferr != nil {
+					fmt.Fprintln(os.Stderr, "hpk serve: folder rules:", ferr)
+				}
+			}
 		} else {
 			res, err = wk.Discard(in.Nums, s.who(r).ID, "from HPK Console")
 		}

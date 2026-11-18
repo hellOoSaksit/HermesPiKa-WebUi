@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"hpk.local/hpk/internal/folders"
 	"hpk.local/hpk/internal/install"
 	"hpk.local/hpk/internal/isolate"
 	"hpk.local/hpk/internal/launch"
@@ -98,9 +99,13 @@ func isolateSetup(args []string, stdin io.Reader, stdout, stderr io.Writer) int 
 		fmt.Fprintf(stderr, "hpk isolate: already set up (%s, home %s); run hpk isolate teardown first to change it\n", c.Mode, c.Home)
 		return 1
 	}
+	if err := os.MkdirAll(folders.TrustedDir(home), 0o755); err != nil {
+		fmt.Fprintln(stderr, "hpk isolate:", err)
+		return 1
+	}
 	o := isolate.Options{Mode: isolate.ModeUser, User: *user, Home: home, Private: privateDefault(),
 		Bin: install.Resolve(home, "").Bin, HermesDir: setup.Dir(launch.DataDir()), Image: *image,
-		ReadOnly: []string{filepath.Join(home, "bin"), filepath.Join(home, "hermes-agent"), filepath.Join(home, "installs")}}
+		ReadOnly: []string{filepath.Join(home, "bin"), filepath.Join(home, "hermes-agent"), filepath.Join(home, "installs"), folders.TrustedDir(home)}}
 	if *docker {
 		o.Mode, o.Container = isolate.ModeDocker, isolate.DefaultUser
 		o.Compose = filepath.Join(launch.DataDir(), "isolate", "compose.yaml")
