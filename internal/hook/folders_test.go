@@ -108,3 +108,49 @@ func TestMisplacedWriteWarns(t *testing.T) {
 		t.Fatalf("no rule for .txt: %q", out)
 	}
 }
+
+func TestFolderContextIsLazy(t *testing.T) {
+	p, home := folderProject(t)
+	w := wiki.Open(p.WikiDir())
+	d, err := w.CreateDraft(wiki.DraftInput{Target: folders.Page, Title: "Folders", Sources: []string{"chat"}, Summary: "x", Author: "me", Body: folderTable})
+	if err != nil {
+		t.Fatal(err)
+	}
+	res, _ := w.Approve([]int{d.N}, "me")
+	if err := folders.AfterApprove(home, p, res); err != nil {
+		t.Fatal(err)
+	}
+	if out, _ := call("session_link", llmEvent(p)); !strings.Contains(ctxOf(t, out), "RAW 3D") {
+		t.Fatalf("first call: %q", out)
+	}
+	page := filepath.Join(p.WikiDir(), "decisions", "folders.md")
+	fi, _ := os.Stat(page)
+	raw, _ := os.ReadFile(page)
+	// same size and mtime, different content: only a real read would notice
+	alt := []byte(strings.Replace(string(raw), "RAW 3D", "RAW 4D", 1))
+	if err := os.WriteFile(page, alt, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	os.Chtimes(page, fi.ModTime(), fi.ModTime())
+	if out, _ := call("session_link", llmEvent(p)); out != "" {
+		t.Fatalf("unchanged fingerprint must not re-read: %q", out)
+	}
+	// a real change (new size) is noticed
+	if err := os.WriteFile(page, append(alt, "\nmore\n"...), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if out, _ := call("session_link", llmEvent(p)); !strings.Contains(ctxOf(t, out), "changed outside approval") {
+		t.Fatalf("touched page: %q", out)
+	}
+}
+
+func TestFolderContextNoticesNewDraft(t *testing.T) {
+	p, _ := folderProject(t)
+	call("session_link", llmEvent(p))
+	if _, err := wiki.Open(p.WikiDir()).CreateDraft(wiki.DraftInput{Target: folders.Page, Title: "Folders", Sources: []string{"chat"}, Summary: "x", Author: "me", Body: folderTable}); err != nil {
+		t.Fatal(err)
+	}
+	if out, _ := call("session_link", llmEvent(p)); !strings.Contains(ctxOf(t, out), "waiting for approval") {
+		t.Fatalf("new draft: %q", out)
+	}
+}

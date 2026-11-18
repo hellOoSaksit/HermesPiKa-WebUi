@@ -28,17 +28,31 @@ func folderContext(ev Event) result {
 	if err != nil || p == nil {
 		return result{Allow, ""}
 	}
+	idSum := sha256.Sum256([]byte(ev.SessionID))
+	file := filepath.Join(home, "hpk", "sessions", hex.EncodeToString(idSum[:8])+".folders")
+	fp := fingerprint(home, p)
+	oldKey, oldFp := "", ""
+	if old, err := os.ReadFile(file); err == nil {
+		lines := strings.SplitN(strings.TrimSpace(string(old)), "\n", 2)
+		oldKey = lines[0]
+		if len(lines) > 1 {
+			oldFp = lines[1]
+		}
+	}
+	if oldKey != "" && oldFp == fp {
+		return result{Allow, ""} // nothing the rules depend on changed: no read, no parse
+	}
 	rules, st := folders.Load(home, p)
 	text := folderText(p, rules, st)
 	sum := sha256.Sum256([]byte(text))
 	key := hex.EncodeToString(sum[:8])
-	idSum := sha256.Sum256([]byte(ev.SessionID))
-	file := filepath.Join(home, "hpk", "sessions", hex.EncodeToString(idSum[:8])+".folders")
-	if old, err := os.ReadFile(file); err == nil && strings.TrimSpace(string(old)) == key {
-		return result{Allow, ""}
+	if key != oldKey || fp != oldFp {
+		if err := os.MkdirAll(filepath.Dir(file), 0o755); err == nil {
+			_ = os.WriteFile(file, []byte(key+"\n"+fp+"\n"), 0o644)
+		}
 	}
-	if err := os.MkdirAll(filepath.Dir(file), 0o755); err == nil {
-		_ = os.WriteFile(file, []byte(key+"\n"), 0o644)
+	if key == oldKey {
+		return result{Allow, ""}
 	}
 	return result{Inform, text}
 }
@@ -90,6 +104,9 @@ func misplacedNote(ev Event) result {
 	if rel == "" || strings.HasPrefix(rel, ".") {
 		return result{Allow, ""}
 	}
+	if _, err := os.Stat(filepath.Join(p.WikiDir(), filepath.FromSlash(folders.Page))); err != nil {
+		return result{Allow, ""} // no page: no rules to apply
+	}
 	rules, st := folders.Load(home, p)
 	if st != folders.OK {
 		return result{Allow, ""}
@@ -102,4 +119,25 @@ func misplacedNote(ev Event) result {
 		return result{Allow, ""}
 	}
 	return result{Inform, fmt.Sprintf("[hpk] %s belongs in %s/ by the project's folder rules", rel, want)}
+}
+
+// fingerprint is a cheap stand-in for "did anything the rules depend on change":
+// size and mtime of the page and of the trusted-hash file, mtime of _drafts/.
+// Only stat calls; nothing is read or parsed.
+func fingerprint(home string, p *project.Project) string {
+	st := func(path string, withSize bool) string {
+		fi, err := os.Stat(path)
+		if err != nil {
+			return "-"
+		}
+		if withSize {
+			return fmt.Sprintf("%d/%d", fi.ModTime().UnixNano(), fi.Size())
+		}
+		return fmt.Sprint(fi.ModTime().UnixNano())
+	}
+	return strings.Join([]string{
+		st(filepath.Join(p.WikiDir(), filepath.FromSlash(folders.Page)), true),
+		st(filepath.Join(folders.TrustedDir(home), "folders-"+p.Name+".sha256"), true),
+		st(filepath.Join(p.WikiDir(), "_drafts"), false),
+	}, " ")
 }
