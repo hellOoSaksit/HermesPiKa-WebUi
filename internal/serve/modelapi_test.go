@@ -191,7 +191,7 @@ func TestModelSwitchKeepsMemory(t *testing.T) {
 }
 
 func TestModelSwitchCompactsWhenFull(t *testing.T) {
-	s, url, _, agent := modelSetup(t)
+	s, url, p, agent := modelSetup(t)
 	_, out := post(t, url+"/api/sessions", map[string]any{"project": "sample-app", "name": "big", "firstMessage": "x", "start": true}, true)
 	id := out["id"].(string)
 	waitFor(t, "first turn", func() bool { pr, _ := agent.snapshot(); return len(pr) == 1 && !s.acp.sessions[id].streaming })
@@ -207,6 +207,12 @@ func TestModelSwitchCompactsWhenFull(t *testing.T) {
 	if pr, _ := agent.snapshot(); pr[1] != "/compress" {
 		t.Fatalf("compaction runs before set_model on the old model: %q", pr)
 	}
+	// the switch is written to the chat record after set_model; let it land before the temp dir goes
+	waitFor(t, "switch recorded", func() bool { x, err := session.Get(p, id); return err == nil && len(x.Switches) == 1 })
+	waitFor(t, "switch audited", func() bool {
+		raw, _ := os.ReadFile(filepath.Join(p.Dir, "audit.log"))
+		return strings.Contains(string(raw), "model switched")
+	})
 }
 
 func TestModelLocalOnlyAndAskOnce(t *testing.T) {
