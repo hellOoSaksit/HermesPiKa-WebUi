@@ -52,13 +52,7 @@ func userSetup(o Options, c *Config) ([]Step, error) {
 		if _, err := os.Stat(d); err != nil {
 			continue
 		}
-		steps = append(steps, Step{Say: "Let " + who + " read and run, not change, " + d, Do: func() error {
-			if err := icacls(d, "/inheritance:d"); err != nil {
-				return err
-			}
-			_ = icacls(d, "/remove:g", who)
-			return icacls(d, "/grant", who+":(OI)(CI)RX")
-		}})
+		steps = append(steps, Step{Say: "Let " + who + " read and run, not change, " + d, Do: func() error { return readOnlyDir(who, d) }})
 		c.ReadOnly = append(c.ReadOnly, d)
 	}
 	steps = append(steps,

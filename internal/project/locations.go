@@ -4,25 +4,27 @@ package project
 
 import (
 	"encoding/json"
-	"os"
-	"path/filepath"
+
+	"hpk.local/hpk/internal/isolate"
 )
 
-// locations.json lives in <home>/hpk/trusted, which the AI's account can read
-// but not change: where a person moved a project's wiki to.
+// locations.json records where a person moved a project's wiki to. hpk keeps
+// it with the other trusted records (isolate.WriteTrusted): a copy in
+// <home>/hpk/trusted for the AI's side to read, and, while the AI is
+// isolated, the copy hpk itself reads in the private folder, so a file the AI
+// planted cannot make hpk write a wiki somewhere else.
 //
 //	{"wikis": {"<project>": "<absolute folder>"}}
 type locations struct {
 	Wikis map[string]string `json:"wikis"`
 }
 
-func locationsFile(home string) string {
-	return filepath.Join(home, "hpk", "trusted", "locations.json")
-}
+// LocationsFile is the record's name in the trusted folders.
+const LocationsFile = "locations.json"
 
 // WikiLocations reads where wikis were moved to (project name -> folder).
 func WikiLocations(home string) map[string]string {
-	raw, err := os.ReadFile(locationsFile(home))
+	raw, err := isolate.ReadTrusted(home, LocationsFile)
 	if err != nil {
 		return map[string]string{}
 	}
@@ -46,13 +48,5 @@ func SetWikiLocation(home, name, dir string) error {
 	if err != nil {
 		return err
 	}
-	f := locationsFile(home)
-	if err := os.MkdirAll(filepath.Dir(f), 0o755); err != nil {
-		return err
-	}
-	tmp := f + ".tmp"
-	if err := os.WriteFile(tmp, raw, 0o644); err != nil {
-		return err
-	}
-	return os.Rename(tmp, f)
+	return isolate.WriteTrusted(home, LocationsFile, raw)
 }

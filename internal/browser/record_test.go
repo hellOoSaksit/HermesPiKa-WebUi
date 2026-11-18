@@ -91,14 +91,19 @@ func TestIsolateSetupTakesBackReadableRecordings(t *testing.T) {
 		t.Errorf("RunsDir %s, want %s", got, want)
 	}
 
-	// a folder outside the home and projects is left alone
+	// a folder outside the home and projects stays where it is, made private
 	other := t.TempDir()
 	SetRunsDir(other)
 	steps, _, _ = isolate.SetupPlan(isolate.Options{Mode: isolate.ModeDocker, Home: home, Private: priv, Projects: []string{proj},
 		Compose: filepath.Join(t.TempDir(), "c.yaml"), Recordings: RunsDir(home), ResetRecordings: func() error { return SetRunsDir("") }})
+	kept := false
 	for _, s := range steps {
-		if strings.Contains(s.Say, "browser recordings") {
-			t.Errorf("a private custom folder was moved: %s", s.Say)
+		if strings.Contains(s.Say, "Move the browser recordings") {
+			t.Errorf("a custom folder outside the AI's reach was moved: %s", s.Say)
 		}
+		kept = kept || strings.Contains(s.Say, "Keep the browser recordings in "+other)
+	}
+	if !kept {
+		t.Error("no step resets the permissions of the custom recordings folder")
 	}
 }

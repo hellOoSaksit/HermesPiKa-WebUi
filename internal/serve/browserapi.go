@@ -28,6 +28,9 @@ import (
 	"hpk.local/hpk/internal/vault"
 )
 
+// makePrivate is isolate.MakePrivate; tests swap it.
+var makePrivate = isolate.MakePrivate
+
 // The built-in browser and the personal vault live on a person's own machine
 // only: on a team server both are switched off (the server runs no programs and
 // keeps no one's passwords).
@@ -312,13 +315,17 @@ func (s *Server) browserAPI(mux *http.ServeMux) {
 		}
 		made := false
 		if _, err := os.Stat(src); err != nil {
-			// nothing recorded yet: only the setting changes
+			// nothing recorded yet: only the setting changes, once the folder is
+			// private (a folder that cannot be made private is not chosen)
+			if isolated {
+				if err := makePrivate(dst); err != nil {
+					writeErr(w, http.StatusInternalServerError, fmt.Errorf("cannot make %s private to you: %w", dst, err))
+					return
+				}
+			}
 			if err := browser.SetRunsDir(custom); err != nil {
 				writeErr(w, http.StatusInternalServerError, err)
 				return
-			}
-			if isolated {
-				_ = isolate.MakePrivate(dst)
 			}
 			writeJSON(w, map[string]any{"ok": true, "dir": dst})
 			return
@@ -328,8 +335,8 @@ func (s *Server) browserAPI(mux *http.ServeMux) {
 		}
 		if isolated {
 			// private before the first file lands in it
-			if err := isolate.MakePrivate(dst); err != nil {
-				writeErr(w, http.StatusInternalServerError, err)
+			if err := makePrivate(dst); err != nil {
+				writeErr(w, http.StatusInternalServerError, fmt.Errorf("cannot make %s private to you: %w", dst, err))
 				return
 			}
 		}

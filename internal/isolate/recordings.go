@@ -9,9 +9,14 @@ import (
 	"hpk.local/hpk/internal/relocate"
 )
 
+// makePrivateDir is makePrivate; tests swap it.
+var makePrivateDir = makePrivate
+
 // recordingsStep takes the browser recordings back into the private folder when
 // the person had put them somewhere the AI can read (inside the Hermes home or
-// a project folder). A folder elsewhere is left alone. nil when nothing to do.
+// a project folder). A folder elsewhere stays where it is, but its permissions
+// are reset to the person and SYSTEM only (a folder on another drive, D:\rec,
+// often lets every signed-in account change it). nil when nothing to do.
 func recordingsStep(o Options) *Step {
 	rec := o.Recordings
 	if rec == "" || o.ResetRecordings == nil {
@@ -22,14 +27,16 @@ func recordingsStep(o Options) *Step {
 		readable = readable || under(rec, p)
 	}
 	if !readable {
-		return nil
+		return &Step{Say: "Keep the browser recordings in " + rec + ", but only for you and SYSTEM (the AI's account cannot open it)", Do: func() error {
+			return makePrivateDir(rec)
+		}}
 	}
 	dst := filepath.Join(o.Private, "browser", "runs")
 	return &Step{Say: "Move the browser recordings from " + rec + " (the AI can read it) to " + dst + " (private to you)", Do: func() error {
 		if _, err := os.Stat(rec); err != nil {
 			return o.ResetRecordings()
 		}
-		if err := makePrivate(dst); err != nil {
+		if err := makePrivateDir(dst); err != nil {
 			return err
 		}
 		ents, _ := os.ReadDir(dst)

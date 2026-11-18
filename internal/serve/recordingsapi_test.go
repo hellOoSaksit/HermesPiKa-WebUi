@@ -4,11 +4,13 @@ package serve
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"hpk.local/hpk/internal/browser"
+	"hpk.local/hpk/internal/isolate"
 )
 
 func TestRecordingsDirRules(t *testing.T) {
@@ -65,5 +67,28 @@ func TestRecordingsDirRules(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(priv, "browser", "runs", id, "run.json")); err != nil {
 		t.Errorf("recording not back: %v", err)
+	}
+}
+
+// Isolated, a recordings folder that cannot be made private is not chosen:
+// the error comes back and the setting stays as it was.
+func TestRecordingsDirMakePrivateFailureSurfaces(t *testing.T) {
+	s, ts, _ := setup(t)
+	t.Setenv("HPK_DATA_DIR", t.TempDir())
+	cfg := filepath.Join(t.TempDir(), "isolation.json")
+	t.Setenv("HPK_ISOLATION_FILE", cfg)
+	raw, _ := json.Marshal(map[string]string{"mode": "docker", "home": s.home, "private": filepath.Join(t.TempDir(), "private")})
+	os.WriteFile(cfg, raw, 0o600)
+	var asked string
+	makePrivate = func(dir string) error { asked = dir; return errors.New("access denied") }
+	t.Cleanup(func() { makePrivate = isolate.MakePrivate })
+	before := browser.RunsDir(s.home)
+	dst := filepath.Join(t.TempDir(), "my-recordings")
+	res, out := post(t, ts.URL+"/api/browser/recordings-dir", map[string]string{"dir": dst}, true)
+	if res.StatusCode != 500 || asked != dst {
+		t.Fatalf("%d %v (asked %q)", res.StatusCode, out, asked)
+	}
+	if browser.RunsDir(s.home) != before {
+		t.Fatalf("the setting was saved: %s", browser.RunsDir(s.home))
 	}
 }

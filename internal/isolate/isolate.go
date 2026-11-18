@@ -65,10 +65,12 @@ type Config struct {
 	Created   time.Time `json:"created"`
 }
 
-// Mount maps a host folder into the container.
+// Mount maps a host folder into the container; ReadOnly mounts it read-only
+// (hpk/trusted over the read-write home).
 type Mount struct {
 	Host      string `json:"host"`
 	Container string `json:"container"`
+	ReadOnly  bool   `json:"readOnly,omitempty"`
 }
 
 // ConfigPath is isolation.json in the person's config folder
@@ -142,6 +144,17 @@ func PrivateDir(home string) string {
 	}
 	return filepath.Join(home, "hpk")
 }
+
+// TrustedDir is <home>/hpk/trusted: what the person decided (approved folder
+// rules, where a wiki was moved), for the AI's side to read. The AI's account
+// gets it read-only, but it sits in a home the AI can write.
+func TrustedDir(home string) string { return filepath.Join(home, "hpk", "trusted") }
+
+// OwnTrustedDir is the copy hpk itself trusts: <private>/trusted while the AI
+// is isolated (out of the AI's reach, in every mode), else TrustedDir. hpk
+// writes both and reads only this one. The AI's own hpk (hooks) has no
+// isolation settings, so it reads TrustedDir.
+func OwnTrustedDir(home string) string { return filepath.Join(PrivateDir(home), "trusted") }
 
 // Private names, relative to PrivateDir: they move out of the Hermes home when
 // the AI is isolated, and back when it is not.
