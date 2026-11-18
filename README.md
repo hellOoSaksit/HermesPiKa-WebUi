@@ -23,7 +23,7 @@ Windows, macOS and Linux. Pick one way:
 
 **Windows.** Download `hpk.exe` from the
 [Releases page](https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest)
-and double-click it (if SmartScreen warns: More info, then Run anyway). Or, in
+and double-click it (your browser may ask you to Keep the file, and SmartScreen may warn: More info, then Run anyway). Or, in
 PowerShell:
 
 ```powershell
@@ -57,14 +57,13 @@ First run: the Console checks for Hermes Agent. If it is missing, it offers
 to install the tested version (v0.23.1) into hpk's own folder with its own
 portable Python, showing the size and every source first. Then it adds hpk
 to Hermes (the same change `hpk install` shows) after you agree. Then add a
-model account in Settings, AI accounts.
+model account: on macOS and Linux in Settings, AI accounts (a form); on Windows run `hermes auth add <provider>` in a new terminal (that page shows the command).
 
 Optional, in Settings › General: **Install as app** (its own window and
 icon, from Chrome, Edge or Safari), desktop notices with quiet hours, and
 **Start hpk when I log in**.
 
-Step by step for beginners: [docs/install.md](docs/install.md) (Thai:
-[docs/install.th.md](docs/install.th.md)).
+Step by step for beginners: [docs/install.md](docs/install.md) ([คู่มือภาษาไทย](docs/install.th.md)).
 
 ## Build
 
@@ -74,6 +73,8 @@ Requires Go 1.27+.
 go test ./...
 go build -o dist/hpk ./cmd/hpk
 ```
+
+While developing, set `HPK_NO_SELFINSTALL=1` so a bare `dist/hpk` runs from where it is instead of installing itself into your data folder.
 
 ## Use
 

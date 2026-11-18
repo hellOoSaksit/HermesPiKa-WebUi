@@ -20,10 +20,11 @@ English: [install.md](install.md)
 
 1. เปิด https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest แล้วดาวน์โหลด `hpk.exe`
 2. ดับเบิลคลิก `hpk.exe`
-3. ถ้า Windows ขึ้น "Windows protected your PC" ให้กด **More info** แล้วกด **Run anyway** โปรแกรมยังไม่ได้ลงลายเซ็น Windows จึงถามหนึ่งครั้ง
-4. hpk จะคัดลอกตัวเองไปที่ `%LOCALAPPDATA%\hpk\bin` เพิ่มโฟลเดอร์นั้นและโฟลเดอร์ของ Hermes (`%LOCALAPPDATA%\hpk\hermes\bin`) ใน PATH (รายชื่อโฟลเดอร์ที่ Windows ใช้หาโปรแกรม) เพิ่มทางลัดในเมนู Start ชื่อ "HPK Console" แล้วเปิด HPK Console ในเบราว์เซอร์
+3. เบราว์เซอร์ (Edge หรือ Chrome) อาจเตือนว่า `hpk.exe` "isn't commonly downloaded" หรือ "could harm your device" โปรแกรมยังไม่ได้ลงลายเซ็น จึงเป็นเรื่องปกติ เปิดรายการดาวน์โหลด กด **...** ข้างไฟล์ เลือก **Keep** แล้วเลือก **Keep anyway** (ใน Chrome กด **Keep** อย่างเดียว)
+4. ถ้า Windows ขึ้น "Windows protected your PC" ให้กด **More info** แล้วกด **Run anyway** จะถามหนึ่งครั้ง
+5. hpk จะคัดลอกตัวเองไปที่ `%LOCALAPPDATA%\hpk\bin` เพิ่มโฟลเดอร์นั้นและโฟลเดอร์ของ Hermes (`%LOCALAPPDATA%\hpk\hermes\bin`) ใน PATH (รายชื่อโฟลเดอร์ที่ Windows ใช้หาโปรแกรม) เพิ่มทางลัดในเมนู Start ชื่อ "HPK Console" แล้วเปิด HPK Console ในเบราว์เซอร์
 
-หลังจากนั้นเปิดได้จากเมนู Start หรือพิมพ์ `hpk` ในเทอร์มินัลที่เปิดใหม่
+การดับเบิลคลิกจะมีหน้าต่างคอนโซลค้างอยู่ หน้าต่างนั้น**คือ**เซิร์ฟเวอร์ของ HPK Console ถ้าปิดมัน Console จะหยุดทำงาน จะเริ่มใหม่ให้ใช้ทางลัด "HPK Console" ในเมนู Start หรือพิมพ์ `hpk` ในเทอร์มินัลที่เปิดใหม่ ถ้าอยากให้เริ่มเองทุกครั้งที่ล็อกอิน ให้รัน `hpk autostart on` หรือเปิด **Start hpk when I log in** ใน Settings
 
 ### 3. Windows / macOS / Linux (คำสั่งเดียว)
 
@@ -44,7 +45,8 @@ curl -fsSL https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/down
 - ติดตั้งเวอร์ชันที่ระบุ: ตั้ง `HPK_VERSION` (เช่น `HPK_VERSION=0.1.0`)
 - ติดตั้งโดยไม่เปิด HPK Console: ตั้ง `HPK_NO_START=1`
 - บน macOS สคริปต์จะลบเครื่องหมาย "ดาวน์โหลดจากอินเทอร์เน็ต" ออก เพื่อไม่ให้ Gatekeeper ขวาง
-- บน macOS และ Linux hpk เพิ่มโฟลเดอร์ของตัวเองและของ Hermes ใน PATH ด้วยบรรทัดที่มีเครื่องหมายกำกับหนึ่งบรรทัด ในไฟล์ `~/.profile`, `~/.zshrc` และ `~/.bashrc` (เฉพาะไฟล์ที่มีอยู่แล้ว)
+- บน macOS และ Linux hpk เพิ่มโฟลเดอร์ของตัวเองและของ Hermes ใน PATH ด้วยบรรทัดที่มีเครื่องหมายกำกับหนึ่งบรรทัด ในไฟล์โปรไฟล์ของเชลล์ (`~/.profile`, `~/.zshrc`, `~/.bashrc`, `~/.bash_profile`) ไฟล์ไหนที่มีอยู่แล้วจะเพิ่มให้ ถ้าไม่มีสักไฟล์ (เช่นบัญชี Mac ใหม่) hpk จะสร้างไฟล์ของเชลล์คุณให้ (`~/.zshrc` สำหรับ zsh, `~/.bash_profile` สำหรับ bash บน macOS, `~/.bashrc` สำหรับ bash บน Linux ไม่เช่นนั้น `~/.profile`) และบอกว่าแก้ไฟล์ไหน
+- ถ้าอยู่ในเทอร์มินัล สคริปต์จะเปิด HPK Console แบบเบื้องหน้า (กด Ctrl+C เพื่อหยุด) ถ้าไม่มีเทอร์มินัลจะเปิดเบื้องหลัง แล้วแสดงที่อยู่กับไฟล์บันทึก
 
 คุณรัน `hpk self-install` เองได้เสมอ ถ้าไม่ต้องการให้ hpk ติดตั้งตัวเองอัตโนมัติ ให้ตั้ง `HPK_NO_SELFINSTALL=1`
 
@@ -72,7 +74,7 @@ irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/co
 docker compose -f compose.release.yaml up -d
 ```
 
-5. แสดง owner token (กุญแจเข้าระบบครั้งแรกของคุณ):
+5. รอสักครู่ให้เริ่มทำงาน แล้วแสดง owner token (กุญแจเข้าระบบครั้งแรกของคุณ) ถ้าไม่พบไฟล์ token ให้รอสักครู่แล้วลองอีกครั้ง:
 
 ```sh
 docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
@@ -116,7 +118,13 @@ hermes auth add <provider>
 hpk self-uninstall
 ```
 
-คำสั่งนี้ลบ hpk, รายการใน PATH และทางลัดในเมนู Start แต่ไม่แตะข้อมูลของ hpk และโฟลเดอร์ Hermes ของคุณ จึงไม่มีอะไรหาย ถ้าจะลบสองอย่างนั้นด้วย ให้ลบโฟลเดอร์เอง (บน Windows คือ `%LOCALAPPDATA%\hpk`)
+ก่อนอื่น ถ้าคุณเพิ่ม hpk เข้า Hermes ไว้ ให้เอาออกก่อน:
+
+```sh
+hpk uninstall --yes
+```
+
+จากนั้น `hpk self-uninstall` จะลบ hpk, รายการใน PATH, ทางลัดในเมนู Start และการเริ่มตอนล็อกอิน แต่ไม่แตะข้อมูลของ hpk และโฟลเดอร์ Hermes ของคุณ จึงไม่มีอะไรหาย โฟลเดอร์ของ Hermes ที่ hpk ติดตั้งให้จะออกจาก PATH ด้วย ดังนั้นคำสั่ง `hermes` จะหาไม่เจอในเทอร์มินัลใหม่ (ไฟล์ยังอยู่ในโฟลเดอร์ข้อมูล) ถ้าจะลบทั้งหมด ให้ลบโฟลเดอร์ข้อมูลเอง: `%LOCALAPPDATA%\hpk` บน Windows, `~/Library/Application Support/hpk` บน macOS, `~/.local/share/hpk` บน Linux (`$XDG_DATA_HOME/hpk` ถ้าคุณตั้งไว้)
 
 ### 8. แก้ปัญหา
 
@@ -124,6 +132,7 @@ hpk self-uninstall
 - **ติดตั้งแล้วแต่หา `hpk` ไม่เจอ** การเปลี่ยน PATH มีผลกับเทอร์มินัลที่เปิดหลังจากนั้นเท่านั้น ปิดเทอร์มินัลแล้วเปิดใหม่
 - **macOS แจ้งว่าเปิดแอปไม่ได้ (Gatekeeper)** ใช้การติดตั้งด้วยคำสั่งเดียว (ข้อ 3) ซึ่งลบเครื่องหมายให้ หรือรัน `xattr -d com.apple.quarantine <path to hpk>`
 - **Windows SmartScreen ขวางอยู่** กด **More info** แล้วกด **Run anyway**
+- **ใช้ผ่าน SSH (เครื่องนั้นไม่มีเบราว์เซอร์)** ส่งต่อพอร์ตแล้วเปิดที่อยู่บนเครื่องของคุณเอง: `ssh -L 7878:127.0.0.1:7878 you@host` แล้วเปิด http://127.0.0.1:7878 บนเครื่องคุณ
 - **ปัญหาอื่น** รัน `hpk doctor` มันตรวจ Hermes, hooks, โปรเจกต์ และ Console
 
 รายละเอียดเต็ม (ภาษาอังกฤษ): [install.md](install.md)

@@ -26,10 +26,11 @@ You do not need administrator rights. hpk installs for your user only.
 
 1. Open https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest and download `hpk.exe`.
 2. Double-click `hpk.exe`.
-3. If Windows shows "Windows protected your PC", click **More info**, then click **Run anyway**. The program is not code-signed yet, so Windows asks you once.
-4. hpk copies itself to `%LOCALAPPDATA%\hpk\bin`, adds that folder and the folder for Hermes (`%LOCALAPPDATA%\hpk\hermes\bin`) to your PATH (the list of folders where Windows looks for programs), adds a Start menu shortcut called "HPK Console", and opens HPK Console in your browser.
+3. Your browser (Edge or Chrome) may say that `hpk.exe` "isn't commonly downloaded" or "could harm your device". The program is not code-signed yet, so this is expected. Open the downloads list, click the **...** next to the file, choose **Keep**, then **Keep anyway** (in Chrome, just **Keep**).
+4. If Windows then shows "Windows protected your PC", click **More info**, then click **Run anyway**. It asks you once.
+5. hpk copies itself to `%LOCALAPPDATA%\hpk\bin`, adds that folder and the folder for Hermes (`%LOCALAPPDATA%\hpk\hermes\bin`) to your PATH (the list of folders where Windows looks for programs), adds a Start menu shortcut called "HPK Console", and opens HPK Console in your browser.
 
-After that you can start it from the Start menu, or type `hpk` in a new terminal.
+The double-click leaves a console window open. That window **is** the HPK Console server: if you close it, the Console stops. To start it again, use the Start menu shortcut "HPK Console", or type `hpk` in a new terminal. To have it start by itself when you log in, run `hpk autostart on` or turn on **Start hpk when I log in** in Settings.
 
 ### 3. Windows / macOS / Linux (one command)
 
@@ -52,7 +53,8 @@ it installs hpk for your user and starts HPK Console.
 - To install a specific version, set `HPK_VERSION` (for example `HPK_VERSION=0.1.0`).
 - To install without starting HPK Console, set `HPK_NO_START=1`.
 - On macOS the script removes the "downloaded from the internet" mark, so Gatekeeper does not block hpk.
-- On macOS and Linux, hpk adds its folders (its own and the Hermes one) to PATH with one marked line in your `~/.profile`, `~/.zshrc` and `~/.bashrc` (only the ones that already exist).
+- On macOS and Linux, hpk adds its folders (its own and the Hermes one) to PATH with one marked line in your shell profile files (`~/.profile`, `~/.zshrc`, `~/.bashrc`, `~/.bash_profile`): in each one that already exists. If none exists (a new Mac account, for example), hpk creates the one for your shell (`~/.zshrc` for zsh, `~/.bash_profile` for bash on macOS, `~/.bashrc` for bash on Linux, otherwise `~/.profile`). It tells you which file it changed.
+- At a terminal, the script starts HPK Console in the foreground (Ctrl+C stops it). Without a terminal it starts it in the background and prints the address and a log file.
 
 You can also run `hpk self-install` yourself at any time. Set
 `HPK_NO_SELFINSTALL=1` if you do not want hpk to install itself automatically.
@@ -81,7 +83,7 @@ irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/co
 docker compose -f compose.release.yaml up -d
 ```
 
-5. Print your owner token (your first sign-in key):
+5. Wait a few seconds for it to start, then print your owner token (your first sign-in key). If the token file is missing, wait a little and try again:
 
 ```sh
 docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
@@ -125,9 +127,13 @@ Run the same install again (step 2 or 3). It stops a running hpk first, then rep
 hpk self-uninstall
 ```
 
-This removes hpk, its PATH entry and the Start menu shortcut. It leaves your
-hpk data and your Hermes home alone, so you lose nothing. To delete those too,
-remove the folders yourself (`%LOCALAPPDATA%\hpk` on Windows).
+First, if you added hpk to Hermes, take it out again:
+
+```sh
+hpk uninstall --yes
+```
+
+Then `hpk self-uninstall` removes hpk, its PATH entries, the Start menu shortcut and start at login. It leaves your hpk data and your Hermes home alone, so you lose nothing. The folder of the Hermes that hpk installed leaves your PATH too, so the `hermes` command will no longer be found in a new terminal (the files are still in the data folder). To delete everything, remove the data folder yourself: `%LOCALAPPDATA%\hpk` on Windows, `~/Library/Application Support/hpk` on macOS, `~/.local/share/hpk` on Linux (`$XDG_DATA_HOME/hpk` if you set it).
 
 ### 8. Troubleshooting
 
@@ -135,6 +141,7 @@ remove the folders yourself (`%LOCALAPPDATA%\hpk` on Windows).
 - **`hpk` is not found after installing.** PATH changes only reach terminals opened afterwards. Close the terminal and open a new one.
 - **macOS says the app cannot be opened (Gatekeeper).** Use the one-command install (step 3), which removes the mark. Or run `xattr -d com.apple.quarantine <path to hpk>`.
 - **Windows SmartScreen blocks it.** Click **More info**, then **Run anyway**.
+- **Over SSH (no browser on that machine).** Forward the port, then open the address on your own computer: `ssh -L 7878:127.0.0.1:7878 you@host`, then open http://127.0.0.1:7878 locally.
 - **Something else.** Run `hpk doctor`. It checks Hermes, hooks, projects and the Console.
 
 ---
@@ -194,7 +201,7 @@ The add-project page first checks two things:
 2. **hpk in Hermes.** The same change as `hpk install` (below), shown with its
    diff, applied after you press "Add hpk to Hermes".
 
-Then connect a model account with `hermes setup` in a terminal.
+Then connect a model account with `hermes auth add <provider>` in a terminal.
 
 ### Hermes Agent's licence (checked for an offline bundle)
 

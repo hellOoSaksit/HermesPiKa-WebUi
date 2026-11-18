@@ -15,10 +15,12 @@ against Hermes v0.23.1.
 - One-line installers `install.ps1` and `install.sh` on every release: they
   check the SHA-256 against `checksums.txt` and stop on a mismatch;
   `HPK_VERSION` pins a version. Re-running them updates hpk.
-- Release image `ghcr.io/hellooosaksit/hpk-hermes` and
+- Release image `ghcr.io/helloosaksit/hpk-hermes` and
   `docker/compose.release.yaml`: Hermes Agent and hpk in one container, with
   the Console on http://127.0.0.1:7878.
 - Beginner install guide in English and Thai (docs/install.md, docs/install.th.md).
+- On a Mac or Linux account with no shell profile, `hpk self-install` creates the one for your shell so `hpk` and `hermes` are on PATH, and says which file it changed. `hpk self-uninstall` also turns off start at login. `install.sh` runs hpk in the foreground at a terminal, or in the background with `--no-open` and a log otherwise.
+- Release checklist for maintainers (docs/release.md); CI builds a release snapshot and checks the asset list.
 
 **One program, any OS**
 - `hpk` with no arguments starts HPK Console once per machine (the port is
