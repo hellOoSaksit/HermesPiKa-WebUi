@@ -392,16 +392,17 @@ export default async function chatView({ params, go, rerender }) {
   const palette = h('div.palette#chatPalette', { role: 'listbox', hidden: true });
   let palItems = []; let palIdx = 0; let palMode = null;
   // Attaching uploads at once (live, solo): the chip shows progress, then a tick; the
-  // message carries the project-relative paths the server returns. Demo and team
-  // mode keep names only.
+  // message carries the project-relative paths the server returns. Without a live
+  // project, or in team mode, attaching is off: a name that was never uploaded is
+  // never sent.
   const canUpload = isLive() && !teamMode();
   const addFiles = (files) => {
     for (const file of files) {
-      const a = { name: file.name, pct: 0, path: canUpload ? null : file.name, err: null };
+      if (!canUpload) return;
+      const a = { name: file.name, pct: 0, path: null, err: null };
       attachments.push(a);
-      if (!canUpload) continue;
       api.uploadFiles(api.project().id, [file], (p) => { a.pct = p; drawAtt(); })
-        .then((r) => { a.path = (r.files && r.files[0] && r.files[0].path) || file.name; a.pct = 1; drawAtt(); })
+        .then((r) => { const f0 = r.files && r.files[0]; if (!f0 || !f0.path) throw new Error(t('chat.uploadFailed')); a.path = f0.path; a.pct = 1; drawAtt(); })
         .catch((e) => { a.err = e.message || t('chat.uploadFailed'); drawAtt(); toast(t('chat.uploadFailed') + ': ' + a.err, null, 'deny'); });
     }
     drawAtt();
@@ -638,7 +639,7 @@ export default async function chatView({ params, go, rerender }) {
     ], { align: 'right', up: true }) }, icon('down'));
     footer.replaceChildren(
       h('div.cf-left',
-        h('button.icon-btn', { type: 'button', 'aria-label': t('chat.attach'), title: t('chat.attach'), disabled: !canChat || null, onclick: () => fileIn.click() }, icon('clip')),
+        h('button.icon-btn', { type: 'button', 'aria-label': t('chat.attach'), title: canUpload ? t('chat.attach') : t('chat.attachOff'), 'data-tip': canUpload ? null : t('chat.attachOff'), disabled: !canChat || !canUpload || null, onclick: () => fileIn.click() }, icon('clip')),
         setChip, ctxRing(), recallChip()),
       h('div.cf-right',
         running ? h('button.btn.danger', { type: 'button', onclick: () => api.stopStreaming(sess.id) }, icon('stop'), t('chat.stopReply')) : null,
@@ -646,7 +647,7 @@ export default async function chatView({ params, go, rerender }) {
   }
 
   const composer = h('div.composer', { ondragover: (e) => { e.preventDefault(); composer.classList.add('drop'); }, ondragleave: () => composer.classList.remove('drop'),
-    ondrop: (e) => { e.preventDefault(); composer.classList.remove('drop'); if (canChat) addFiles([...e.dataTransfer.files]); } },
+    ondrop: (e) => { e.preventDefault(); composer.classList.remove('drop'); if (canChat && canUpload) addFiles([...e.dataTransfer.files]); } },
   palette, attRow, input, fileIn, footer);
 
   // ---- header ----

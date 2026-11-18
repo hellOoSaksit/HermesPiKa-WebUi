@@ -335,6 +335,7 @@
     "uploadFailed": "Upload failed",
     "uploading": "Uploading {f}",
     "stillUploading": "Wait for the files to finish uploading.",
+    "attachOff": "Attaching files needs a connected project on your own computer.",
     "attach": "Attach files",
     "wikiRef": "wiki page",
     "cmd": {

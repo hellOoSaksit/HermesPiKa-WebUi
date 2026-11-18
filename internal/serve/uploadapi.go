@@ -98,8 +98,9 @@ func publish(tmp, dir, name string) (string, error) {
 		if _, err := os.Lstat(dst); err == nil {
 			continue
 		}
-		// a hard link fails if dst appeared meanwhile; some volumes cannot link
-		// and then fall back to rename, which Windows also refuses to overwrite.
+		// a hard link fails if dst appeared meanwhile; volumes that cannot link
+		// (FAT/exFAT, some network drives) get an O_EXCL copy instead. Never a
+		// rename: on Windows Go's rename replaces an existing file.
 		err := os.Link(tmp, dst)
 		if err == nil {
 			os.Remove(tmp)
@@ -108,15 +109,41 @@ func publish(tmp, dir, name string) (string, error) {
 		if os.IsExist(err) {
 			continue
 		}
-		if err := os.Rename(tmp, dst); err != nil {
-			if _, st := os.Lstat(dst); st == nil {
-				continue
-			}
+		switch err := copyExcl(tmp, dst); {
+		case err == nil:
+			os.Remove(tmp)
+			return cand, nil
+		case os.IsExist(err):
+			continue
+		default:
 			return "", err
 		}
-		return cand, nil
 	}
 	return "", errors.New("too many files with that name")
+}
+
+// copyExcl creates dst (failing if it exists) and copies src into it; a failed
+// copy leaves no dst behind.
+func copyExcl(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+	out, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(out, in); err != nil {
+		out.Close()
+		os.Remove(dst)
+		return err
+	}
+	if err := out.Close(); err != nil {
+		os.Remove(dst)
+		return err
+	}
+	return nil
 }
 
 type uploaded struct {

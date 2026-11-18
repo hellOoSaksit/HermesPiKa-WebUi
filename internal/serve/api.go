@@ -264,10 +264,22 @@ func (s *Server) api(mux *http.ServeMux) {
 		if _, ok := s.chatAccess(w, r, p, r.PathValue("id")); !ok {
 			return
 		}
+		if len(in.Attachments) > maxAttachments {
+			writeErr(w, http.StatusBadRequest, errors.New("too many attached files"))
+			return
+		}
 		for _, a := range in.Attachments {
-			if allowedParts(a) == nil && !filepath.IsAbs(a) {
-				in.Text += "\n\nAttached file (in the project folder): " + a
+			if strings.ContainsFunc(a, func(r rune) bool { return r < 32 || r == 127 }) {
+				writeErr(w, http.StatusBadRequest, errors.New("bad attached file name"))
+				return
 			}
+			if _, _, err := projectFile(p.Root, a); err != nil {
+				writeErr(w, http.StatusBadRequest, fmt.Errorf("attached file %q: %w", a, err))
+				return
+			}
+		}
+		for _, a := range in.Attachments {
+			in.Text += "\n\nAttached file (in the project folder): " + a
 		}
 		if strings.TrimSpace(in.Text) == "" {
 			writeErr(w, http.StatusBadRequest, errors.New("empty message"))

@@ -21,6 +21,8 @@ import (
 // SVG or HTML file cannot run script on the Console's origin.
 var secretFileRE = regexp.MustCompile(`(?i)(^id_[a-z0-9_]+(\.pub)?$|\.(pem|key|p12|pfx|kdbx|keystore|jks|env|tfstate|tfvars|ppk|asc|gpg)$|\.tfstate\.|^credentials|^service-?account.*\.json$|secrets?\.(json|ya?ml|toml)$|^\.?(npmrc|pypirc|netrc|pgpass|htpasswd)$)`)
 
+const maxAttachments = 20
+
 const maxServe = 1 << 30 // 1 GB
 
 func registerFileTypes() {
@@ -121,11 +123,32 @@ func (s *Server) filesAPI(mux *http.ServeMux) {
 
 // allowedParts refuses hidden components, components Windows would trim, and
 // key/credential file names, anywhere in a project-relative path.
+// reservedDevice reports Windows device names (CON, NUL, COM1, AUX.txt …); refused
+// on every OS so a project folder stays usable on Windows.
+func reservedDevice(part string) bool {
+	base := strings.ToUpper(part)
+	if i := strings.IndexByte(base, '.'); i >= 0 {
+		base = base[:i]
+	}
+	base = strings.TrimRight(base, " ")
+	switch base {
+	case "CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$":
+		return true
+	}
+	if len(base) == 4 && (strings.HasPrefix(base, "COM") || strings.HasPrefix(base, "LPT")) && base[3] >= '0' && base[3] <= '9' {
+		return true
+	}
+	return false
+}
+
 func allowedParts(rel string) error {
 	parts := strings.Split(filepath.ToSlash(rel), "/")
 	for _, part := range parts {
 		if part == ".." || strings.HasPrefix(part, ".") {
 			return errors.New("hidden files and folders are not shown")
+		}
+		if reservedDevice(part) {
+			return errors.New("that name is reserved on Windows")
 		}
 		if strings.HasSuffix(part, ".") || strings.HasSuffix(part, " ") {
 			return errors.New("give the file's plain path")
