@@ -190,9 +190,18 @@ type Spec struct {
 	Env  []string `json:"env,omitempty"`
 }
 
+// progBase is the last part of a program path, split on / and \ on every OS
+// (a Windows path can reach a Linux container through the relay).
+func progBase(name string) string {
+	if i := strings.LastIndexAny(name, `/\`); i >= 0 {
+		name = name[i+1:]
+	}
+	return name
+}
+
 // Allowed programs: the relay runs Hermes, nothing else.
 func Allowed(name string) bool {
-	b := strings.ToLower(filepath.Base(name))
+	b := strings.ToLower(progBase(name))
 	b = strings.TrimSuffix(b, ".exe")
 	b = strings.TrimSuffix(b, ".cmd")
 	return b == "hermes" || b == "hermes-acp" || b == "hpk"

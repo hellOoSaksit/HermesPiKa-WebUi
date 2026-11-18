@@ -36,7 +36,7 @@ func Relay(args []string, stderr io.Writer) int {
 		s = NewSpec(c.Home, c.Bin, []string{"ai-probe", c.Private, c.Home})
 	case args[0] == "--probe":
 		s = NewSpec(c.Home, "hermes", []string{"--version"})
-	case !Allowed(args[0]) || strings.EqualFold(strings.TrimSuffix(filepath.Base(args[0]), ".exe"), "hpk"):
+	case !Allowed(args[0]) || strings.EqualFold(strings.TrimSuffix(progBase(args[0]), ".exe"), "hpk"):
 		fmt.Fprintln(stderr, "hpk ai-relay: only hermes and hermes-acp run as the AI")
 		return 2
 	default:
@@ -132,6 +132,6 @@ func DockerArgs(c *Config, s Spec) []string {
 		}
 		args = append(args, "-e", k+"="+v)
 	}
-	name := strings.TrimSuffix(filepath.Base(s.Name), ".exe")
+	name := strings.TrimSuffix(progBase(s.Name), ".exe")
 	return append(append(args, c.Container, name), s.Args...)
 }
