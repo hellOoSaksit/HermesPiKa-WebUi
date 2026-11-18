@@ -398,7 +398,7 @@ func childReport(ev Event) result {
 // boardGuard (pre_tool_call): editing a file someone else holds a claim on is an
 // overlap (§20.4 🟠) — a person decides before the edit goes ahead.
 func boardGuard(ev Event) result {
-	if ev.ToolName != "write_file" && ev.ToolName != "patch" {
+	if !fileWriters[ev.ToolName] {
 		return result{Allow, ""}
 	}
 	p, err := privacy.ResolveSession(project.Home(), ev.Cwd, ev.SessionID)
@@ -435,7 +435,7 @@ func boardHeartbeat(ev Event) result {
 		return result{Allow, ""}
 	}
 	var touched []string
-	if ev.ToolName == "write_file" || ev.ToolName == "patch" {
+	if fileWriters[ev.ToolName] {
 		if rel := projectRel(p, ev.Cwd, firstStr(ev.ToolInput, "path", "file_path")); rel != "" {
 			touched = append(touched, rel)
 		}

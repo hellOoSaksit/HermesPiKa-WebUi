@@ -107,6 +107,25 @@ func TestMisplacedWriteWarns(t *testing.T) {
 	if out, _ := call("board_heartbeat", write("notes.txt")); out != "" {
 		t.Fatalf("no rule for .txt: %q", out)
 	}
+	// reading a file in the wrong place is not saving it: no note
+	read := strings.Replace(write("scene.fbx"), `"tool_name":"write_file"`, `"tool_name":"read_file"`, 1)
+	if out, _ := call("board_heartbeat", read); out != "" {
+		t.Fatalf("read_file noted: %q", out)
+	}
+}
+
+// A cron run has no one to ask: it is told to keep new files out instead.
+func TestFolderTextForCron(t *testing.T) {
+	p, _ := folderProject(t)
+	if got := folderText(p, folders.Rules{}, folders.None, true); !strings.Contains(got, "do not save new files into the project") || strings.Contains(got, "ask the person") {
+		t.Fatalf("cron: %q", got)
+	}
+	if got := folderText(p, folders.Rules{}, folders.None, false); !strings.Contains(got, "ask the person") {
+		t.Fatalf("chat: %q", got)
+	}
+	if got := folderText(p, folders.Rules{}, folders.Changed, true); strings.Contains(got, "ask the person") {
+		t.Fatalf("cron, changed: %q", got)
+	}
 }
 
 func TestFolderContextIsLazy(t *testing.T) {

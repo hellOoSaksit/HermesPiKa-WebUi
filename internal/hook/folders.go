@@ -44,7 +44,8 @@ func folderContext(ev Event) result {
 		return result{Allow, ""} // nothing the rules depend on changed: no read, no parse
 	}
 	rules, st := folders.Load(home, p)
-	text := folderText(p, rules, st)
+	_, job := project.LinkOf(home, ev.SessionID)
+	text := folderText(p, rules, st, job != "")
 	sum := sha256.Sum256([]byte(text))
 	key := hex.EncodeToString(sum[:8])
 	if key != oldKey || fp != oldFp {
@@ -58,7 +59,9 @@ func folderContext(ev Event) result {
 	return result{Inform, text}
 }
 
-func folderText(p *project.Project, r folders.Rules, st folders.State) string {
+// folderText is what the AI is told. A cron run has no person to ask, so it is
+// told to keep new files out of the project until the person sets the rules.
+func folderText(p *project.Project, r folders.Rules, st folders.State, cronRun bool) string {
 	switch st {
 	case folders.Pending:
 		n := ""
@@ -81,15 +84,25 @@ func folderText(p *project.Project, r folders.Rules, st folders.State) string {
 		}
 		return "[hpk] Project folders: " + strings.Join(parts, ", ") + ". Save each file in its folder."
 	case folders.Changed:
+		if cronRun {
+			return "[hpk] The folder rules page was changed outside approval. Save files in the project root until the person approves it again."
+		}
 		return "[hpk] The folder rules page was changed outside approval; ask the person to approve it again. Save files in the project root until then."
+	}
+	if cronRun {
+		return "[hpk] This project has no folder rules yet. This is a scheduled run with no one to ask: do not save new files into the project until the person sets the folder rules."
 	}
 	return "[hpk] Before saving the first file into this project, ask the person which folders to use and what goes in each, then draft `decisions/folders.md` with the table `| Folder | What goes here | Extensions |` (hpk wiki draft). If they want no split, draft the page with the header only."
 }
 
+// fileWriters: the Hermes tools that save a file (v0.23.1). An explicit list:
+// reading or searching a path is not saving one.
+var fileWriters = map[string]bool{"write_file": true, "patch": true}
+
 // misplacedNote (post_tool_call) gently says where a file just saved belongs.
 // It never blocks.
 func misplacedNote(ev Event) result {
-	if ev.ToolInput == nil {
+	if ev.ToolInput == nil || !fileWriters[ev.ToolName] {
 		return result{Allow, ""}
 	}
 	path := firstStr(ev.ToolInput, "path", "file_path")
