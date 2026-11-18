@@ -1,0 +1,200 @@
+// SPDX-License-Identifier: MIT AND LicenseRef-Commons-Clause-1.0
+
+// Package selfinstall puts a downloaded hpk where it belongs: a copy in hpk's
+// own folder (<DataDir>/bin), that folder on the user's PATH, and on Windows a
+// Start-menu shortcut. A beginner who double-clicks hpk.exe needs nothing else.
+// It never touches Hermes or the data folder, and Uninstall reverses it.
+package selfinstall
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"time"
+
+	"hpk.local/hpk/internal/launch"
+)
+
+// Result says what Install did.
+type Result struct {
+	Copied, PathAdded, Shortcut bool
+	Target                      string
+}
+
+func exeName() string {
+	if runtime.GOOS == "windows" {
+		return "hpk.exe"
+	}
+	return "hpk"
+}
+
+// Dir is the folder that holds the installed hpk.
+func Dir() string { return filepath.Join(launch.DataDir(), "bin") }
+
+// Target is where the installed copy lives: <DataDir>/bin/hpk(.exe).
+func Target() string { return filepath.Join(Dir(), exeName()) }
+
+// dryRun (HPK_SELFINSTALL_DRYRUN=1) skips the PATH and shortcut changes, so a
+// manual try or a test cannot edit the real user's environment.
+func dryRun() bool { return os.Getenv("HPK_SELFINSTALL_DRYRUN") == "1" }
+
+func samePath(a, b string) bool {
+	if ra, err := filepath.EvalSymlinks(a); err == nil {
+		a = ra
+	}
+	if rb, err := filepath.EvalSymlinks(b); err == nil {
+		b = rb
+	}
+	a, b = filepath.Clean(a), filepath.Clean(b)
+	if runtime.GOOS == "windows" {
+		return strings.EqualFold(a, b)
+	}
+	return a == b
+}
+
+// IsInstalled reports whether exe is the installed copy itself.
+func IsInstalled(exe string) bool { return samePath(exe, Target()) }
+
+func sameBytes(a, b string) bool {
+	ia, err := os.Stat(a)
+	if err != nil {
+		return false
+	}
+	ib, err := os.Stat(b)
+	if err != nil || ia.Size() != ib.Size() {
+		return false
+	}
+	x, err := os.ReadFile(a)
+	if err != nil {
+		return false
+	}
+	y, err := os.ReadFile(b)
+	return err == nil && bytes.Equal(x, y)
+}
+
+// stopRunning ends a running hpk (what `hpk stop` does) so its file can be replaced.
+func stopRunning(out io.Writer) {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	for _, r := range launch.Runs() {
+		if launch.Probe(ctx, r.Addr) != launch.HPK {
+			_ = os.Remove(launch.RunFile(r.Addr))
+			continue
+		}
+		if err := launch.Stop(ctx, r); err == nil {
+			fmt.Fprintf(out, "Stopped hpk on %s\n", r.Addr)
+		}
+	}
+}
+
+// oldName is where a busy binary is moved aside (Windows cannot overwrite a running exe).
+func oldName() string {
+	ext := filepath.Ext(exeName())
+	return filepath.Join(Dir(), strings.TrimSuffix(exeName(), ext)+".old"+ext)
+}
+
+func copyFile(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+	tmp, err := os.CreateTemp(filepath.Dir(dst), ".hpk-new-*")
+	if err != nil {
+		return err
+	}
+	name := tmp.Name()
+	if _, err := io.Copy(tmp, in); err != nil {
+		tmp.Close()
+		os.Remove(name)
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		os.Remove(name)
+		return err
+	}
+	if err := os.Chmod(name, 0o755); err != nil {
+		os.Remove(name)
+		return err
+	}
+	if err := os.Rename(name, dst); err != nil {
+		// Busy target (Windows): move the old file aside, then put the new one in.
+		_ = os.Remove(oldName())
+		if err2 := os.Rename(dst, oldName()); err2 != nil {
+			os.Remove(name)
+			return err
+		}
+		if err := os.Rename(name, dst); err != nil {
+			_ = os.Rename(oldName(), dst)
+			os.Remove(name)
+			return err
+		}
+	}
+	return nil
+}
+
+// Install copies exe to Target(), puts its folder on PATH and, on Windows,
+// adds the Start-menu shortcut. It is safe to run again.
+func Install(exe string, out io.Writer) (Result, error) {
+	res := Result{Target: Target()}
+	if err := os.MkdirAll(Dir(), 0o755); err != nil {
+		return res, err
+	}
+	if !samePath(exe, res.Target) && !sameBytes(exe, res.Target) {
+		stopRunning(out)
+		if err := copyFile(exe, res.Target); err != nil {
+			return res, fmt.Errorf("copy hpk to %s: %w", res.Target, err)
+		}
+		res.Copied = true
+		fmt.Fprintf(out, "Copied hpk to %s\n", res.Target)
+	}
+	if dryRun() {
+		return res, nil
+	}
+	added, err := addPath(Dir())
+	if err != nil {
+		return res, fmt.Errorf("add %s to PATH: %w", Dir(), err)
+	}
+	res.PathAdded = added
+	if added {
+		fmt.Fprintf(out, "Added %s to your PATH (open a new terminal to use `hpk`).\n", Dir())
+	}
+	sc, err := addShortcut(res.Target)
+	if err != nil {
+		fmt.Fprintf(out, "Could not make the Start-menu shortcut: %v\n", err)
+	}
+	res.Shortcut = sc
+	return res, nil
+}
+
+// Uninstall removes what Install added. Data and the Hermes home stay.
+func Uninstall(out io.Writer) error {
+	stopRunning(out)
+	if !dryRun() {
+		removed, err := removePath(Dir())
+		if err != nil {
+			return err
+		}
+		if removed {
+			fmt.Fprintf(out, "Removed %s from your PATH.\n", Dir())
+		}
+		if err := removeShortcut(); err != nil {
+			fmt.Fprintf(out, "Could not remove the Start-menu shortcut: %v\n", err)
+		}
+	}
+	for _, f := range []string{Target(), oldName()} {
+		if err := os.Remove(f); err != nil && !os.IsNotExist(err) {
+			// A running exe cannot be deleted on Windows: move it aside.
+			if err2 := os.Rename(f, f+".gone"); err2 != nil {
+				return err
+			}
+		}
+	}
+	fmt.Fprintln(out, "hpk was removed. Your projects, wikis and Hermes were left alone.")
+	return nil
+}

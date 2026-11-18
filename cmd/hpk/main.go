@@ -26,6 +26,7 @@ const usage = `hpk — Hermes Project Kit
 Usage:
   hpk [--no-open]                     start HPK Console (once per machine) and open it in the browser
   hpk stop [--addr A]                 stop hpk serve and its built-in browser
+  hpk self-install / self-uninstall   put hpk in its own folder and on PATH (done once on first double-click)
   hpk serve [--addr 127.0.0.1:7878]   run HPK Console and the daemon in this terminal
             [--tls-cert F --tls-key F]  team mode on a network (docs/team.md)
   hpk team init|add|list|role|remove|token   people and roles (team mode)
@@ -56,10 +57,20 @@ func main() {
 func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	// A Hermes that hpk installed (hpk setup hermes) is found like one on PATH.
 	setup.UsePath(launch.DataDir())
+	if len(args) == 0 {
+		// A downloaded hpk, started by double-click, installs itself first.
+		if code, ok := autoSelfInstall(stdout, stderr); ok {
+			return code
+		}
+	}
 	if len(args) == 0 || strings.HasPrefix(args[0], "-") && args[0] != "-h" && args[0] != "--help" && args[0] != "-v" && args[0] != "--version" {
 		return runLaunch(args, stdout, stderr)
 	}
 	switch args[0] {
+	case "self-install":
+		return runSelfInstall(false, stdout, stderr)
+	case "self-uninstall":
+		return runSelfInstall(true, stdout, stderr)
 	case "stop":
 		return runStop(args[1:], stdout, stderr)
 	case "autostart":
