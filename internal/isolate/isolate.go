@@ -348,3 +348,7 @@ func Ungrant(c *Config, dir string) error {
 	c.Granted = kept
 	return Save(c)
 }
+
+// IsUnsupported reports whether Grant or Ungrant refused because this setup
+// (a container, or an account made by hand) has no automatic folder grants.
+func IsUnsupported(err error) bool { return err == errContainer || err == errManual }

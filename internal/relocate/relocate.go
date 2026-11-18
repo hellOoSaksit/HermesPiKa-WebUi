@@ -18,6 +18,21 @@ import (
 // OldSuffix is added to the source while the swap is in progress.
 const OldSuffix = ".hpk-old"
 
+// CleanupError: the move itself succeeded (the new place is complete and
+// recorded) but the old copy could not be removed; it is still at Path.
+type CleanupError struct {
+	Path string
+	Err  error
+}
+
+func (e *CleanupError) Error() string {
+	return fmt.Sprintf("moved, but the old copy is still at %s: %v", e.Path, e.Err)
+}
+func (e *CleanupError) Unwrap() error { return e.Err }
+
+// removeAll is os.RemoveAll; tests swap it.
+var removeAll = os.RemoveAll
+
 // Move moves the folder src to dst (see MoveWith).
 func Move(src, dst string) error { return MoveWith(src, dst, nil) }
 
@@ -25,6 +40,8 @@ func Move(src, dst string) error { return MoveWith(src, dst, nil) }
 // src to src.hpk-old, calls commit (which records the new location), then
 // removes src.hpk-old. Before the swap any failure removes the partial dst and
 // leaves src untouched; when commit fails src is put back. Links are refused.
+// When only the final removal of src.hpk-old fails, the move stands and a
+// *CleanupError is returned: callers must treat that as success with a warning.
 func MoveWith(src, dst string, commit func() error) error {
 	src, dst = filepath.Clean(src), filepath.Clean(dst)
 	if !filepath.IsAbs(src) || !filepath.IsAbs(dst) {
@@ -91,7 +108,10 @@ func MoveWith(src, dst string, commit func() error) error {
 			return err
 		}
 	}
-	return os.RemoveAll(old)
+	if err := removeAll(old); err != nil {
+		return &CleanupError{Path: old, Err: err}
+	}
+	return nil
 }
 
 type tally struct{ files, bytes int64 }

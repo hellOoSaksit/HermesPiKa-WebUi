@@ -3,6 +3,7 @@
 package relocate
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -74,5 +75,25 @@ func TestMoveCommitFailureRestores(t *testing.T) {
 	}
 	if _, err := os.Stat(dst); err == nil {
 		t.Error("dst left behind")
+	}
+}
+
+func TestMoveCleanupFailureIsNotFailure(t *testing.T) {
+	base := t.TempDir()
+	src, dst := filepath.Join(base, "wiki"), filepath.Join(base, "dst")
+	write(t, filepath.Join(src, "a.md"), "a")
+	removeAll = func(string) error { return os.ErrPermission }
+	defer func() { removeAll = os.RemoveAll }()
+	committed := false
+	err := MoveWith(src, dst, func() error { committed = true; return nil })
+	var ce *CleanupError
+	if !errors.As(err, &ce) || ce.Path != src+OldSuffix {
+		t.Fatalf("want CleanupError, got %v", err)
+	}
+	if !committed {
+		t.Error("commit not called")
+	}
+	if _, err := os.Stat(filepath.Join(dst, "a.md")); err != nil {
+		t.Error("new copy missing")
 	}
 }

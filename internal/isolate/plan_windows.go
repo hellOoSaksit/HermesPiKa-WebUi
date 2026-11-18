@@ -5,6 +5,7 @@
 package isolate
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 )
@@ -138,3 +139,6 @@ func ungrantDir(c *Config, dir string) error {
 	}
 	return icacls(dir, "/remove:g", c.User)
 }
+
+// errManual exists so IsUnsupported compiles; folder grants are automated on Windows.
+var errManual = errors.New("not supported")
