@@ -9,7 +9,6 @@ import (
 	"errors"
 	"io"
 	"log"
-	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -24,7 +23,6 @@ import (
 )
 
 // The Console is an installable web app; some systems have no MIME entry for its manifest.
-func init() { _ = mime.AddExtensionType(".webmanifest", "application/manifest+json") }
 
 // life is the daemon's own lifecycle: the stop key from the run file, the
 // cancel that ends Run, and the one Hermes install job.

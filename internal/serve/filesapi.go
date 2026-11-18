@@ -23,7 +23,7 @@ var secretFileRE = regexp.MustCompile(`(?i)(^id_[a-z0-9_]+(\.pub)?$|\.(pem|key|p
 
 const maxServe = 1 << 30 // 1 GB
 
-func init() {
+func registerFileTypes() {
 	for ext, typ := range map[string]string{
 		".glb": "model/gltf-binary", ".gltf": "model/gltf+json", ".fbx": "application/octet-stream", ".obj": "text/plain; charset=utf-8",
 		".mtl": "text/plain; charset=utf-8", ".stl": "model/stl", ".ply": "application/octet-stream", ".dae": "model/vnd.collada+xml",
