@@ -5,6 +5,31 @@ as a non-root user, works with a read-only root filesystem and no Linux
 capabilities, and keeps everything in the `/data` volume (the Hermes home hpk
 uses).
 
+## Quick start (one person, one computer)
+
+Use the released image with `docker/compose.release.yaml`
+(`ghcr.io/hellooosaksit/hpk-hermes:0.1.0`, Hermes Agent and hpk together, the
+Console on http://127.0.0.1:7878). Change `HPK_OWNER` in the file to your
+email, then:
+
+```bash
+docker compose -f compose.release.yaml up -d
+```
+
+```bash
+docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
+```
+
+Open http://127.0.0.1:7878 and paste the token. Hermes needs a model account:
+
+```bash
+docker compose -f compose.release.yaml exec -u hermes hermes hermes auth add <provider>
+```
+
+In Git Bash on Windows, put `MSYS_NO_PATHCONV=1` before these commands. Data
+lives in the `hermes-data` volume. For a team server with TLS, read on. Beginner
+guide: [install.md](install.md) (Thai: [install.th.md](install.th.md)).
+
 ## Build
 
 The Dockerfile packages a Linux binary built outside the image, so the image

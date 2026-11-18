@@ -1,9 +1,24 @@
 # Changelog
 
-## 0.2.0 (unreleased)
+## 0.1.0 (unreleased)
 
 First public release. hpk is an independent add-on for Hermes Agent, tested
 against Hermes v0.23.1.
+
+**Install**
+- Double-click `hpk.exe` (or run `hpk` from outside its install folder): hpk
+  installs itself for your user (`%LOCALAPPDATA%\hpk\bin` on Windows, in hpk's
+  data folder elsewhere), adds that folder to PATH, adds a Start menu shortcut
+  "HPK Console" on Windows, and starts the Console. `hpk self-install` and
+  `hpk self-uninstall` do it explicitly; `HPK_NO_SELFINSTALL=1` turns the
+  automatic part off.
+- One-line installers `install.ps1` and `install.sh` on every release: they
+  check the SHA-256 against `checksums.txt` and stop on a mismatch;
+  `HPK_VERSION` pins a version. Re-running them updates hpk.
+- Release image `ghcr.io/hellooosaksit/hpk-hermes` and
+  `docker/compose.release.yaml`: Hermes Agent and hpk in one container, with
+  the Console on http://127.0.0.1:7878.
+- Beginner install guide in English and Thai (docs/install.md, docs/install.th.md).
 
 **One program, any OS**
 - `hpk` with no arguments starts HPK Console once per machine (the port is

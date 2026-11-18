@@ -1,3 +1,5 @@
+🇹🇭 [คู่มือภาษาไทย](docs/install.th.md)
+
 # Hermes Project Kit (hpk)
 
 > Working name. An independent add-on for [Hermes Agent](https://github.com/NousResearch/hermes-agent) — not an official Nous Research product.
@@ -17,22 +19,49 @@ Status: **M9** — team mode: people, roles (owner, maintainer, member, viewer),
 ## Install
 
 hpk is one program, and HPK Console is a web app, so it works the same on
-Windows, macOS and Linux:
+Windows, macOS and Linux. Pick one way:
 
-1. Download `hpk` for your OS from the releases page (or build it, below) and
-   put it anywhere on PATH.
-2. Run `hpk`. It starts HPK Console on http://127.0.0.1:7878 (once per
-   machine: a second `hpk` just opens it) and opens it in your browser.
-   Stop it with Ctrl+C or `hpk stop`.
-3. First run: the Console checks for Hermes Agent. If it is missing, it offers
-   to install the tested version (v0.23.1) into hpk's own folder with its own
-   portable Python, showing the size and every source first. Then it adds hpk
-   to Hermes (the same change `hpk install` shows) after you agree.
-4. Optional, in Settings › General: **Install as app** (its own window and
-   icon, from Chrome, Edge or Safari), desktop notices with quiet hours, and
-   **Start hpk when I log in** (the only OS-specific part).
+**Windows.** Download `hpk.exe` from the
+[Releases page](https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest)
+and double-click it (if SmartScreen warns: More info, then Run anyway). Or, in
+PowerShell:
 
-Details: [docs/install.md](docs/install.md).
+```powershell
+irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/install.ps1 | iex
+```
+
+**macOS / Linux:**
+
+```sh
+curl -fsSL https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/install.sh | sh
+```
+
+**Docker** (Hermes Agent and hpk together; edit `HPK_OWNER` in
+`docker/compose.release.yaml` first):
+
+```sh
+docker compose -f compose.release.yaml up -d
+docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
+# then open http://127.0.0.1:7878 and paste the token
+```
+
+hpk installs itself for your user (no administrator rights), adds itself to
+PATH and starts HPK Console on http://127.0.0.1:7878 in your browser (once per
+machine: a second `hpk` just opens it). Stop it with Ctrl+C or `hpk stop`;
+remove it with `hpk self-uninstall`. Update by running the same install again.
+
+First run: the Console checks for Hermes Agent. If it is missing, it offers
+to install the tested version (v0.23.1) into hpk's own folder with its own
+portable Python, showing the size and every source first. Then it adds hpk
+to Hermes (the same change `hpk install` shows) after you agree. Then add a
+model account in Settings, AI accounts.
+
+Optional, in Settings › General: **Install as app** (its own window and
+icon, from Chrome, Edge or Safari), desktop notices with quiet hours, and
+**Start hpk when I log in**.
+
+Step by step for beginners: [docs/install.md](docs/install.md) (Thai:
+[docs/install.th.md](docs/install.th.md)).
 
 ## Build
 

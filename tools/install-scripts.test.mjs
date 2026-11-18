@@ -155,3 +155,27 @@ test("install.ps1: no network gives a clear download message", { skip: !havePs }
   assert.notEqual(r.status, 0);
   assert.match(r.stderr + r.stdout, /download/i);
 });
+
+// The English and Thai guides must have the same Quick install headings.
+test("install.md and install.th.md: same Quick install heading structure", () => {
+  const quick = (file) => {
+    const text = readFileSync(join(root, "docs", file), "utf8").replace(/```[\s\S]*?```/g, "");
+    const lines = text.split(/\r?\n/);
+    const start = lines.findIndex((l) => /^## /.test(l) && !/^## ?$/.test(l) && !/^# /.test(l));
+    assert.ok(start >= 0, `${file}: no ## heading`);
+    let end = lines.findIndex((l, i) => i > start && /^## /.test(l));
+    if (end < 0) end = lines.length;
+    return lines.slice(start, end).filter((l) => /^#{2,3} /.test(l));
+  };
+  const en = quick("install.md");
+  const th = quick("install.th.md");
+  assert.equal(en.filter((l) => l.startsWith("## ")).length, 1);
+  assert.equal(en.filter((l) => l.startsWith("### ")).length, 8);
+  assert.deepEqual(
+    th.map((l) => l.match(/^#+/)[0]),
+    en.map((l) => l.match(/^#+/)[0]),
+  );
+  // Numbered steps appear in the same order.
+  const nums = (a) => a.map((l) => (l.match(/^### (\d+)\./) || [])[1]);
+  assert.deepEqual(nums(th), nums(en));
+});
