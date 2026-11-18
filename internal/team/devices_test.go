@@ -161,3 +161,27 @@ func TestAllowIPs(t *testing.T) {
 		t.Fatal("bad allow_ips accepted")
 	}
 }
+
+// A device's first use is written at once: `hpk team devices` runs in another
+// process and reads devices.json, so it must not say "never" right after a join.
+func TestFirstUseIsSavedAtOnce(t *testing.T) {
+	home := t.TempDir()
+	c := teamOf(t)
+	d, _ := LoadDevices(home)
+	now := time.Now()
+	code, _, err := d.NewInvite(c, "max@example.com", "olivia@example.com", now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, token, err := d.Join(c, code, "laptop", now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, ok := d.ByToken(c, token, "203.0.113.5", now.Add(5*time.Second)); !ok {
+		t.Fatal("sign in")
+	}
+	other, _ := LoadDevices(home)
+	if ls := other.For("max@example.com"); len(ls) != 1 || ls[0].LastSeen.IsZero() {
+		t.Fatalf("another process sees the first use: %+v", ls)
+	}
+}

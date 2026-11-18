@@ -120,6 +120,17 @@ How a key is handled:
 - On Windows, Hermes reads keys from the keyboard, so keys are added in a
   terminal there. Reorder, reset and remove still work from the Console.
 
+### Joining from your own hpk
+
+People join with an invite code from their own hpk (Settings > Team server).
+The server takes a code only over HTTPS, or from its own loopback. So the
+plain-HTTP try-out (`compose.local.yaml`, port 7880 on this computer) cannot be
+joined from the hpk on that same computer: the request reaches the container
+from Docker's network, not from loopback. Put the TLS proxy from
+`compose.yaml` in front (a certificate your machine trusts), or, to try the
+flow only, run a second hpk inside the container and join
+`http://127.0.0.1:7878` from there.
+
 ### Tested
 
 On Docker Desktop with `nousresearch/hermes-agent:v0.23.1` (4.56 GB; hpk adds
