@@ -183,6 +183,10 @@ func moveSteps(home, private string, toPrivate bool) []Step {
 	return []Step{{Say: say + "; delete " + filepath.Join(home, "hpk", "console-link"), Do: func() error {
 		// the copy hpk trusts: in the private folder while the AI is isolated
 		// (isolate.OwnTrustedDir); back in the home when it is not
+		// never through a link or junction the AI planted in the home
+		if err := sharedGuard(home); err != nil {
+			return err
+		}
 		if err := copyTrusted(trustFrom, trustTo); err != nil {
 			return err
 		}

@@ -15,6 +15,9 @@ func RepairTrusted(c *Config) (bool, error) {
 
 // trustedFinding says what is wrong with <home>/hpk/trusted for the AI, or "".
 func trustedFinding(c *Config) string {
+	if err := sharedGuard(c.Home); err != nil {
+		return err.Error()
+	}
 	switch c.Mode {
 	case ModeUser:
 		return trustedOpen(c)

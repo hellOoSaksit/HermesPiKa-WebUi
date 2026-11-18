@@ -3,9 +3,12 @@
 package isolate
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"hpk.local/hpk/internal/safepath"
 )
 
 // ReadTrusted reads name from OwnTrustedDir: the copy the AI cannot change.
@@ -24,8 +27,36 @@ func WriteTrusted(home, name string, data []byte) error {
 		dirs = append(dirs, shared)
 	}
 	for _, d := range dirs {
+		if samePath(d, shared) {
+			if err := sharedGuard(home); err != nil {
+				return err
+			}
+		}
 		if err := writeNew(d, name, data); err != nil {
 			return err
+		}
+	}
+	return nil
+}
+
+// sharedGuard refuses when <home>/hpk or <home>/hpk/trusted is a link or a
+// junction. The AI can rename and recreate <home>/hpk, so it could make
+// "trusted" lead anywhere; hpk, running as the person, must then not write,
+// copy or change permissions there. A missing folder is fine (hpk makes it).
+func sharedGuard(home string) error {
+	for _, p := range []string{filepath.Join(home, "hpk"), TrustedDir(home)} {
+		fi, err := os.Lstat(p)
+		if err != nil {
+			if os.IsNotExist(err) {
+				return nil
+			}
+			return err
+		}
+		if safepath.IsLink(p, fi) {
+			return fmt.Errorf("%s is a link or junction (the AI may have planted it); hpk does not write through it. Remove it, then run hpk isolate status", p)
+		}
+		if !fi.IsDir() {
+			return fmt.Errorf("%s is not a folder", p)
 		}
 	}
 	return nil

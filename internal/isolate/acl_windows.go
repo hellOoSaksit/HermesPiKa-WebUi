@@ -11,6 +11,8 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/windows"
+
+	"hpk.local/hpk/internal/safepath"
 )
 
 // broadSIDs: groups the AI's account belongs to. A write right given to them
@@ -75,6 +77,9 @@ func closedTo(dir, who string) string {
 }
 
 func trustedOpen(c *Config) string {
+	if err := sharedGuard(c.Home); err != nil {
+		return err.Error()
+	}
 	dir := TrustedDir(c.Home)
 	if _, err := os.Stat(dir); err != nil {
 		return ""
@@ -88,7 +93,15 @@ func trustedOpen(c *Config) string {
 // there while it could is otherwise still its own to change).
 func repairTrusted(c *Config) (bool, error) {
 	dir := TrustedDir(c.Home)
+	// never through a link or junction: the AI can recreate <home>/hpk and
+	// plant "trusted" pointing anywhere
+	if err := sharedGuard(c.Home); err != nil {
+		return false, err
+	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return false, err
+	}
+	if err := sharedGuard(c.Home); err != nil {
 		return false, err
 	}
 	if closedTo(dir, c.User) == "" {
@@ -102,11 +115,23 @@ func repairTrusted(c *Config) (bool, error) {
 		args = append(args, "*"+b)
 	}
 	_ = icacls(args...)
-	if ents, _ := os.ReadDir(dir); len(ents) > 0 {
-		_ = icacls(filepath.Join(dir, "*"), "/reset", "/T", "/C", "/Q")
+	sid := PersonSID()
+	if sid != "" {
+		_ = icacls(dir, "/setowner", "*"+sid, "/C", "/Q")
 	}
-	if sid := PersonSID(); sid != "" {
-		_ = icacls(dir, "/setowner", "*"+sid, "/T", "/C", "/Q")
+	// the files in it, one by one (no /T): plain files only, each checked with
+	// Lstat, so nothing is reached through a link
+	ents, _ := os.ReadDir(dir)
+	for _, e := range ents {
+		p := filepath.Join(dir, e.Name())
+		fi, err := os.Lstat(p)
+		if err != nil || !fi.Mode().IsRegular() || safepath.IsLink(p, fi) {
+			continue
+		}
+		_ = icacls(p, "/reset", "/C", "/Q")
+		if sid != "" {
+			_ = icacls(p, "/setowner", "*"+sid, "/C", "/Q")
+		}
 	}
 	if why := closedTo(dir, c.User); why != "" {
 		return true, fmt.Errorf("%s is still open to the AI: %s", dir, why)
