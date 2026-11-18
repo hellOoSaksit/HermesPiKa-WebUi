@@ -195,3 +195,49 @@ test("install.md and install.th.md: same Quick install code blocks", () => {
   assert.ok(en.length >= 8, `expected several code blocks, got ${en.length}`);
   assert.deepEqual(th, en);
 });
+
+// Without a terminal (stdout piped, as here) install.sh must not run hpk in the
+// foreground: it starts it in the background with --no-open and a log file,
+// and tells the person the address.
+test("install.sh without a terminal starts hpk in the background with --no-open", { skip: !haveSh }, async () => {
+  const bin = join(work, "data", "bin");
+  mkdirSync(bin, { recursive: true });
+  const stub = join(bin, "hpk");
+  writeFileSync(stub, '#!/bin/sh\necho "start $@" >> "$STUB_LOG"\n');
+  spawnSync("sh", ["-c", 'chmod +x "$1"', "sh", stub.replaceAll("\\", "/")]);
+  const r = await runSh("good", { HPK_NO_START: "" });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /http:\/\/127\.0\.0\.1:7878/);
+  assert.match(r.stdout, /hpk\.log/);
+  let text = "";
+  for (let i = 0; i < 40 && !/start --no-open/.test(text); i++) {
+    await new Promise((res) => setTimeout(res, 100));
+    text = existsSync(r.log) ? readFileSync(r.log, "utf8") : "";
+  }
+  assert.match(text, /start --no-open/);
+});
+
+test("install.sh wraps its body in main() and calls it last", () => {
+  const lines = readFileSync(join(root, "install.sh"), "utf8").trimEnd().split("\n");
+  assert.equal(lines[lines.length - 1], 'main "$@"');
+  assert.ok(lines.some((l) => l === "main() {"));
+});
+
+// The image name in the release compose file must use the repository owner
+// (lower-cased, as GHCR requires), not a typo of it.
+test("compose.release.yaml image owner matches the git remote owner", () => {
+  const r = spawnSync("git", ["remote", "get-url", "origin"], { cwd: root, encoding: "utf8" });
+  if (r.error || r.status !== 0) return; // no remote: nothing to compare
+  const m = r.stdout.trim().match(/github\.com[:/]([^/]+)\//i);
+  if (!m) return;
+  const compose = readFileSync(join(root, "docker", "compose.release.yaml"), "utf8");
+  const img = compose.match(/image:\s*ghcr\.io\/([^/\s]+)\/hpk-hermes:/);
+  assert.ok(img, "no ghcr image line in compose.release.yaml");
+  assert.equal(img[1], m[1].toLowerCase());
+  for (const f of ["docs/docker.md", "CHANGELOG.md", ".github/workflows/release.yml"]) {
+    const t = readFileSync(join(root, f), "utf8");
+    for (const [, owner] of t.matchAll(/ghcr\.io\/([a-z0-9-]+)\/hpk-hermes/gi)) {
+      assert.equal(owner, m[1].toLowerCase(), `${f} names the wrong image owner`);
+    }
+  }
+});
