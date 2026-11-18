@@ -46,6 +46,9 @@ func PathDirs() []string {
 
 const marker = "# added by hpk"
 
+// pathFiles are the shell profile files the last addPath changed (Unix only).
+var pathFiles []string
+
 // profileLine is the one marked line added to shell profiles.
 func profileLine(dirs []string) string {
 	return `export PATH="` + strings.Join(dirs, ":") + `:$PATH" ` + marker
@@ -173,11 +176,17 @@ func Install(exe string, out io.Writer) (Result, error) {
 	}
 	added, err := addPath(PathDirs()...)
 	if err != nil {
-		return res, fmt.Errorf("add %s to PATH: %w", strings.Join(PathDirs(), " and "), err)
+		// Not fatal: hpk is installed. Say where it is and how to reach it.
+		fmt.Fprintf(out, "Could not add %s to your PATH (%v).\n", strings.Join(PathDirs(), " and "), err)
+		fmt.Fprintf(out, "hpk is at %s. To use `hpk` and `hermes` in a terminal, add this line to your shell profile:\n  %s\n", res.Target, profileLine(PathDirs()))
 	}
 	res.PathAdded = added
 	if added {
-		fmt.Fprintf(out, "Added %s to your PATH (open a new terminal to use `hpk` and `hermes`).\n", strings.Join(PathDirs(), " and "))
+		where := ""
+		if len(pathFiles) > 0 {
+			where = " in " + strings.Join(pathFiles, ", ")
+		}
+		fmt.Fprintf(out, "Added %s to your PATH%s (open a new terminal to use `hpk` and `hermes`).\n", strings.Join(PathDirs(), " and "), where)
 	}
 	sc, err := addShortcut(res.Target)
 	if err != nil {
@@ -201,6 +210,16 @@ func Uninstall(out io.Writer) error {
 		if err := removeShortcut(); err != nil {
 			fmt.Fprintf(out, "Could not remove the Start-menu shortcut: %v\n", err)
 		}
+		// Start at login points at the file being removed: turn it off.
+		if a, err := launch.ThisAutostart(); err == nil && a.Supported() {
+			if a.Enabled() {
+				if err := a.Disable(); err != nil {
+					fmt.Fprintf(out, "Could not turn off start at login: %v\n", err)
+				} else {
+					fmt.Fprintln(out, "Turned off start at login.")
+				}
+			}
+		}
 	}
 	for _, f := range []string{Target(), oldName()} {
 		if err := os.Remove(f); err != nil && !os.IsNotExist(err) {
@@ -211,5 +230,6 @@ func Uninstall(out io.Writer) error {
 		}
 	}
 	fmt.Fprintln(out, "hpk was removed. Your projects, wikis and Hermes were left alone.")
+	fmt.Fprintln(out, "Reminder: hpk's hooks stay in Hermes' config.yaml unless you ran `hpk uninstall --yes` before this. To take them out now, run `hpk uninstall --yes` with a downloaded hpk.")
 	return nil
 }

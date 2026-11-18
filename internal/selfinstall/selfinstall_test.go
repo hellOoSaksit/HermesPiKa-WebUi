@@ -98,9 +98,9 @@ func TestProfileLineOnce(t *testing.T) {
 	if err := os.WriteFile(prof, []byte("# mine\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	exe := fakeExe(t, d, "v1")
+	// Install skips PATH edits under HPK_SELFINSTALL_DRYRUN, so call addPath itself.
 	for i := 0; i < 2; i++ {
-		if _, err := Install(exe, io.Discard); err != nil {
+		if _, err := addPath(PathDirs()...); err != nil {
 			t.Fatal(err)
 		}
 	}
