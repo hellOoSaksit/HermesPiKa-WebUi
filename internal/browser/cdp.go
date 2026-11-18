@@ -13,7 +13,7 @@ import (
 
 // cdp is one DevTools connection: commands with ids, events to a handler.
 type cdp struct {
-	ws      *wsConn
+	ws      transport
 	next    atomic.Int64
 	mu      sync.Mutex
 	waiting map[int64]chan reply
@@ -43,9 +43,13 @@ func dialCDP(url string, onEvent func(method, session string, params json.RawMes
 	if err != nil {
 		return nil, err
 	}
-	c := &cdp{ws: ws, waiting: map[int64]chan reply{}, onEvent: onEvent, closed: make(chan struct{})}
+	return newCDP(ws, onEvent), nil
+}
+
+func newCDP(t transport, onEvent func(method, session string, params json.RawMessage)) *cdp {
+	c := &cdp{ws: t, waiting: map[int64]chan reply{}, onEvent: onEvent, closed: make(chan struct{})}
 	go c.loop()
-	return c, nil
+	return c
 }
 
 func (c *cdp) loop() {

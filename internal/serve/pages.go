@@ -18,7 +18,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -30,6 +29,7 @@ import (
 	"hpk.local/hpk/internal/doctor"
 	"hpk.local/hpk/internal/gates"
 	"hpk.local/hpk/internal/hermes"
+	"hpk.local/hpk/internal/isolate"
 	"hpk.local/hpk/internal/notify"
 	"hpk.local/hpk/internal/onboard"
 	"hpk.local/hpk/internal/privacy"
@@ -394,7 +394,7 @@ func (s *Server) pages(mux *http.ServeMux) {
 		id := js.HermesID
 		_ = project.Audit(p.Dir, "job run requested", name+" by "+s.who(r).ID)
 		go func() {
-			cmd := exec.Command("hermes", "cron", "run", id)
+			cmd := isolate.Command("hermes", "cron", "run", id)
 			if out, err := cmd.CombinedOutput(); err != nil {
 				_ = project.Audit(p.Dir, "job run failed", name+": "+strings.TrimSpace(string(out)))
 			}

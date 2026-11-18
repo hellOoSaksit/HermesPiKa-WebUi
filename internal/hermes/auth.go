@@ -6,11 +6,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"hpk.local/hpk/internal/isolate"
 )
 
 // Managing Hermes' credential pool from the Console. Every change runs the
@@ -49,7 +50,7 @@ func forget() {
 func runAuth(ctx context.Context, args ...string) error {
 	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
-	out, err := exec.CommandContext(ctx, "hermes", append([]string{"auth"}, args...)...).CombinedOutput()
+	out, err := isolate.CommandContext(ctx, "hermes", append([]string{"auth"}, args...)...).CombinedOutput()
 	forget()
 	if err != nil {
 		return fmt.Errorf("hermes auth %s: %s", args[0], lastLine(string(out), err))

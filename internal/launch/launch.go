@@ -23,6 +23,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"hpk.local/hpk/internal/isolate"
 )
 
 // DefaultAddr is where `hpk` and `hpk serve` listen unless told otherwise.
@@ -249,7 +251,9 @@ func Open(url string) error {
 
 // LinkFile is where `hpk serve` keeps the one-time Console link (the Console
 // key: a browser that opens it gets the cookie that lets it make changes).
-func LinkFile(hermesHome string) string { return filepath.Join(hermesHome, "hpk", "console-link") }
+func LinkFile(hermesHome string) string {
+	return filepath.Join(isolate.PrivateDir(hermesHome), "console-link")
+}
 
 // ConsoleLink reads that link. Only a loopback http link is accepted; a link
 // older than since (left by an earlier run) is ignored.

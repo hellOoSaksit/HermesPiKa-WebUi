@@ -30,6 +30,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"hpk.local/hpk/internal/isolate"
 )
 
 // Entry is one secret.
@@ -98,7 +100,8 @@ func (v *Vault) path() string { return filepath.Join(v.dir, "vault.bin") }
 
 // Open opens (or creates) the vault in <home>/hpk/vault.
 func Open(home string) (*Vault, error) {
-	dir := filepath.Join(home, "hpk", "vault")
+	// isolated (docs/isolation.md), the vault lives where the AI's account cannot read it
+	dir := filepath.Join(isolate.PrivateDir(home), "vault")
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
 	}

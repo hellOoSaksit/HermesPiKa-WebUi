@@ -5,12 +5,12 @@ package cron
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
 
+	"hpk.local/hpk/internal/isolate"
 	"hpk.local/hpk/internal/project"
 )
 
@@ -63,7 +63,7 @@ func Install(home string, p *project.Project, pl Plan) (string, error) {
 	if err := os.WriteFile(pl.ScriptPath, []byte(pl.ScriptBody), 0o644); err != nil {
 		return "", err
 	}
-	cmd := exec.Command("hermes", pl.Args...)
+	cmd := isolate.Command("hermes", pl.Args...)
 	cmd.Env = append(os.Environ(), "HERMES_HOME="+home)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -104,7 +104,7 @@ func Uninstall(home string, p *project.Project, job string) (string, error) {
 	js := st.job(job)
 	id := js.HermesID
 	if id != "" {
-		cmd := exec.Command("hermes", "cron", "remove", id)
+		cmd := isolate.Command("hermes", "cron", "remove", id)
 		cmd.Env = append(os.Environ(), "HERMES_HOME="+home)
 		if out, err := cmd.CombinedOutput(); err != nil && !strings.Contains(strings.ToLower(string(out)), "not found") {
 			return id, fmt.Errorf("hermes cron remove %s: %v: %s", id, err, strings.TrimSpace(string(out)))

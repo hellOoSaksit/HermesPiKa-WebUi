@@ -114,7 +114,21 @@ against Hermes v0.23.1.
   egress forms, and cover hpk's own files and MCP tools; background jobs are
   matched by start time and Hermes ancestry before Stop; team servers refuse
   private and metadata addresses for MCPs; git refuses refs starting with `-`.
-- Known gaps are listed in docs/browser.md (Limits).
+- **The AI under its own OS identity** (`hpk isolate setup|status|check|teardown`,
+  docs/isolation.md): Hermes runs as a separate standard account `hpk-ai`
+  (Windows, started with CreateProcessWithLogonW through `hpk ai-relay`) or in
+  the docker/hermes container (`--docker`). The vault and its key, the browser
+  profile and recordings and the Console key move to a private folder only
+  your account can open; the AI shares only the Hermes home and the project
+  folders. Every step is shown first and confirmed in a terminal; the account
+  is made through Windows' own administrator prompt. `hpk isolate check`
+  verifies from the AI's side.
+- The built-in browser's DevTools is a **pipe** (`--remote-debugging-pipe`;
+  handle numbers on Windows), no longer a TCP port; the port is only a
+  fallback while the AI is not isolated.
+- `hpk doctor` warns while the AI runs in your account. Agent tool calls that
+  name the private folder or `hpk isolate` are refused.
+- Remaining limits are listed in docs/browser.md (Limits) and docs/isolation.md.
 
 **Teams**
 - Team mode: owner, maintainer, member and viewer roles; sign-in with personal

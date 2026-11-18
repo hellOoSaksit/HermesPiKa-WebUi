@@ -15,6 +15,8 @@ import (
 	"io"
 	"os/exec"
 	"sync"
+
+	"hpk.local/hpk/internal/isolate"
 )
 
 // PermissionOption is one choice the agent offers (allow_once, reject_once, …).
@@ -79,7 +81,7 @@ func New(r io.Reader, w io.Writer, h Handlers) *Client {
 
 // Start launches an agent command (e.g. hermes-acp) and connects to it.
 func Start(ctx context.Context, h Handlers, name string, args ...string) (*Client, error) {
-	cmd := exec.CommandContext(ctx, name, args...)
+	cmd := isolate.CommandContext(ctx, name, args...)
 	in, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, err

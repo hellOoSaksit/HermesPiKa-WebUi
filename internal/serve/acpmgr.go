@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -17,6 +16,7 @@ import (
 
 	"hpk.local/hpk/internal/acp"
 	"hpk.local/hpk/internal/gates"
+	"hpk.local/hpk/internal/isolate"
 	"hpk.local/hpk/internal/notify"
 	"hpk.local/hpk/internal/privacy"
 	"hpk.local/hpk/internal/project"
@@ -100,7 +100,7 @@ func NewACPManager(home string, launch Launcher, notify func(event, data string)
 }
 
 func launchHermes(p *project.Project, h acp.Handlers) (*acp.Client, error) {
-	cmd := exec.Command("hermes-acp")
+	cmd := isolate.Command("hermes-acp")
 	cmd.Dir = p.Root
 	cmd.Env = append(os.Environ(), "HPK_PROJECT="+p.Name, "WIKI_PATH="+p.WikiDir(), "PATH="+hpkPath(p))
 	return acp.StartCmd(cmd, h)

@@ -30,6 +30,8 @@ import (
 	"time"
 
 	"gopkg.in/yaml.v3"
+
+	"hpk.local/hpk/internal/isolate"
 )
 
 // Server is one entry of mcp_servers, safe to show: env values and headers are
@@ -91,7 +93,7 @@ func Dir(home, profile string) string {
 func configPath(dir string) string { return filepath.Join(dir, "config.yaml") }
 
 func hermes(ctx context.Context, dir string, args ...string) *exec.Cmd {
-	cmd := exec.CommandContext(ctx, "hermes", append([]string{"mcp"}, args...)...)
+	cmd := isolate.CommandContext(ctx, "hermes", append([]string{"mcp"}, args...)...)
 	cmd.Env = append(os.Environ(), "HERMES_HOME="+dir)
 	return cmd
 }

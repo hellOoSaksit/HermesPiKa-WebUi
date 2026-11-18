@@ -127,7 +127,7 @@ func (r *recorder) close() {
 
 // Runs lists recordings, newest first.
 func Runs(home string) []Run {
-	base := filepath.Join(home, "hpk", "browser")
+	base := Dir(home)
 	ents, _ := os.ReadDir(runsDir(base))
 	out := []Run{}
 	for _, e := range ents {
@@ -147,7 +147,7 @@ func runDir(home, id string) (string, error) {
 	if !runIDRE.MatchString(id) {
 		return "", errors.New("no such recording")
 	}
-	return filepath.Join(home, "hpk", "browser", "runs", id), nil
+	return filepath.Join(Dir(home), "runs", id), nil
 }
 
 // RunSteps returns a recording's steps.

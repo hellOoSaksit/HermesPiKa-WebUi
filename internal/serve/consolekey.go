@@ -15,6 +15,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"hpk.local/hpk/internal/isolate"
 )
 
 // Console key (solo mode). Without sign-in, anything on this machine could
@@ -23,10 +25,11 @@ import (
 // from hpk:
 //
 //   - `hpk serve` keeps a one-time link, /k/<code>, valid 10 minutes, printed
-//     on its console and kept in <home>/hpk/console-link (0600, this account
-//     only); `hpk open` opens it in the default browser;
+//     on its console and kept in <private>/console-link (0600, this account
+//     only; <private> is <home>/hpk, or a folder the AI cannot read when it
+//     is isolated); `hpk open` opens it in the default browser;
 //   - opening it gives that browser an HttpOnly, SameSite=Strict cookie for 30
-//     days; only its SHA-256 is kept (<home>/hpk/console-sessions.json);
+//     days; only its SHA-256 is kept (<private>/console-sessions.json);
 //   - the agent's own browser endpoint uses its key, and team mode its sign-in.
 //
 // With Hermes under a separate OS account (docs/isolation.md) the AI can read
@@ -56,11 +59,11 @@ func newConsoleKeys(home string) *consoleKeys {
 }
 
 func (k *consoleKeys) sessionsPath() string {
-	return filepath.Join(k.home, "hpk", "console-sessions.json")
+	return filepath.Join(isolate.PrivateDir(k.home), "console-sessions.json")
 }
 
 // LinkFile holds the current one-time link for `hpk open`.
-func LinkFile(home string) string { return filepath.Join(home, "hpk", "console-link") }
+func LinkFile(home string) string { return filepath.Join(isolate.PrivateDir(home), "console-link") }
 
 func randHex(n int) string {
 	b := make([]byte, n)

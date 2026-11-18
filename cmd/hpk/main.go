@@ -14,6 +14,7 @@ import (
 
 	"hpk.local/hpk/assets"
 	"hpk.local/hpk/internal/hook"
+	"hpk.local/hpk/internal/isolate"
 	"hpk.local/hpk/internal/launch"
 	"hpk.local/hpk/internal/serve"
 	"hpk.local/hpk/internal/setup"
@@ -42,6 +43,7 @@ Usage:
   hpk uninstall [--yes]               take hpk out of Hermes (projects and wikis stay)
   hpk setup hermes [--yes]            install the tested Hermes Agent into hpk's own folder
   hpk autostart on|off|status         start hpk serve when you log in (per user)
+  hpk isolate setup|status|check|teardown   run Hermes (the AI) under its own OS account or container
   hpk doctor [--json]                 check everything hpk depends on
   hpk selftest                        run the core flows in a throwaway folder
   hpk version [--json]                print version information
@@ -110,6 +112,16 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return runProject(args[1:], stdout, stderr)
 	case "wiki":
 		return runWiki(args[1:], stdin, stdout, stderr)
+	case "isolate":
+		return runIsolate(args[1:], stdin, stdout, stderr)
+	case "ai-relay":
+		return isolate.Relay(args[1:], stderr)
+	case "ai-exec":
+		return runAIExec(args[1:], stderr)
+	case "ai-probe":
+		return runAIProbe(args[1:], stdout)
+	case "ai-account":
+		return runAIAccount(args[1:], stderr)
 	case "doctor":
 		return runDoctor(args[1:], stdout)
 	case "selftest":

@@ -10,12 +10,12 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"os/signal"
 	"strings"
 	"time"
 
 	"hpk.local/hpk/internal/acp"
+	"hpk.local/hpk/internal/isolate"
 	"hpk.local/hpk/internal/project"
 	"hpk.local/hpk/internal/session"
 )
@@ -219,7 +219,7 @@ func runSession(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 func hermesRename(hermesID, title string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	out, err := exec.CommandContext(ctx, "hermes", "sessions", "rename", hermesID, title).CombinedOutput()
+	out, err := isolate.CommandContext(ctx, "hermes", "sessions", "rename", hermesID, title).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v: %s", err, strings.TrimSpace(string(out)))
 	}
