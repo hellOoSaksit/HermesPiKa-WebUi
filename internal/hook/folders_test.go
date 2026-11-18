@@ -154,3 +154,38 @@ func TestFolderContextNoticesNewDraft(t *testing.T) {
 		t.Fatalf("new draft: %q", out)
 	}
 }
+
+func TestMisplacedWriteIsLazy(t *testing.T) {
+	p, home := folderProject(t)
+	w := wiki.Open(p.WikiDir())
+	d, err := w.CreateDraft(wiki.DraftInput{Target: folders.Page, Title: "Folders", Sources: []string{"chat"}, Summary: "x", Author: "me", Body: folderTable})
+	if err != nil {
+		t.Fatal(err)
+	}
+	res, _ := w.Approve([]int{d.N}, "me")
+	if err := folders.AfterApprove(home, p, res); err != nil {
+		t.Fatal(err)
+	}
+	write := `{"hook_event_name":"post_tool_call","tool_name":"write_file","tool_input":{"path":"scene.fbx"},"session_id":"s-1","cwd":"` + filepath.ToSlash(p.Root) + `"}`
+	if out, _ := call("board_heartbeat", write); !strings.Contains(ctxOf(t, out), "Export/") {
+		t.Fatalf("first: %q", out)
+	}
+	page := filepath.Join(p.WikiDir(), "decisions", "folders.md")
+	fi, _ := os.Stat(page)
+	raw, _ := os.ReadFile(page)
+	// same size and mtime, different content: a real Load would now say "changed"
+	alt := []byte(strings.Replace(string(raw), "Export", "Exporz", 1))
+	os.WriteFile(page, alt, 0o644)
+	os.Chtimes(page, fi.ModTime(), fi.ModTime())
+	if out, _ := call("board_heartbeat", write); !strings.Contains(ctxOf(t, out), "Export/") {
+		t.Fatalf("unchanged fingerprint must use the cache: %q", out)
+	}
+	// the trusted hash being rewritten moves the fingerprint: reload sees a mismatch
+	tf := folders.TrustFile(home, p.Name)
+	if err := os.WriteFile(tf, []byte("0000\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if out, _ := call("board_heartbeat", write); out != "" {
+		t.Fatalf("after a trust change the rules are not OK: %q", out)
+	}
+}

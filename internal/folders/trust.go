@@ -28,8 +28,9 @@ const (
 // TrustedDir holds the approved hashes. The AI's account gets it read-only.
 func TrustedDir(home string) string { return filepath.Join(home, "hpk", "trusted") }
 
-func trustFile(home string, p *project.Project) string {
-	return filepath.Join(TrustedDir(home), "folders-"+p.Name+".sha256")
+// TrustFile is where the approved hash of project name's rules page is kept.
+func TrustFile(home, name string) string {
+	return filepath.Join(TrustedDir(home), "folders-"+name+".sha256")
 }
 
 func pagePath(p *project.Project) string {
@@ -62,7 +63,7 @@ func Load(home string, p *project.Project) (Rules, State) {
 		return Rules{}, None
 	}
 	r := Parse(bodyOf(raw))
-	want, err := os.ReadFile(trustFile(home, p))
+	want, err := os.ReadFile(TrustFile(home, p.Name))
 	if err != nil || strings.TrimSpace(string(want)) != sum(raw) {
 		return r, Changed
 	}
@@ -78,7 +79,7 @@ func Trust(home string, p *project.Project) error {
 	if err := os.MkdirAll(TrustedDir(home), 0o755); err != nil {
 		return err
 	}
-	return os.WriteFile(trustFile(home, p), []byte(sum(raw)+"\n"), 0o644)
+	return os.WriteFile(TrustFile(home, p.Name), []byte(sum(raw)+"\n"), 0o644)
 }
 
 // Ensure creates the missing folders of the rules under root.

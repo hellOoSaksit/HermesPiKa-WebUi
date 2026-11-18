@@ -5,6 +5,7 @@ package hook
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -107,8 +108,8 @@ func misplacedNote(ev Event) result {
 	if _, err := os.Stat(filepath.Join(p.WikiDir(), filepath.FromSlash(folders.Page))); err != nil {
 		return result{Allow, ""} // no page: no rules to apply
 	}
-	rules, st := folders.Load(home, p)
-	if st != folders.OK {
+	rules, ok := cachedRules(home, p)
+	if !ok {
 		return result{Allow, ""}
 	}
 	want, ok := rules.For(rel)
@@ -137,7 +138,35 @@ func fingerprint(home string, p *project.Project) string {
 	}
 	return strings.Join([]string{
 		st(filepath.Join(p.WikiDir(), filepath.FromSlash(folders.Page)), true),
-		st(filepath.Join(folders.TrustedDir(home), "folders-"+p.Name+".sha256"), true),
+		st(folders.TrustFile(home, p.Name), true),
 		st(filepath.Join(p.WikiDir(), "_drafts"), false),
 	}, " ")
+}
+
+type rulesCache struct {
+	Fp    string
+	OK    bool
+	Rules []folders.Rule
+}
+
+// cachedRules returns the approved rules (ok=false when they cannot be used).
+// While the stat-only fingerprint is unchanged the answer comes from a small
+// per-project cache file; folders.Load runs only when the fingerprint moved.
+func cachedRules(home string, p *project.Project) (folders.Rules, bool) {
+	fp := fingerprint(home, p)
+	file := filepath.Join(home, "hpk", "sessions", "folders-rules-"+hex.EncodeToString([]byte(p.Name))+".json")
+	if raw, err := os.ReadFile(file); err == nil {
+		var c rulesCache
+		if json.Unmarshal(raw, &c) == nil && c.Fp == fp {
+			return folders.Rules{Rows: c.Rules}, c.OK
+		}
+	}
+	rules, st := folders.Load(home, p)
+	c := rulesCache{Fp: fp, OK: st == folders.OK, Rules: rules.Rows}
+	if raw, err := json.Marshal(c); err == nil {
+		if err := os.MkdirAll(filepath.Dir(file), 0o755); err == nil {
+			_ = os.WriteFile(file, raw, 0o644)
+		}
+	}
+	return rules, c.OK
 }
