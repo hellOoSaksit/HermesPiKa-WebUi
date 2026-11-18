@@ -84,6 +84,11 @@ func planOK(rel string) bool {
 // skipRels turns skip into paths relative to root, for those inside it ("" is
 // root itself: nothing may move).
 func skipRels(root string, skip []string) []string {
+	// compare resolved with resolved: temp and home paths often go through a
+	// link (/var → /private/var on macOS) or an 8.3 short name (Windows)
+	if r, err := filepath.EvalSymlinks(root); err == nil {
+		root = r
+	}
 	var out []string
 	for _, s := range skip {
 		if s == "" {
