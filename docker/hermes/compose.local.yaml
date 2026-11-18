@@ -1,0 +1,12 @@
+# Try it on this machine: the Console on http://127.0.0.1:7880, reachable from
+# this computer only (no proxy, no TLS).
+#
+#   docker compose -f compose.yaml -f compose.local.yaml up -d --build
+#   docker compose -f compose.yaml -f compose.local.yaml exec hermes cat /opt/data/hpk/owner-token
+#
+# For a server, use compose.yaml behind a TLS proxy instead (docs/docker.md).
+name: hpk-hermes
+services:
+  hermes:
+    ports:
+      - "127.0.0.1:7880:7878"

@@ -1,0 +1,249 @@
+{
+ "asset": {
+  "version": "2.0",
+  "generator": "hpk fixtures"
+ },
+ "extensionsUsed": [
+  "KHR_lights_punctual"
+ ],
+ "extensions": {
+  "KHR_lights_punctual": {
+   "lights": [
+    {
+     "type": "spot",
+     "color": [
+      1,
+      0.85,
+      0.95
+     ],
+     "intensity": 40,
+     "spot": {
+      "outerConeAngle": 0.8
+     }
+    }
+   ]
+  }
+ },
+ "scene": 0,
+ "scenes": [
+  {
+   "nodes": [
+    0,
+    1
+   ]
+  }
+ ],
+ "nodes": [
+  {
+   "name": "kart-body",
+   "mesh": 0
+  },
+  {
+   "name": "spot",
+   "translation": [
+    0,
+    3,
+    2
+   ],
+   "rotation": [
+    -0.4,
+    0,
+    0,
+    0.92
+   ],
+   "extensions": {
+    "KHR_lights_punctual": {
+     "light": 0
+    }
+   }
+  }
+ ],
+ "meshes": [
+  {
+   "name": "body",
+   "primitives": [
+    {
+     "attributes": {
+      "POSITION": 0,
+      "NORMAL": 1,
+      "TEXCOORD_0": 2
+     },
+     "indices": 3,
+     "material": 0
+    }
+   ]
+  }
+ ],
+ "materials": [
+  {
+   "name": "paint",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 0
+    },
+    "metallicFactor": 0.2,
+    "roughnessFactor": 0.5
+   }
+  }
+ ],
+ "textures": [
+  {
+   "source": 0,
+   "sampler": 0
+  }
+ ],
+ "samplers": [
+  {
+   "magFilter": 9728,
+   "minFilter": 9728
+  }
+ ],
+ "images": [
+  {
+   "uri": "kart-paint.png"
+  }
+ ],
+ "buffers": [
+  {
+   "byteLength": 1000,
+   "uri": "data:application/octet-stream;base64,zcxMv5qZmb4AAAA/zcxMP5qZmb4AAAA/zcxMP5qZmT4AAAA/zcxMv5qZmT4AAAA/zcxMP5qZmb4AAAC/zcxMv5qZmb4AAAC/zcxMv5qZmT4AAAC/zcxMP5qZmT4AAAC/zcxMP5qZmb4AAAA/zcxMP5qZmb4AAAC/zcxMP5qZmT4AAAC/zcxMP5qZmT4AAAA/zcxMv5qZmb4AAAC/zcxMv5qZmb4AAAA/zcxMv5qZmT4AAAA/zcxMv5qZmT4AAAC/zcxMv5qZmT4AAAA/zcxMP5qZmT4AAAA/zcxMP5qZmT4AAAC/zcxMv5qZmT4AAAC/zcxMv5qZmb4AAAC/zcxMP5qZmb4AAAC/zcxMP5qZmb4AAAA/zcxMv5qZmb4AAAA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgD8AAIA/AACAPwAAgD8AAAAAAAAAAAAAAAAAAAAAAACAPwAAgD8AAIA/AACAPwAAAAAAAAAAAAAAAAAAAAAAAIA/AACAPwAAgD8AAIA/AAAAAAAAAAAAAAAAAAAAAAAAgD8AAIA/AACAPwAAgD8AAAAAAAAAAAAAAAAAAAAAAACAPwAAgD8AAIA/AACAPwAAAAAAAAAAAAAAAAAAAAAAAIA/AACAPwAAgD8AAIA/AAAAAAAAAAAAAAAAAAABAAIAAAACAAMABAAFAAYABAAGAAcACAAJAAoACAAKAAsADAANAA4ADAAOAA8AEAARABIAEAASABMAFAAVABYAFAAWABcAAAAAAAAAAD8AAIA/AADAPwAAAEAAAAAAAAAAAAAAAAAAAIA/AAAAAPMENT8AAAAA8wQ1PwAAAAAAAIA/AAAAADIxjSQAAAAA8wQ1PwAAAADzBDW/AAAAADIxDSUAAAAAAACAvwAAAAAAAAAAAAAAAAAAAACamRk/AAAAAAAAAAA8bqkkAAAAAAAAAACamRk/AAAAAAAAAAA8biklAAAAAA=="
+  }
+ ],
+ "bufferViews": [
+  {
+   "buffer": 0,
+   "byteOffset": 0,
+   "byteLength": 288
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 288,
+   "byteLength": 288
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 576,
+   "byteLength": 192
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 768,
+   "byteLength": 72
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 840,
+   "byteLength": 20
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 860,
+   "byteLength": 80
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 940,
+   "byteLength": 60
+  }
+ ],
+ "accessors": [
+  {
+   "bufferView": 0,
+   "componentType": 5126,
+   "count": 24,
+   "type": "VEC3",
+   "min": [
+    -0.8,
+    -0.3,
+    -0.5
+   ],
+   "max": [
+    0.8,
+    0.3,
+    0.5
+   ]
+  },
+  {
+   "bufferView": 1,
+   "componentType": 5126,
+   "count": 24,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 2,
+   "componentType": 5126,
+   "count": 24,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 3,
+   "componentType": 5123,
+   "count": 36,
+   "type": "SCALAR"
+  },
+  {
+   "bufferView": 4,
+   "componentType": 5126,
+   "count": 5,
+   "type": "SCALAR",
+   "min": [
+    0
+   ],
+   "max": [
+    2
+   ]
+  },
+  {
+   "bufferView": 5,
+   "componentType": 5126,
+   "count": 5,
+   "type": "VEC4"
+  },
+  {
+   "bufferView": 6,
+   "componentType": 5126,
+   "count": 5,
+   "type": "VEC3"
+  }
+ ],
+ "animations": [
+  {
+   "name": "Spin",
+   "samplers": [
+    {
+     "input": 4,
+     "output": 5,
+     "interpolation": "LINEAR"
+    }
+   ],
+   "channels": [
+    {
+     "sampler": 0,
+     "target": {
+      "node": 0,
+      "path": "rotation"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bounce",
+   "samplers": [
+    {
+     "input": 4,
+     "output": 6,
+     "interpolation": "LINEAR"
+    }
+   ],
+   "channels": [
+    {
+     "sampler": 0,
+     "target": {
+      "node": 0,
+      "path": "translation"
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,5 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT AND LicenseRef-Commons-Clause-1.0
+# A clean exit (team mode not set up) is final: do not restart. Crashes restart.
+[ "${1:-0}" = 0 ] && exit 125
+exit 0

@@ -1,0 +1,23 @@
+{
+  "id": "/",
+  "name": "HPK Console",
+  "short_name": "HPK",
+  "description": "Hermes Project Kit: projects, chats, approvals and the wiki for Hermes Agent.",
+  "start_url": "/#/overview",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "background_color": "#0D0B0F",
+  "theme_color": "#141117",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Approvals", "url": "/#/approvals", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "New chat", "url": "/#/chat/new", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

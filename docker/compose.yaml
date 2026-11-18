@@ -1,0 +1,51 @@
+# HPK Console team server: hpk behind a reverse proxy that adds TLS (docs/docker.md).
+# hpk listens on the compose network only; publish your proxy, never hpk.
+#
+#   CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o ../dist/docker/hpk-linux-amd64 ../cmd/hpk
+#   docker compose up -d --build
+#   docker compose exec hpk cat /data/hpk/owner-token     # once, then delete it
+#
+# Your proxy must send X-Forwarded-Proto: https and keep the browser's host in
+# Host or X-Forwarded-Host (Caddy and Traefik do; nginx needs proxy_set_header).
+services:
+  hpk:
+    image: hpk:local
+    build:
+      context: ..
+    environment:
+      HPK_OWNER: owner@example.com # first start only
+      HPK_BEHIND_PROXY: "1"
+      # Sign-in by the proxy instead of tokens (oauth2-proxy, Authelia …):
+      # HPK_AUTH: header
+      # HPK_HEADER: X-Forwarded-Email
+      # HPK_PROXY: 10.77.0.10        # the proxy's own address, never a range
+    volumes:
+      - hpk-data:/data
+    expose:
+      - "7878"
+    networks: [inner]
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+
+  # Add your proxy here, on the same network, with a fixed address when hpk
+  # trusts its header:
+  # proxy:
+  #   image: <your proxy>
+  #   ports: ["443:443"]
+  #   networks:
+  #     inner:
+  #       ipv4_address: 10.77.0.10
+
+networks:
+  inner:
+    ipam:
+      config:
+        - subnet: 10.77.0.0/24
+
+volumes:
+  hpk-data:

@@ -1,0 +1,5 @@
+# Keep LF everywhere: gofmt, the embedded Console and the skills expect it.
+* text=auto eol=lf
+*.png binary
+*.ico binary
+*.woff2 binary

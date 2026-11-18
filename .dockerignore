@@ -1,0 +1,5 @@
+# Only the Linux binary and the entrypoint go into the image.
+*
+!dist/docker/
+!docker/
+!tools/hermes-consent.py

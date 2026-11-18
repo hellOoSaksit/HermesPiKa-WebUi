@@ -1,0 +1,2645 @@
+{
+  "shell": {
+    "skip": "Skip to content",
+    "openNav": "Open navigation",
+    "language": "Switch language",
+    "theme": "Switch light or dark",
+    "connected": "Connected to Hermes",
+    "motion": "Animation on or off",
+    "motionOn": "Animation on",
+    "motionOff": "Animation off",
+    "primaryNav": "Primary",
+    "closeNav": "Close navigation",
+    "home": "HPK Console home",
+    "needsN": {
+      "one": "1 needs you",
+      "other": "{n} need you"
+    },
+    "demo": "Demo data",
+    "demoHint": "Not connected to hpk serve: this is sample data. Run hpk serve to see your projects.",
+    "noProjectTitle": "No projects yet",
+    "noProjectBody": "hpk serve is running, but no project has been added. Add one from a terminal; hpk asks before it reads anything.",
+    "demoPageTitle": "Sample data on this page",
+    "demoPageBody": "hpk serve does not feed this page yet, so what you see here is example data, not your setup. Use the hpk command line for it for now.",
+    "noProjectSetup": "Set up hpk and add a project"
+  },
+  "nav": {
+    "overview": "Overview",
+    "sessions": "Sessions",
+    "approvals": "Approvals",
+    "board": "Board",
+    "wiki": "Wiki",
+    "projects": "Projects",
+    "jobs": "Scheduled jobs",
+    "gates": "Modes & red lines",
+    "privacy": "Privacy",
+    "team": "Team",
+    "settings": "Settings",
+    "chat": "Chat",
+    "accounts": "AI accounts",
+    "setup": "Process & profiles",
+    "work": "Work",
+    "git": "Git",
+    "mcp": "MCP",
+    "browser": "Browser",
+    "vault": "Vault",
+    "teamserver": "Team server"
+  },
+  "common": {
+    "apply": "Apply",
+    "back": "Back",
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirm": "Confirm",
+    "next": "Next",
+    "remove": "Remove",
+    "save": "Save",
+    "undo": "Undo",
+    "yes": "Yes",
+    "costUnknown": "unknown"
+  },
+  "time": {
+    "now": "just now"
+  },
+  "actor": {
+    "agent": "Agent",
+    "auto": "Auto",
+    "hpk": "hpk"
+  },
+  "roles": {
+    "owner": "Owner",
+    "maintainer": "Maintainer",
+    "member": "Member",
+    "viewer": "Viewer"
+  },
+  "status": {
+    "running": "Running",
+    "waiting": "Held for you",
+    "stale": "No heartbeat",
+    "done": "Done",
+    "stopped": "Stopped",
+    "queued": "Queued"
+  },
+  "mode": {
+    "title": "Working mode",
+    "aria": "Working mode: {mode}. Change",
+    "manual": {
+      "name": "Manual",
+      "desc": "The agent reads and drafts on its own. Every write and every command waits for you."
+    },
+    "ask": {
+      "name": "Ask",
+      "desc": "The agent works inside its worktree and commits locally. It stops at each decision point and at every red line."
+    },
+    "auto": {
+      "name": "Auto",
+      "desc": "A small model decides routine approvals for you and logs each one so you can undo it. Red lines still stop and wait for a human."
+    },
+    "for": "Keep Auto on for",
+    "dur": {
+      "30": "30 minutes",
+      "120": "2 hours",
+      "480": "8 hours",
+      "until": "Until I turn it off"
+    },
+    "scopeLabel": "Applies to",
+    "scope": {
+      "session": "this session",
+      "lane": "this lane",
+      "project": "whole project"
+    },
+    "leftMin": "{n} min left",
+    "redLinesTitle": "Red lines never move",
+    "redLinesBody": "Push, delete, secrets, agent-control files, model changes, core wiki pages, sharing knowledge and sending data out always wait for a human — in every mode.",
+    "seeGates": "See all decision points and red lines",
+    "saved": "Mode set to {mode}"
+  },
+  "track": {
+    "aria": "Track diagram of lanes and the sessions working in them",
+    "mainline": "Main chat",
+    "trainAria": "Session {num}, {title}, {status}. Open",
+    "legend": {
+      "clear": "Moving, nothing needed",
+      "caution": "Question or no heartbeat",
+      "danger": "Held: red line or duplicate work",
+      "idle": "Finished or parked",
+      "route": "Blue = route of the session you point at"
+    }
+  },
+  "overview": {
+    "title": "{project}",
+    "lede": "Every lane, who holds which block of work, and what is waiting for you.",
+    "running": "Sessions running",
+    "ofN": "of {n}",
+    "needsYou": "Waiting for you",
+    "tokensToday": "Tokens today",
+    "costToday": "Cost today",
+    "budgetOf": "of {b}",
+    "mode": "Mode",
+    "trackTitle": "Track diagram",
+    "openBoard": "Open board",
+    "needsTitle": "Needs you",
+    "allApprovals": "All {n}",
+    "keysHint": "Click the list, then: j / k to move, a approves a red line, d denies, Enter opens. Elsewhere, g then a opens Approvals.",
+    "movements": "Movements",
+    "movementsSub": "Latest first · live",
+    "tree": "Session tree",
+    "runningN": "{n} of {total} running",
+    "tokensN": "{v} tokens today",
+    "costN": "{v} of {b} today",
+    "summaryNeeds": {
+      "one": "1 thing needs you",
+      "other": "{n} things need you"
+    },
+    "summaryClear": "Nothing needs you",
+    "summaryRunning": "{n} of {total} sessions running",
+    "summaryCost": "{v} of {b} spent today",
+    "openWork": "Open work",
+    "costUnknownN": {
+      "one": "(+1 session with unknown price)",
+      "other": "(+{n} sessions with unknown price)"
+    },
+    "planTitle": "Plans in motion",
+    "summaryCostNoCap": "{v} spent today (no cap)"
+  },
+  "sessions": {
+    "title": "Sessions",
+    "lede": "Every main chat and the sub-tasks it split off. Sub-tasks work in their own worktree and report back to their main chat.",
+    "treeAria": "Session tree",
+    "tab": {
+      "tree": "Tree",
+      "lanes": "Lanes"
+    },
+    "coordinator": "main chat",
+    "newChild": "New sub-task",
+    "owner": "Owner",
+    "heartbeat": "Last heartbeat",
+    "tokens": "Tokens",
+    "cost": "Cost",
+    "model": "Model",
+    "modeLabel": "Mode",
+    "workspace": "Workspace",
+    "source": "Started from",
+    "viaHpk": "HPK Console (ACP) — you can chat here",
+    "viaOther": "{src} — status only",
+    "claims": "Claims",
+    "noClaims": "No claims",
+    "waitingOn": "Held for you: {n} decision",
+    "readOnlyNote": "This session was started outside HPK. You can see its status and ask how it is going, but not chat with it here.",
+    "openChat": "Open chat",
+    "askStatus": "Ask for status",
+    "askSent": "Asked {num} for status. The answer will arrive without interrupting it.",
+    "stop": "Stop session",
+    "stopped": "Session {num} stopped",
+    "ws": {
+      "worktree": "New git worktree",
+      "scratch": "Scratch folder",
+      "directory": "Existing directory"
+    },
+    "form": {
+      "under": "Child of {num} · {title}",
+      "title": "Task name",
+      "titlePh": "e.g. search › relevance tuning",
+      "titleHint": "The title follows the project template automatically.",
+      "lane": "Lane",
+      "brief": "Brief",
+      "briefPh": "What to do, what done looks like, which wiki pages to read first.",
+      "briefHint": "The brief also lists this project's red lines and the summary format to send back.",
+      "model": "Model",
+      "workspace": "Workspace",
+      "claimNote": "Before it starts, hpk checks the board. If someone already holds this work, you will be asked what to do.",
+      "start": "Start session",
+      "started": "Started “{title}”. It will appear on the board once it claims its paths."
+    }
+  },
+  "chat": {
+    "logAria": "Conversation",
+    "back": "Back to sessions",
+    "placeholder": "Reply to the agent…",
+    "readOnly": "Started outside HPK — read only",
+    "hint": {
+      "queue": "after the current step",
+      "steer": "adjust without stopping",
+      "interrupt": "stop and start over",
+      "keys": "Enter sends · Shift+Enter new line · / commands · # wiki pages · Ctrl+K new chat · Alt+↑↓ switch chat"
+    },
+    "readOnlyHint": "You can only ask this session for its status.",
+    "queue": "Queue",
+    "send": "Send",
+    "queued": "Queued",
+    "permitAria": "Permission request",
+    "permitTitle": "The agent stopped at a red line",
+    "allowSession": "Allow for this session",
+    "decided": "Decided",
+    "listAria": "Sessions you can chat with",
+    "listTitle": "Chats",
+    "listOther": "Status only · finished",
+    "accountTitle": "AI account this session is using",
+    "newChat": "New chat",
+    "newOptions": "More ways to start a chat",
+    "moreFor": "More actions for {title}",
+    "showList": "Show chat list",
+    "list": {
+      "archived": "Archived",
+      "pinned": "Pinned",
+      "active": "Active",
+      "none": "No chats match.",
+      "search": "Search chats",
+      "filter": "Filter chats",
+      "f": {
+        "all": "All",
+        "waiting": "For you",
+        "running": "Running",
+        "archived": "Archived"
+      },
+      "waiting": "waiting"
+    },
+    "new": {
+      "coordinator": "New coordinator chat",
+      "childOfCurrent": "New child of this chat",
+      "fromTemplate": "Change process or profile…"
+    },
+    "menu": {
+      "rename": "Rename",
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "fork": "Fork into a new chat",
+      "child": "New child session",
+      "exportMd": "Export as Markdown",
+      "exportJson": "Export as JSON",
+      "board": "Show on board",
+      "archive": "Archive",
+      "unarchive": "Restore from archive",
+      "delete": "Delete chat",
+      "share": "Share with…"
+    },
+    "forked": "Forked into a new chat",
+    "archived": "Archived",
+    "unarchived": "Restored",
+    "deleted": "Chat deleted",
+    "renamed": "Renamed",
+    "exported": "Exported",
+    "deleteBody": "Delete “{title}” and its conversation? The session’s wiki notes and commits are kept. This cannot be undone.",
+    "titleLabel": "Title",
+    "renameHint": "The title keeps the project template unless you change it here.",
+    "act": {
+      "copy": "Copy",
+      "edit": "Edit and send again",
+      "regenerate": "Answer again",
+      "fork": "Fork from here",
+      "wiki": "Save to wiki (as a draft)",
+      "quote": "Quote in reply"
+    },
+    "copied": "Copied",
+    "savedToWiki": "Saved as a wiki draft — waits for your approval",
+    "openDrafts": "Open drafts",
+    "editSend": "Send again",
+    "editNote": "Messages after this one are replaced. Fork first to keep them.",
+    "how": {
+      "send": "Send",
+      "queue": "Queue",
+      "steer": "Steer",
+      "interrupt": "Interrupt"
+    },
+    "cut": "stopped",
+    "thinking": "Thinking",
+    "worklog": {
+      "one": "Worklog · 1 step",
+      "other": "Worklog · {n} steps"
+    },
+    "clarify": {
+      "title": "A question for you",
+      "aria": "Question from a session",
+      "answered": "Answered: {a}",
+      "custom": "Or write your own answer…"
+    },
+    "child": {
+      "started": "Sub-task"
+    },
+    "summary": {
+      "title": "Sub-task finished",
+      "done": "Done",
+      "decided": "Decided",
+      "lessons": "Lessons",
+      "open": "Still open",
+      "question": "Question",
+      "toWiki": "Save lessons to wiki",
+      "evidence": "Evidence",
+      "notVerified": "Not verified yet. Merging needs a passing test, review or verify.",
+      "askTests": "Ask for tests",
+      "askTestsText": "Run the tests for this change and report the results."
+    },
+    "compressed": "Context compressed: {from} → {to} tokens. The full conversation is kept.",
+    "emptyLog": "No messages yet. Say what you want done.",
+    "removeFile": "Remove {f}",
+    "attach": "Attach files",
+    "wikiRef": "wiki page",
+    "cmd": {
+      "new": "new chat",
+      "child": "new child of this chat",
+      "mode": "manual | ask | auto",
+      "model": "Switch model, keeping memory",
+      "effort": "low | medium | high | max",
+      "compress": "compress context now",
+      "goal": "set or clear the goal",
+      "title": "rename this chat",
+      "btw": "side question, not saved",
+      "stop": "stop the reply",
+      "who": "who holds a path (board)",
+      "wiki": "open the wiki",
+      "help": "list commands",
+      "split": "split the work into sub-tasks",
+      "ask": "Ask another model once: /ask opus <question>"
+    },
+    "cmdUsage": "Use: {u}",
+    "effortSet": "Reasoning effort: {e}",
+    "goalSet": "Goal set",
+    "goalCleared": "Goal cleared",
+    "btwAnswer": "Side answer to “{q}” — not added to the conversation or the wiki.",
+    "effort": {
+      "heading": "Reasoning effort",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "max": "Max"
+    },
+    "model": {
+      "heading": "Model for this chat",
+      "changeTitle": "Change model mid-chat?",
+      "changeBody": "Switching from {from} to {to} drops the prompt cache and may change behaviour. This is a red line, so it needs your confirmation.",
+      "change": "Switch to {m}",
+      "changed": "Model switched to {m}",
+      "redLineNote": "Changing model mid-chat is a red line"
+    },
+    "draftSaved": "Draft saved",
+    "stopReply": "Stop",
+    "sendOptions": "More ways to send",
+    "ctx": {
+      "aria": "Context used: {pct}%",
+      "used": "{used} of {win} tokens in context",
+      "compress": "Compress now",
+      "what": "What is this?",
+      "explain": "Context is how much of the conversation the model holds at once. Compressing summarises older turns; the full history stays saved."
+    },
+    "display": {
+      "heading": "Show work as",
+      "worklog": "Worklog (grouped)",
+      "stream": "Every step",
+      "answers": "Answers only"
+    },
+    "goal": "Goal",
+    "goalClear": "Clear",
+    "newc": {
+      "lede": "Describe the goal. The agent plans it and splits it into sub-tasks by itself — you follow everything from this one chat.",
+      "kind": "Kind of chat",
+      "coordinator": {
+        "t": "Coordinator",
+        "d": "A top-level chat that plans and opens children."
+      },
+      "child": {
+        "t": "Child of a chat",
+        "d": "Works in its own worktree and reports back to its parent."
+      },
+      "parent": "Parent chat",
+      "version": "Version",
+      "name": "Name",
+      "namePh": "e.g. search relevance",
+      "template": "Template {tpl}",
+      "first": "First message",
+      "firstPh": "e.g. Add CSV and PDF export to invoices, with tests. Stop before pushing.",
+      "starter": {
+        "plan": {
+          "label": "Plan the next version",
+          "text": "Plan the next version. Read BOARD.md and the wiki first, then propose lanes and open a child per lane."
+        },
+        "review": {
+          "label": "Review open lanes",
+          "text": "Review every open lane: check git in each worktree, not the board prose, and give me a table of real status."
+        },
+        "yesterday": {
+          "label": "What happened yesterday",
+          "text": "Summarise what happened in this project since yesterday from the wiki log and session summaries."
+        },
+        "tests": {
+          "label": "Fix failing tests",
+          "text": "Run the test suite, find the failing tests and fix them inside a worktree. Stop before pushing."
+        }
+      },
+      "start": "Start",
+      "started": "Started “{title}”",
+      "claimNote": "hpk checks the board first, so the same work is never started twice.",
+      "settings": "Settings for this chat",
+      "inherited": "Inherited — change for this chat only",
+      "worktree": "Work in a new git worktree",
+      "settingsNote": "Changing the model later in the chat is a red line and will ask you first.",
+      "ask": "What do you want done?",
+      "splitNote": "Enter to start · Shift+Enter new line",
+      "nameAuto": "Leave empty to use the first line of your message",
+      "moreOptions": "Title and settings",
+      "starting": "Starting Hermes…"
+    },
+    "placeholderShort": "Message the agent… ( / for commands )",
+    "settingsAria": "Model, reasoning effort and mode for this chat",
+    "subtasks": {
+      "title": "Sub-tasks",
+      "one": "Sub-task",
+      "count": {
+        "one": "1 sub-task",
+        "other": "{n} sub-tasks"
+      },
+      "needsYou": {
+        "one": "1 needs you",
+        "other": "{n} need you"
+      },
+      "toggle": {
+        "one": "Show 1 sub-task",
+        "other": "Show {n} sub-tasks"
+      }
+    },
+    "delivery": {
+      "pending": "waiting",
+      "read": "read",
+      "unused": "not used",
+      "pendingHint": "Held until the agent finishes its current step",
+      "readHint": "The agent read this and applied it",
+      "unusedHint": "The step stopped before the agent read this. It was not applied.",
+      "sendNow": "Send now (interrupts the current step)",
+      "drop": "Remove this message",
+      "resend": "Send again"
+    },
+    "permit": {
+      "allowOnce": "Allow once",
+      "keys": "Keys on this card: 1 deny · 2 allow once · 3 allow for session",
+      "next": "next ask",
+      "parts": {
+        "one": "1 command",
+        "other": "{n} commands, checked one by one"
+      },
+      "safe": "no red line",
+      "noneLeft": "Nothing is waiting for you",
+      "done": {
+        "deny": "Denied",
+        "once": "Allowed once",
+        "session": "Allowed for this session",
+        "decided": "Decided"
+      }
+    },
+    "recall": {
+      "title": "Wiki recalled into this chat",
+      "aria": "Wiki recall: {used} of {budget} tokens",
+      "none": "No wiki pages recalled yet",
+      "droppedTitle": "Left out: did not fit the budget",
+      "budget": "Budget per turn: {budget} tokens. Anything left out is named here."
+    },
+    "shareTitle": "Share “{title}”",
+    "shareBody": "Everyone sees this chat on the board. The people you tick can also read its messages. Owners of the Console can read every chat.",
+    "shareNobody": "Nobody else is in the team yet.",
+    "shared": "Sharing saved.",
+    "switch": {
+      "title": "Switch model",
+      "open": "Switch model or ask once…",
+      "lede": "The chat keeps its memory: the brief ({brief}) and recalled wiki pages ({recall}) always go along. The ring shows how full the history would be on each model.",
+      "rule": "Auto: up to 60% full, the whole history goes along; above that it is compacted to a summary plus the last 20 messages, and the full history stays searchable. Another provider is a red line.",
+      "here": "Switched to {m} here",
+      "back": "Back to {m}",
+      "current": "In use",
+      "local": "On this machine",
+      "localOnly": "Local only",
+      "policy": "This project allows local models only, so remote models are locked.",
+      "busy": "The agent is answering. Switch when the turn ends.",
+      "notLive": "Open this chat in hpk serve to switch models.",
+      "unavailable": "{m} is not offered for this chat any more",
+      "firstTurn": "first turn",
+      "costHint": "Input cost of the first message on this model. Nothing is cached there yet, so every token is billed in full.",
+      "ringHint": "Full history: {full}% of the {win} window. Sent: {sent}%.",
+      "windowGuess": "(window unknown, assumed)",
+      "crossBody": "Moving this chat to {m} sends its history to {p}, another provider. The prompt cache starts over and thinking from the old model is dropped.",
+      "way": {
+        "continue": "Whole history",
+        "compact": "Compact",
+        "continueHint": "Fits: the whole conversation goes along. Thinking blocks the new model cannot read are dropped.",
+        "compactHint": "Too full: Hermes summarises older turns and keeps the last 20 messages. The full history stays searchable."
+      },
+      "done": {
+        "continue": "Now on {m}, with the whole history",
+        "compact": "Now on {m}: history compacted, the last 20 messages kept"
+      }
+    },
+    "ask": {
+      "btn": "Ask once",
+      "label": "Question for {m}",
+      "placeholder": "What should the other model look at?",
+      "send": "Ask {m}",
+      "note": "A sub-task answers and reports back here. This chat keeps its model and cache.",
+      "started": "{m} is on it. The answer comes back here as a summary.",
+      "crossTitle": "Ask a model from another provider?",
+      "crossBody": "Asking {m} sends the question and this chat's brief to {p}, another provider. This chat stays on its own model."
+    }
+  },
+  "approvals": {
+    "title": "Approvals",
+    "lede": "Everything waiting for a human, oldest risk first. Decide with the keyboard: j / k to move, a to approve, d to deny.",
+    "queue": "Queue",
+    "filter": "Filter approvals",
+    "f": {
+      "all": "All",
+      "redline": "Red lines",
+      "drafts": "Wiki drafts",
+      "other": "Other"
+    },
+    "kind": {
+      "permission": "Red line",
+      "duplicate": "Duplicate work",
+      "question": "Question",
+      "draft": "Wiki drafts",
+      "stale": "Stale claim"
+    },
+    "open": {
+      "permission": "Review",
+      "duplicate": "Decide on board",
+      "question": "Answer in chat",
+      "draft": "Review drafts",
+      "stale": "Resolve on board"
+    },
+    "approve": "Approve",
+    "deny": "Deny",
+    "approved": "Approved and logged",
+    "denied": "Denied and logged",
+    "undoNote": "Undo requested. The session will be asked to revert if it already acted.",
+    "empty": "Nothing is waiting for you.",
+    "emptyDetail": "When an agent stops at a red line or asks a question, it shows up here.",
+    "redLineNote": "Red lines wait for a human in every mode. Your decision is written to the audit log.",
+    "session": "Session",
+    "owner": "Owner",
+    "whoCan": "Who can approve",
+    "whoCanRed": "Owner or maintainer",
+    "whoCanAny": "Any member"
+  },
+  "redlines": {
+    "push": {
+      "short": "Push / tag / merge",
+      "long": "Push, tag, open a merge request, or merge into the main branch."
+    },
+    "delete": {
+      "short": "Delete",
+      "long": "Delete files, folders, worktrees, branches, databases or wiki pages."
+    },
+    "secrets": {
+      "short": "Secrets",
+      "long": "Read or print .env files and other secrets."
+    },
+    "control": {
+      "short": "Agent-control files",
+      "long": "Edit AGENTS.md, CLAUDE.md, SOUL.md, skills, project.yaml or the wiki SCHEMA."
+    },
+    "model": {
+      "short": "Model or budget",
+      "long": "Switch a chat to another provider's model, or spend beyond the budget."
+    },
+    "wikicore": {
+      "short": "Core wiki pages",
+      "long": "Change decisions/, architecture/ or people/ in the wiki."
+    },
+    "promote": {
+      "short": "Share knowledge",
+      "long": "Promote knowledge to the shared wiki or change a project's privacy mode."
+    },
+    "egress": {
+      "short": "Send data out",
+      "long": "Send anything outside this machine except the configured channel."
+    }
+  },
+  "wiki": {
+    "title": "Wiki",
+    "lede": "{pages} pages of project knowledge. Every claim has a source. Rules live in the repo, not here.",
+    "searchPh": "Search the wiki",
+    "sections": "Wiki sections",
+    "tab": {
+      "pages": "Pages",
+      "drafts": "Drafts",
+      "log": "Log"
+    },
+    "section": {
+      "decisions": "Decisions",
+      "architecture": "Architecture",
+      "lessons": "Lessons",
+      "versions": "Versions",
+      "glossary": "Glossary",
+      "people": "People"
+    },
+    "updated": "Updated",
+    "confidence": "Confidence",
+    "conf": {
+      "high": "high",
+      "medium": "medium",
+      "low": "low"
+    },
+    "sources": "Sources",
+    "proposeEdit": "Propose an edit",
+    "history": "History",
+    "draftStarted": "Draft started in _drafts/",
+    "historyNote": "History comes from the wiki's own git log.",
+    "noDrafts": "No drafts waiting. New knowledge from sessions will appear here.",
+    "draftsTitle": "{n} drafts waiting",
+    "draftsSub": "Pick, or type a batch",
+    "pick": "Select draft {n}",
+    "kind": {
+      "new": "New",
+      "edit": "Edit"
+    },
+    "from": "from session {num}",
+    "coreArea": "Core page",
+    "preview": "Preview",
+    "batchLabel": "Batch decision",
+    "batchPh": "approve 1,3 · discard 4",
+    "batchHint": "Type approve or discard followed by numbers, then press Enter.",
+    "batchBad": "Write it like “approve 1,3” or “discard 2-4”.",
+    "approveSel": "Approve selected",
+    "approveN": {
+      "one": "Approve 1 draft",
+      "other": "Approve {n} drafts"
+    },
+    "requestChanges": "Ask for changes",
+    "changesAsked": "Sent back to the session with your note",
+    "discard": "Discard",
+    "discardN": {
+      "one": "Discard 1",
+      "other": "Discard {n}"
+    },
+    "approvedToast": {
+      "one": "1 page saved to the wiki and committed",
+      "other": "{n} pages saved to the wiki and committed"
+    },
+    "discardedToast": {
+      "one": "1 draft discarded",
+      "other": "{n} drafts discarded"
+    },
+    "restored": "Drafts restored",
+    "logSub": "Append-only. Every write, by anyone, in time order.",
+    "empty": "No approved pages yet. Pages appear here after a person approves a draft.",
+    "emptyDrafts": "{n} drafts are waiting in the Drafts tab.",
+    "promote": "Share to shared wiki",
+    "promoteTitle": "Share “{title}”",
+    "promoteBody": "hpk makes a redacted copy (no project names, paths, URLs or people) as a draft in the shared wiki you pick. Nothing is shared until a person approves it there; you can edit the copy first on the Privacy page.",
+    "promoted": "Draft {n} is waiting on the Privacy page.",
+    "promoteTo": {
+      "team": "Team shared wiki",
+      "mine": "My personal shared wiki"
+    },
+    "promoteToSub": {
+      "team": "every project can learn from it; an owner approves",
+      "mine": "only for you, across your projects; you approve"
+    }
+  },
+  "board": {
+    "title": "Board",
+    "lede": "Who is working on what. hpk keeps claims in board.db and writes {file} for people to read.",
+    "render": "Write BOARD.md now",
+    "rendered": "BOARD.md updated from board.db",
+    "diagram": "Who holds what",
+    "diagramSub": "One box per claim. An overlap is marked on the boxes it touches.",
+    "claims": "Claims ({n})",
+    "staleAfter": "Stale after {n} min without heartbeat",
+    "col": {
+      "claim": "Claim",
+      "task": "Task",
+      "paths": "Paths",
+      "owner": "Owner",
+      "heartbeat": "Heartbeat",
+      "status": "Status"
+    },
+    "claim": {
+      "active": "Active",
+      "waiting-human": "Held for human",
+      "stale": "Stale",
+      "done": "Released"
+    },
+    "alerts": "Overlaps",
+    "alertsSub": "Checked at start, on every commit and nightly · 0 tokens",
+    "level": {
+      "danger": "Duplicate work",
+      "caution": "Same files",
+      "related": "Related"
+    },
+    "decide": "Decide",
+    "ack": "Noted",
+    "acked": "Marked as seen",
+    "who": "Who is on it?",
+    "whoBody": "Type a path or task. The answer comes from the board, without disturbing any session.",
+    "whoPh": "e.g. api/invoices",
+    "whoHit": {
+      "one": "1 claim:",
+      "other": "{n} claims:"
+    },
+    "whoFree": "Free — nobody holds this.",
+    "dupTitle": "Duplicate work",
+    "dupBody": "Session {a} wants to change files that {b} ({owner}) is already working on. Last heartbeat {ago}.",
+    "needsHuman": "Needs a human",
+    "dupAutoNote": "In Auto mode the agent may choose to wait or work elsewhere on its own. Working together or taking over always needs a person.",
+    "opt": {
+      "wait": {
+        "t": "Wait",
+        "d": "Hold this part until the other claim is released. You will be told when it is.",
+        "done": "Waiting. You will be notified when the claim is released."
+      },
+      "other": {
+        "t": "Work on something else",
+        "d": "Pick a free block from the board instead.",
+        "done": "Moved to a free block on the board."
+      },
+      "together": {
+        "t": "Work together",
+        "d": "Send a message to the other session to split the work.",
+        "done": "Message sent to the other session (queued, not interrupting)."
+      },
+      "takeover": {
+        "t": "Take over",
+        "d": "Ask the claim's owner, or an owner or maintainer, to hand the work over.",
+        "done": "Takeover request sent to the claim owner."
+      }
+    },
+    "otherArea": "other",
+    "clashWith": "Overlaps on {files}"
+  },
+  "gates": {
+    "title": "Modes & red lines",
+    "lede": "How often the agent must ask you, which points always come to a human, and the record of every decision.",
+    "tab": {
+      "modes": "Modes",
+      "redlines": "Red lines",
+      "audit": "Audit log",
+      "digest": "Auto digest"
+    },
+    "modeTitle": "Default mode for this project",
+    "modeSub": "Override per session or lane from the top bar",
+    "default": "Default",
+    "pointsTitle": "Decision points",
+    "pointsSub": "Who decides in each mode",
+    "point": "Point",
+    "human": "You",
+    "p": {
+      "start": {
+        "t": "Starting a task",
+        "d": "Missing facts are asked for in one question.",
+        "auto": "human"
+      },
+      "plan": {
+        "t": "Large plan",
+        "d": "The plan is posted before work begins.",
+        "auto": "Goes ahead if in agreed scope"
+      },
+      "lanes": {
+        "t": "Opening lanes / children",
+        "d": "Child sessions in their own worktrees.",
+        "auto": "Creates and reports a table"
+      },
+      "childStuck": {
+        "t": "A child is stuck",
+        "d": "Real questions always reach a person.",
+        "auto": "human"
+      },
+      "merge": {
+        "t": "Merge or push",
+        "d": "Red line.",
+        "auto": "human"
+      },
+      "wiki": {
+        "t": "Wiki drafts",
+        "d": "lessons / versions / glossary vs core pages.",
+        "auto": "Approves non-core pages, logged"
+      },
+      "delete": {
+        "t": "Deleting anything",
+        "d": "Red line.",
+        "auto": "human"
+      },
+      "weekly": {
+        "t": "Weekly review",
+        "d": "Read the week's summary; undo what Auto did.",
+        "auto": "Matters more"
+      }
+    },
+    "rlTitle": "Red lines stop the agent in every mode",
+    "rlBody": "Built-in lines cannot be removed. Add your project's own lines below — they are stored in project.yaml.",
+    "builtIn": "Built in",
+    "project": "This project",
+    "rlPh": "e.g. Never edit an applied migration",
+    "rlAdd": "Add red line",
+    "rlAdded": "Red line added to project.yaml",
+    "rlRemoved": "Red line removed"
+  },
+  "audit": {
+    "title": "Audit log",
+    "filter": "Filter by actor",
+    "f": {
+      "all": "Everyone",
+      "human": "People",
+      "auto": "Auto",
+      "agent": "Agent"
+    },
+    "col": {
+      "time": "Time",
+      "actor": "Actor",
+      "action": "Action",
+      "target": "What",
+      "session": "Session",
+      "result": "Result"
+    },
+    "actor": {
+      "agent": "Agent",
+      "auto": "Auto",
+      "human": "Person"
+    },
+    "action": {
+      "write": "write",
+      "request": "request",
+      "approve": "approve",
+      "deny": "deny",
+      "refuse": "refuse",
+      "revert": "revert",
+      "discard": "discard"
+    },
+    "reason": "reason: {r}",
+    "files": "Stored in the project folder (decisions.jsonl and audit.log). Nothing here can be edited."
+  },
+  "digest": {
+    "title": "Today Auto decided {n} things for you",
+    "sub": "Sent at 18:00 on days Auto ran",
+    "revert": "Revert",
+    "reverted": "Decision {n} reverted",
+    "noRevert": "Read-only, nothing to undo",
+    "batchPh": "revert 2,3",
+    "batchRun": "Run",
+    "batchDone": "Reverted",
+    "how": "Wiki changes revert with git; file changes use Hermes checkpoints."
+  },
+  "jobs": {
+    "title": "Scheduled jobs",
+    "lede": "Background work that keeps knowledge growing. Each job has a token budget and stops to ask before going over it.",
+    "col": {
+      "job": "Job",
+      "schedule": "Schedule",
+      "model": "Model",
+      "last": "Last run",
+      "budget": "Budget"
+    },
+    "name": {
+      "nightly": "Nightly ingest",
+      "weekly": "Weekly wiki lint",
+      "digest": "Auto digest"
+    },
+    "desc": {
+      "nightly": "Today's sessions and git log → raw notes and drafts",
+      "weekly": "Contradictions, stale pages, pages nothing links to",
+      "digest": "Summary of Auto's decisions, only on days it ran"
+    },
+    "next": "next {when}",
+    "paused": "Paused",
+    "status": {
+      "ok": "OK",
+      "warn": "Findings",
+      "fail": "Stopped"
+    },
+    "budget": "Budget used",
+    "runNow": "Run now",
+    "started": "{name} started",
+    "pause": "Pause",
+    "resume": "Resume",
+    "history": "Runs",
+    "historySub": "Latest first",
+    "rulesTitle": "How jobs behave",
+    "rule": {
+      "lock": "One run at a time per project (lock).",
+      "resume": "A failed run continues where it stopped next time.",
+      "budget": "Over budget → stop and ask, never silently continue.",
+      "zero": "Checks that need no thinking run as scripts and cost 0 tokens.",
+      "batch": "Night jobs use batch models where the provider offers them."
+    }
+  },
+  "projects": {
+    "title": "Projects",
+    "lede": "Personal projects are only yours; team projects have members and roles. Every project uses a Profile, which uses a Process.",
+    "add": "Add project",
+    "activeN": {
+      "one": "1 active",
+      "other": "{n} active"
+    },
+    "col": {
+      "name": "Project",
+      "privacy": "Privacy",
+      "sessions": "Active",
+      "wiki": "Wiki pages",
+      "ingest": "Last ingest",
+      "tokens": "Tokens 30d",
+      "cost": "Cost 30d",
+      "chain": "Process › Profile",
+      "people": "People"
+    },
+    "draftsN": {
+      "one": "1 draft",
+      "other": "{n} drafts"
+    },
+    "localOnly": "local models only",
+    "open": "Open",
+    "current": "Current",
+    "oneProfile": "Switching project switches the Hermes profile. Nothing from one project is visible inside another unless that project is Shared and you approved the knowledge.",
+    "section": {
+      "team": "Team projects",
+      "personal": "Personal projects"
+    },
+    "sectionSub": {
+      "team": "Shared with members · approvals by role",
+      "personal": "Only you · your own accounts and wiki"
+    },
+    "emptyKind": {
+      "team": "No team projects yet.",
+      "personal": "No personal projects yet."
+    },
+    "manageChain": "Process & profiles",
+    "chainNote": "A Profile can be used by several projects. Switching project switches its Profile in Hermes; the wiki, board and privacy stay with the project."
+  },
+  "privacy": {
+    "title": "Privacy",
+    "lede": "How knowledge from {project} may leave it.",
+    "modeTitle": "Privacy mode",
+    "shared": {
+      "name": "Shared",
+      "desc": "Can add to the shared wiki, but only after you approve a cleaned-up copy.",
+      "write": "After your approval, cleaned",
+      "read": "Yes",
+      "channels": "Any configured channel"
+    },
+    "private": {
+      "name": "Private",
+      "desc": "Never writes to the shared wiki. Still learns from general lessons there.",
+      "write": "Never",
+      "read": "Yes",
+      "channels": "This machine only"
+    },
+    "isolated": {
+      "name": "Isolated",
+      "desc": "Nothing goes in or out. For highly confidential work.",
+      "write": "Never",
+      "read": "No",
+      "channels": "This machine only"
+    },
+    "matrixTitle": "What each mode allows",
+    "matrix": {
+      "mode": "Mode",
+      "write": "Writes to shared wiki",
+      "read": "Reads shared wiki",
+      "channels": "Summaries go to"
+    },
+    "changeNote": "Changing from Private or Isolated to Shared needs approval, and old knowledge is never promoted automatically.",
+    "needsApproval": "Making this project Shared needs an owner's approval. Request sent.",
+    "saved": "Privacy set to {mode}",
+    "promoTitle": "Waiting to be shared",
+    "promoLede": "General lessons found by the weekly lint. Names, paths and people are removed before anything leaves the project.",
+    "promote": "Share this copy",
+    "editRedact": "Edit what is removed",
+    "editRedaction": "Opened the cleaned copy for editing",
+    "keepLocal": "Keep in project",
+    "promoted": "Shared to the wiki of all your projects",
+    "kept": "Kept inside this project",
+    "promoEmpty": "Nothing waiting to be shared.",
+    "promoOff": "This project is {mode}. Nothing from it is ever offered for sharing."
+  },
+  "team": {
+    "title": "Team",
+    "lede": "People who use this server, what they can approve, and their budgets.",
+    "mode": "Team mode",
+    "on": "Team mode on",
+    "off": "Team mode off — single user",
+    "invite": "Add a person",
+    "authTitle": "Sign-in",
+    "authBody": "Team mode needs sign-in. HPK Console supports OIDC (Keycloak, Authentik, Google…), passkeys, or a trusted header from your reverse proxy.",
+    "members": "Members ({n})",
+    "col": {
+      "person": "Person",
+      "role": "Role",
+      "sessions": "Open sessions",
+      "budget": "Budget"
+    },
+    "perMonth": "/mo",
+    "roleSaved": "{name} is now {role}",
+    "removeAsk": "Removing {name} needs confirmation from another owner",
+    "matrix": "Who can approve what",
+    "matrixSub": "Set per project in project.yaml",
+    "approves": "Decision",
+    "ap": {
+      "wikiCore": {
+        "t": "Core wiki pages",
+        "d": "decisions/, architecture/, people/"
+      },
+      "redLines": {
+        "t": "Red lines",
+        "d": "Push, delete, secrets…"
+      },
+      "promote": {
+        "t": "Share knowledge",
+        "d": "Promote to the shared wiki"
+      },
+      "drafts": {
+        "t": "Other wiki drafts",
+        "d": "lessons, versions, glossary"
+      },
+      "duplicate": {
+        "t": "Duplicate-work choices",
+        "d": "Wait, work elsewhere, work together"
+      }
+    },
+    "email": "Email",
+    "inviteNote": "The invite works only after sign-in is set up. People see only the projects their group maps to.",
+    "send": "Send invite",
+    "invited": "Invite created",
+    "personalTitle": "{name} is a personal project",
+    "personalBody": "Only you can see and approve work here. To work with others, create a team project or change this one to a team project in its settings.",
+    "seeTeamProjects": "See team projects",
+    "signInTitle": "Sign in to HPK Console",
+    "signInBody": "This Console is shared by a team. Use the personal token an owner gave you (hpk team add). It stays signed in for 12 hours.",
+    "signInProxy": "This Console signs you in through your organisation's sign-in page. Open it through that address.",
+    "token": "Your token",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "tokenOnce": "Token for {id}. It is shown only now.",
+    "tokenOnceHint": "Give it to them privately. hpk keeps only its hash; if it is lost, issue a new one.",
+    "allProjects": "all projects",
+    "rotateConfirm": "Issue a new token for {id}? Their old token stops working.",
+    "newToken": "New token",
+    "removeConfirm": "Remove {id} from the team? They are signed out at once.",
+    "remove": "Remove",
+    "inviteSub": "They sign in with the token shown after you add them.",
+    "id": "Email or user name",
+    "name": "Name (optional)",
+    "projects": "Projects",
+    "add": "Add",
+    "ledeLive": "Who can use this Console and what each person may decide. Sign-in: {auth}.",
+    "authHeader": "your organisation's proxy",
+    "authToken": "personal tokens",
+    "rolesNote": "Owner: settings, privacy, people. Maintainer: red lines, modes, core wiki pages. Member: chats and general wiki drafts. Viewer: reads only. A chat belongs to whoever started it.",
+    "spentToday": "Spent today",
+    "capLine": "this month {month} of {cap}",
+    "noCap": "no cap",
+    "caps": "Caps",
+    "capsFor": "Money caps for {id}",
+    "capDay": "Per day (USD, 0 = none)",
+    "capMonth": "Per month (USD, 0 = none)",
+    "capsHint": "What the chats this person starts may cost, across projects. At a cap, their chats get no more tools and they cannot start new ones until it is raised or the period ends. Project caps still apply."
+  },
+  "settings": {
+    "title": "Settings",
+    "lede": "Connection to Hermes, notifications, budgets and appearance.",
+    "runDoctor": "Run checks",
+    "doctor": "Health check",
+    "doctorSub": "What hpk needs from Hermes",
+    "checking": "Checking…",
+    "fix": "Fix",
+    "general": "General",
+    "language": "Language",
+    "languageHint": "All text comes from i18n/<language>.json — edit those files to change any wording.",
+    "theme": "Theme",
+    "theme_dark": "Dark",
+    "theme_light": "Light",
+    "about": "About",
+    "version": "Version",
+    "license": "License",
+    "licenseValue": "MIT + Commons Clause (source-available, not for sale)",
+    "data": "Your data",
+    "dataValue": "Stays in your Hermes home folder",
+    "sample": "Data shown",
+    "sampleValue": "Sample data — not a real project",
+    "notify": "Notifications",
+    "channel": "Send summaries and drafts to",
+    "channelHint": "Private and isolated projects always use the console only.",
+    "ch": {
+      "console": "This console",
+      "telegram": "Telegram (via Hermes gateway)",
+      "line": "LINE (via Hermes gateway)",
+      "email": "Email (via Hermes gateway)"
+    },
+    "batch": "Group notifications (at most one every 5 minutes, except red lines)",
+    "morning": "Morning summary of overnight findings",
+    "budgets": "Budgets",
+    "daily": "Daily limit (USD)",
+    "monthly": "Monthly limit (USD)",
+    "ingestCap": "Max tokens per project analysis",
+    "ingestHint": "Analysis stops and asks before going over this.",
+    "saved": "Budgets saved",
+    "motion": "Animation",
+    "motionHint": "Track draw-in, flowing light, route lighting and transitions. Your system’s reduce-motion setting always wins.",
+    "ap": {
+      "title": "Appearance",
+      "sub": "Saved in this browser only. Each person on the team can pick their own.",
+      "reset": "Reset",
+      "resetDone": "Appearance reset",
+      "theme": "Theme",
+      "accent": "Accent",
+      "palette": "Background",
+      "size": "Text size",
+      "density": "Spacing",
+      "radius": "Corners",
+      "font": "Font",
+      "motion": "Motion",
+      "o": {
+        "theme": {
+          "dark": "Dark",
+          "light": "Light",
+          "auto": "Follow system"
+        },
+        "accent": {
+          "rose": "Rose",
+          "violet": "Violet",
+          "blue": "Blue",
+          "teal": "Teal",
+          "coral": "Coral",
+          "mono": "Ink"
+        },
+        "palette": {
+          "plum": "Plum",
+          "graphite": "Graphite",
+          "ocean": "Ocean",
+          "forest": "Forest"
+        },
+        "size": {
+          "sm": "Small",
+          "md": "Normal",
+          "lg": "Large",
+          "xl": "Extra large"
+        },
+        "density": {
+          "compact": "Compact",
+          "cozy": "Normal",
+          "roomy": "Roomy"
+        },
+        "radius": {
+          "sharp": "Sharp",
+          "soft": "Soft",
+          "round": "Round"
+        },
+        "font": {
+          "anuphan": "Anuphan (bundled)",
+          "system": "System font"
+        },
+        "motion": {
+          "on": "Animations on",
+          "off": "Animations off"
+        }
+      }
+    }
+  },
+  "doctor": {
+    "hermes": {
+      "t": "Hermes CLI",
+      "d": "Found on PATH",
+      "fix": "Install or add hermes to PATH"
+    },
+    "acp": {
+      "t": "ACP",
+      "d": "Used to start, chat with and approve sessions",
+      "fix": "Run hermes-acp --check"
+    },
+    "wikiPath": {
+      "t": "Wiki location",
+      "d": "WIKI_PATH in the profile's .env",
+      "fix": "WIKI_PATH set"
+    },
+    "hooks": {
+      "t": "Hooks",
+      "d": "Red-line guard, heartbeat, child report…",
+      "fix": "Installed the missing hook: pre_compress_capture"
+    },
+    "cron": {
+      "t": "Scheduled jobs",
+      "d": "Registered with Hermes cron",
+      "fix": "Jobs registered"
+    },
+    "stateDb": {
+      "t": "Session database",
+      "d": "Read-only access to state.db",
+      "fix": "Reconnected"
+    },
+    "auth": {
+      "t": "Console sign-in",
+      "d": "Required before binding beyond this machine",
+      "fix": "Opened sign-in setup"
+    },
+    "hookLatency": {
+      "t": "Hook speed",
+      "d": "Target under 30 ms (80 ms on Windows)",
+      "fix": "OK"
+    }
+  },
+  "notif": {
+    "title": "Notifications",
+    "empty": "No notifications.",
+    "batching": "Grouped every 5 minutes. Red lines and duplicate work arrive at once.",
+    "markAll": "Mark all read",
+    "settings": "Notification settings"
+  },
+  "keys": {
+    "title": "Keyboard shortcuts",
+    "move": "move",
+    "approve": "Approve selected red line",
+    "deny": "Deny selected red line",
+    "open": "Open selected item",
+    "help": "Show this list"
+  },
+  "wizard": {
+    "title": "Add project",
+    "lede": "hpk asks before it reads anything, shows the cost first, and never opens secrets.",
+    "steps": "Steps",
+    "step": {
+      "consent": "Permission",
+      "privacy": "Privacy",
+      "scan": "Scan",
+      "estimate": "Estimate",
+      "ingest": "Read",
+      "drafts": "Drafts",
+      "health": "Health",
+      "config": "Settings",
+      "setup": "Type & profile"
+    },
+    "consent": {
+      "title": "Analyse this project and add its knowledge to the wiki?",
+      "path": "Project folder",
+      "pathHint": "A git repository on this machine.",
+      "note": "Nothing is read until you continue. .env files, secrets and anything in .gitignore are never opened."
+    },
+    "depth": {
+      "full": {
+        "t": "Full",
+        "d": "Docs, notes, ADRs, agent files, CI and config."
+      },
+      "light": {
+        "t": "Light",
+        "d": "README and docs/ only. Cheapest."
+      },
+      "skip": {
+        "t": "Skip analysis",
+        "d": "Create an empty wiki. Knowledge builds up from sessions."
+      }
+    },
+    "privacy": {
+      "title": "How private is this project?",
+      "local": "Use only local models for analysis (Ollama / LM Studio)",
+      "change": "You can change this later in Privacy."
+    },
+    "scan": {
+      "title": "Scan",
+      "start": "Scan the folder",
+      "running": "Scanning {path}…",
+      "zero": "0 tokens used",
+      "zeroBody": "The scan is a script: file tree, languages, git history. No AI involved.",
+      "files": "Files",
+      "commits": "Commits",
+      "people": "Contributors",
+      "last": "Last commit",
+      "langs": "Languages",
+      "skipped": "Never opened",
+      "skippedBody": "Matched secrets rules or .gitignore:"
+    },
+    "kind": {
+      "readme": "README",
+      "docs": "Docs",
+      "notes": "Notes",
+      "adr": "Decisions",
+      "changelog": "Changelog",
+      "agents": "Agent files",
+      "ci": "CI",
+      "infra": "Infra"
+    },
+    "estimate": {
+      "title": "What will be read, and what it costs",
+      "lede": "Untick anything you do not want read. The estimate updates as you go.",
+      "source": "Source",
+      "kind": "Kind",
+      "tokens": "Tokens",
+      "files": {
+        "one": "1 file",
+        "other": "{n} files"
+      },
+      "total": "Total",
+      "cost": "estimated cost",
+      "models": "Reading uses the cheap model; one pass of the main model writes the drafts.",
+      "over": "This is over the project's analysis limit (400k tokens). It will stop and ask before going over.",
+      "go": "Start reading"
+    },
+    "ingest": {
+      "title": "Reading",
+      "lede": "Facts are written to raw/ with their source. Nothing becomes a wiki page without your approval.",
+      "reading": "reading…",
+      "notes": {
+        "one": "1 note",
+        "other": "{n} notes"
+      },
+      "pause": "Pause",
+      "paused": "Paused. You can resume from where it stopped.",
+      "review": "Review drafts"
+    },
+    "drafts": {
+      "title": "{n} pages drafted",
+      "lede": "Untick any you do not want. Core pages are marked.",
+      "later": "You can also review them later in Wiki → Drafts.",
+      "approve": "Approve ticked"
+    },
+    "health": {
+      "title": "Knowledge health",
+      "lede": "Problems found in the project's own documents. Tick the ones to fix.",
+      "contradiction": "Contradiction",
+      "deadRef": "Dead reference",
+      "duplicateRule": "Duplicate rule",
+      "missing": "Undocumented",
+      "repoNote": "Fixes to files in the repository are proposed separately and need your approval."
+    },
+    "config": {
+      "title": "Project settings",
+      "lede": "Detected from the repository. Check before saving.",
+      "detected": "detected",
+      "fromRepo": "found in CLAUDE.md",
+      "localOnly": "private: console only",
+      "where": "Saved to the {name} profile as hpk/project.yaml. The wiki starts with the approved pages.",
+      "finish": "Create project",
+      "done": "Project {name} created",
+      "inherits": "everything else is inherited from the profile and its process"
+    },
+    "setup": {
+      "title": "Personal or team, and which profile?",
+      "kind": "Project type",
+      "kindDesc": {
+        "team": "Members, roles and approvals by role. Board and claims are shared.",
+        "personal": "Only you. Your own accounts, private by default."
+      },
+      "members": "Members",
+      "membersHint": "Roles are set on the Team page. You can add people later.",
+      "profile": "Profile",
+      "profileHint": "The profile brings its process. You can override single settings for this project later."
+    }
+  },
+  "accounts": {
+    "title": "AI accounts",
+    "lede": "Add as many accounts per provider as you like, put them in order, and hpk switches to the next one when an account runs out.",
+    "add": "Add account",
+    "test": "Test failover",
+    "safeTitle": "Keys stay with Hermes",
+    "safeBody": "Accounts are saved in Hermes' credential store. This page only shows a masked fingerprint, never the key, and never sends it anywhere except to the provider.",
+    "orderAria": "{provider} accounts in order of use",
+    "countN": {
+      "one": "1 account",
+      "other": "{n} accounts"
+    },
+    "inUse": "In use: {label}",
+    "noneUsable": "No usable account — work is held",
+    "emptyProvider": "No {provider} accounts yet.",
+    "rowAria": "{n}. {label}, {status}. Alt and arrow keys move it.",
+    "status": {
+      "active": "In use",
+      "ready": "Ready",
+      "exhausted": "Used up",
+      "error": "Error",
+      "disabled": "Off"
+    },
+    "method": {
+      "api_key": "API key",
+      "oauth": "Sign-in",
+      "hermes": "From Hermes"
+    },
+    "lastUsed": "used {when}",
+    "neverUsed": "never used",
+    "projectsN": "projects: {list}",
+    "noProjects": "no projects allowed",
+    "usage": {
+      "tokens": "{used} / {limit} tokens",
+      "percent": "{used}% of {limit}% limit",
+      "usd": "{used} of {limit}"
+    },
+    "usageAria": "Usage",
+    "resets": "resets {when}",
+    "window": {
+      "5h": "5-hour window",
+      "day": "daily",
+      "week": "weekly",
+      "month": "monthly",
+      "credits": "prepaid credits"
+    },
+    "up": "Move {label} up",
+    "down": "Move {label} down",
+    "enabled": "On / off",
+    "enabledFor": "Use {label}",
+    "reordered": "Order saved",
+    "removed": "{label} removed",
+    "policyTitle": "When to switch",
+    "policySub": "Applies to every provider",
+    "switchWhen": "Switch to the next account when",
+    "trig": {
+      "quota": {
+        "t": "Tokens or quota run out",
+        "d": "rate limit or usage limit reached (429)"
+      },
+      "budget": {
+        "t": "Account budget reached",
+        "d": "the cap you set on this account"
+      },
+      "errors": {
+        "t": "Repeated errors",
+        "d": "5 provider errors within 2 minutes"
+      },
+      "auth": {
+        "t": "Credentials stop working",
+        "d": "key revoked or sign-in expired"
+      }
+    },
+    "returnTo": "Go back to the first account",
+    "ret": {
+      "on_reset": "As soon as its limit resets",
+      "next_session": "At the start of the next session",
+      "never": "Never — stay on the account that works"
+    },
+    "sticky": {
+      "t": "Keep running sessions on their account",
+      "d": "switching mid-session loses the prompt cache, so it only happens when the account fails"
+    },
+    "cross": {
+      "t": "Fall back to another provider",
+      "d": "off by default: a different provider means a different model, which needs a human"
+    },
+    "crossOn": "Cross-provider fallback on — it will still ask before changing model",
+    "crossOff": "Cross-provider fallback off",
+    "notify": "Tell me every time an account is switched",
+    "logTitle": "Switches",
+    "logSub": "Latest first",
+    "reason": {
+      "quota": "quota used up",
+      "budget": "budget reached",
+      "errors": "repeated errors",
+      "auth": "credentials failed",
+      "reset": "limit reset, back to first",
+      "manual": "turned off by hand"
+    },
+    "accessTitle": "Which projects may use which account",
+    "accessSub": "For example: company work only on the company account",
+    "account": "Account",
+    "allowAria": "Allow {label} for {project}",
+    "accessSaved": "Access saved",
+    "form": {
+      "provider": "Provider",
+      "label": "Name",
+      "labelPh": "e.g. Company, Personal, Team pool",
+      "labelHint": "You can add several accounts to the same provider.",
+      "method": "How to connect",
+      "key": "API key",
+      "keyHint": "Sent straight to Hermes' credential store. It is never shown again.",
+      "oauthNote": "You will sign in with the provider in a new window. hpk never sees your password.",
+      "hermesNote": "Pick an account Hermes already knows (hermes auth list).",
+      "limit": "Limit (optional)",
+      "unit": "Unit",
+      "window": "Limit resets",
+      "orderNote": "New accounts go to the end of the order. Drag to change it.",
+      "save": "Add account"
+    },
+    "unit": {
+      "tokens": "tokens",
+      "usd": "US dollars",
+      "percent": "% of plan"
+    },
+    "added": "{label} added at the end of the order",
+    "switched": "Switched: {from} → {to}",
+    "noneLeft": "No usable account left. Work on this provider is held until one resets.",
+    "cat": {
+      "title": "Work categories",
+      "sub": "Each sub-task gets a category. The category picks its model and what to fall back to.",
+      "order": "Order of fallback: first the next account for the same model (above), then the next model in the chain. Changing model is still a red line for a running sub-task.",
+      "note": "Saved in hpk’s own settings. Hermes’ config is never rewritten. Changes apply to new sub-tasks.",
+      "chainAria": "Model chain for {cat}",
+      "model": "Model, step {n}",
+      "effort": "Effort, step {n}",
+      "up": "Move step {n} up",
+      "down": "Move step {n} down",
+      "remove": "Remove step {n}",
+      "add": "Add fallback",
+      "saved": "Saved. New sub-tasks use this chain.",
+      "inUse": {
+        "one": "1 sub-task now",
+        "other": "{n} sub-tasks now"
+      },
+      "desc": {
+        "quick": "small, clear edits; research; docs",
+        "deep": "real code changes and tests",
+        "review": "checks, reviews and the verify step",
+        "design": "UI and visual work"
+      }
+    }
+  },
+  "setup": {
+    "title": "Set up hpk on this computer",
+    "lede": "hpk works with Hermes Agent. Two things first; nothing is downloaded or changed until you agree.",
+    "tab": {
+      "map": "Map",
+      "processes": "Processes",
+      "profiles": "Profiles",
+      "effective": "Effective settings"
+    },
+    "layer": {
+      "process": "Process",
+      "profile": "Profile",
+      "project": "Project",
+      "builtin": "Built in"
+    },
+    "kind": {
+      "team": "Team",
+      "personal": "Personal"
+    },
+    "explain": {
+      "process": "How work flows: mode, decision points, red lines, board, scheduled jobs. Reusable.",
+      "profile": "Who the agent is: models, AI accounts, skills, personality. Built on one Process.",
+      "project": "What it works on: repository, wiki, privacy, people. Personal or team. Uses one Profile.",
+      "rule": "Project overrides Profile, Profile overrides Process. Red lines only add up — a lower layer can add one, never remove one."
+    },
+    "minutes": "{n} min",
+    "none": "none",
+    "perDay": " / day",
+    "localOnlyBudget": "$0 — local models only",
+    "noAccounts": "local models, no account",
+    "extraLines": "extra",
+    "builtInOnly": "built-in only",
+    "board": {
+      "hpk": "hpk board",
+      "markdown": "BOARD.md in repo",
+      "hermes-kanban": "Hermes Kanban",
+      "none": "no board"
+    },
+    "wikiReview": {
+      "core": "core pages only",
+      "all": "every draft"
+    },
+    "projectsN": {
+      "one": "1 project",
+      "other": "{n} projects"
+    },
+    "profilesN": {
+      "one": "1 profile",
+      "other": "{n} profiles"
+    },
+    "unusedProcess": "No profile uses this process yet.",
+    "duplicate": "Duplicate",
+    "duplicated": "Copy of {name} created",
+    "usesProcess": "Built on process",
+    "saved": "Saved",
+    "hermesProfile": "Hermes profile: {name}",
+    "key": {
+      "mode": "Default mode",
+      "autoMax": "Longest Auto period",
+      "redLines": "Extra red lines",
+      "board": "Board",
+      "jobs": "Scheduled jobs",
+      "titleTemplate": "Session title template",
+      "wikiReview": "Wiki drafts needing review",
+      "maxChildren": "Max child sessions at once",
+      "budgetDaily": "Daily budget",
+      "model": "Main model",
+      "designModel": "Model for design and planning",
+      "accounts": "AI accounts (in order)",
+      "skills": "Skills",
+      "personality": "Personality",
+      "toolsets": "Tool set",
+      "language": "Language"
+    },
+    "usedByProfiles": "Used by profiles",
+    "usedByProjects": "Used by projects",
+    "notUsed": "Not used yet",
+    "processNote": "Changing a process changes every profile and project built on it, except settings they override.",
+    "profileNote": "One profile can serve many projects — personal and team. Each project keeps its own wiki, board and privacy.",
+    "forProject": "Project",
+    "editRedLines": "Edit red lines",
+    "override": "Override here",
+    "overridden": "{key} overridden for this project",
+    "reset": "Use inherited",
+    "resetDone": "Back to the inherited value",
+    "col": {
+      "setting": "Setting",
+      "value": "Value in use",
+      "from": "Comes from"
+    },
+    "addsUp": "adds up across layers",
+    "effNote": "Struck-through values are overridden by a lower layer. Overrides are saved in the project’s project.yaml.",
+    "hermesFound": "Hermes Agent is installed ({version})",
+    "managed": "Installed by hpk in {dir}",
+    "hermesMissing": "Hermes Agent was not found",
+    "hermesWhy": "hpk needs Hermes Agent for chats, hooks and scheduled jobs. hpk looks for hermes on PATH.",
+    "offerTitle": "hpk can install the tested Hermes Agent {version} for you",
+    "offerBody": "Into hpk's own folder ({dir}), with its own portable Python. It does not change a system Python or anything else on this computer.",
+    "size": "~{dl} MB download · ~{disk} MB",
+    "total": "Total: about {dl} MB to download, {disk} MB on disk (estimates).",
+    "licence": "Hermes Agent licence: {licence}.",
+    "agree": "I agree to download and install these from the sources shown",
+    "installBtn": "Install Hermes Agent {version}",
+    "self": "Or install it yourself (docs/install.md) and reload this page.",
+    "unsupported": "There is no tested installer for this platform ({platform}). Install Hermes Agent yourself (docs/install.md).",
+    "installing": "Installing… {step}",
+    "step": {
+      "start": "starting",
+      "uv": "getting uv",
+      "python": "getting Python",
+      "hermes": "installing Hermes Agent",
+      "check": "checking",
+      "done": "done"
+    },
+    "failed": "The install stopped. Nothing outside hpk's folder was changed; you can try again.",
+    "hpkIn": "hpk {version} is added to Hermes",
+    "hpkWait": "Next, hpk is added to Hermes (after Hermes is installed).",
+    "hpkNeeded": "Add hpk to Hermes",
+    "hpkWhat": "Same as hpk install --yes: skills and hooks in {config}, with a backup.",
+    "diff": "See the exact change",
+    "hpkNote": "Hermes asks you once to allow each new hook the first time it runs. Your projects and wikis are not touched.",
+    "hpkBtn": "Add hpk to Hermes",
+    "hpkDone": "hpk is added to Hermes",
+    "modelTitle": "3 · A model account",
+    "modelBody": "Hermes needs a model account (Nous Portal, Anthropic, OpenAI, OpenRouter or a local model). Connect one in a terminal:",
+    "ready": "Ready. Next: add your first project.",
+    "notYet": "You can continue now and finish this later.",
+    "continue": "Add a project",
+    "skip": "Skip for now"
+  },
+  "tabs": {
+    "board": "Lanes & claims",
+    "sessions": "Session tree",
+    "projects": "Projects",
+    "setup": "Process & profiles",
+    "jobs": "Scheduled jobs",
+    "settings": "General",
+    "accounts": "AI accounts",
+    "gates": "Modes & red lines",
+    "privacy": "Privacy",
+    "team": "Team",
+    "git": "Git",
+    "mcp": "MCP",
+    "browser": "Browser",
+    "vault": "Vault",
+    "teamserver": "Team server"
+  },
+  "ev": {
+    "aria": "Evidence: stage and how sure we are",
+    "stage": {
+      "plan": "Plan",
+      "research": "Research",
+      "code": "Code",
+      "test": "Test",
+      "review": "Review",
+      "verify": "Verify"
+    },
+    "conf": {
+      "notrun": "not run",
+      "running": "running",
+      "seen": "seen",
+      "reported": "reported done",
+      "verified": "verified",
+      "failed": "failed",
+      "blocked": "blocked",
+      "cancelled": "cancelled"
+    }
+  },
+  "plan": {
+    "title": "Plan",
+    "show": "Show plan",
+    "hide": "Hide plan",
+    "verifiedOf": "{n} of {total} verified",
+    "running": {
+      "one": "1 running",
+      "other": "{n} running"
+    },
+    "needsYou": {
+      "one": "1 needs you",
+      "other": "{n} need you"
+    },
+    "queued": {
+      "one": "1 queued",
+      "other": "{n} queued"
+    },
+    "waitsOn": {
+      "one": "waits on 1",
+      "other": "waits on {n}"
+    },
+    "more": {
+      "one": "+1 sub-task",
+      "other": "+{n} sub-tasks"
+    },
+    "repair": "repair {k} of {max}",
+    "graphAria": "Plan: sub-tasks and what each one waits on. Choose a sub-task to act on it.",
+    "category": {
+      "quick": "quick",
+      "deep": "deep",
+      "review": "review",
+      "design": "design"
+    },
+    "act": {
+      "open": "Open sub-task",
+      "steer": "Steer…",
+      "stop": "Stop",
+      "model": "Model (red line)",
+      "retry": "Retry (repair {k} of {max})",
+      "retryNone": "No repairs left",
+      "merge": "Merge into main chat",
+      "merged": "Merged",
+      "mergeNeeds": "needs verified",
+      "board": "Open BOARD"
+    },
+    "steerTitle": "Steer · {title}",
+    "steerLede": "It keeps working and applies this to the remaining steps. Ctrl+Enter sends.",
+    "steerPh": "Tell this sub-task what to change",
+    "steerSend": "Send steer",
+    "note": {
+      "steered": "You steered “{title}”",
+      "stopped": "You stopped “{title}”",
+      "retried": "Repair started on “{title}”",
+      "merged": "“{title}” merged into this chat"
+    },
+    "toast": {
+      "steered": "Steer sent to {title}",
+      "stopped": "Stopped {title}",
+      "retried": "Repair started on {title}",
+      "merged": "Merged {title}"
+    },
+    "overlaps": {
+      "one": "1 file overlap",
+      "other": "{n} file overlaps"
+    },
+    "chain": "Model chain: {list}",
+    "worktree": "Worktree: {path}",
+    "scope": {
+      "writes": "Writes only: {list}",
+      "readOnly": "Read-only",
+      "clash": "{who} holds {claim}: {files}",
+      "clashShort": "overlaps {who} · {files}",
+      "none": "No claim yet"
+    },
+    "boardEmpty": "No chat has split work yet. Start a chat and the agent draws its plan here."
+  },
+  "wikiAdmit": {
+    "title": "Save to wiki?",
+    "keep": "Keep",
+    "refuse": "Refuse",
+    "defer": "Defer",
+    "preview": "What would be saved",
+    "hidden": "Hidden: it looks like a secret. It is not shown or stored.",
+    "target": "Becomes a draft at {path}. A draft still needs approval before it joins the wiki.",
+    "rules": "Rules: secrets are always refused. Logs and task progress are refused unless you keep them. Very short notes are deferred.",
+    "create": "Create draft",
+    "anyway": "Keep it anyway",
+    "deferBtn": "Defer",
+    "close": "Close",
+    "logRefusal": "Log the refusal",
+    "openLog": "Open log",
+    "override": "kept by you",
+    "done": {
+      "keep": "Draft created. It waits for approval.",
+      "defer": "Deferred. It is in the admission log with its reason.",
+      "refused": "Refused and logged. Nothing was saved."
+    },
+    "logTitle": "Admission log",
+    "logSub": "Every save request: kept, refused or deferred, with the reason",
+    "reason": {
+      "keep": "Stands on its own and names its source (session {src}).",
+      "secret": "Looks like a secret (key, password or .env). Secrets never go to the wiki.",
+      "log": "Looks like a log or test output, not knowledge. Logs stay in the session.",
+      "progress": "This is progress on the current task, not something to remember later.",
+      "short": "Too short to stand alone. Say what was decided and why first."
+    }
+  },
+  "live": {
+    "rlHow": "Your own red lines go into project.yaml (gates.red_lines_extra). A line written as re:<pattern> is enforced on commands; plain text is shown to the agent as a rule.",
+    "digestEmpty": "Auto let nothing through in the last 24 hours.",
+    "localOnlyNote": "Enforced: hpk sees where each request of a session goes. On a local-only project, tools are refused for a session that uses (or once used) a model outside this machine. Hosts in privacy.local_hosts also count as this machine.",
+    "openUpConfirm": "Open {name} up to {mode}? Knowledge already in its wiki is not promoted.",
+    "jobInstalled": "scheduled in Hermes cron",
+    "jobNotInstalled": "not scheduled yet",
+    "jobNever": "not run yet",
+    "jobsNoneTitle": "No jobs are scheduled for this project yet",
+    "jobsNoneBody": "Creating them adds jobs to Hermes cron, which runs a model. Review the plan and agree in a terminal:",
+    "runsEmpty": "No runs yet. Runs show here after Hermes cron runs a job.",
+    "wizardLede": "Point hpk at a folder. The scan and checks read names, sizes and links only, and never open secret files. Nothing is read with a model until you start it.",
+    "pathPh": "C:\\code\\my-app or ~/code/my-app",
+    "pathHint": "A folder on this machine.",
+    "pathNeeded": "Give the project folder first.",
+    "kind": {
+      "readme": "README",
+      "docs": "docs",
+      "notes": "notes",
+      "adr": "decision record",
+      "changelog": "changelog",
+      "guide": "guide",
+      "control": "agent rules",
+      "markdown": "markdown"
+    },
+    "noSources": "No documents found to read. You can still add the project.",
+    "priceNote": "Estimate at ${price} per million tokens; the real price depends on the model.",
+    "healthLede": "Checks the project's own documents against its files: missing READMEs, broken links, paths that no longer exist. 0 tokens.",
+    "healthClean": "No problems found in the documents.",
+    "health": {
+      "no-readme": "no README",
+      "broken-link": "broken link",
+      "missing-file": "missing file",
+      "duplicate-rule": "duplicate rule",
+      "undocumented": "undocumented"
+    },
+    "configLede": "This is what hpk writes. You can edit project.yaml at any time.",
+    "configWhere": "Written to <hermes home>/hpk/projects/<name>/: project.yaml, its wiki, and the reading queue. Your project folder is not changed.",
+    "name": "Project name",
+    "nameHint": "Lowercase letters, digits, . _ -",
+    "added": "{name} is added",
+    "addedBody": "project.yaml, the wiki and the reading queue are ready. If the folder is a git repository, its history is in the wiki's raw notes.",
+    "ingestTitle": "Reading the documents uses a model",
+    "ingestBody": "It runs one source at a time and stops at the budget. Start it when you are ready:",
+    "openProject": "Open the project",
+    "acc": {
+      "lede": "Hermes' credential pool, read with `hermes auth list`. hpk never sees a key.",
+      "count": "{n} accounts",
+      "order": "Order",
+      "label": "Account",
+      "type": "Type",
+      "source": "Signed in with",
+      "status": "Status",
+      "next": "used next",
+      "ready": "ready",
+      "none": "Hermes has no pooled accounts yet.",
+      "manage": "Manage accounts in Hermes",
+      "manageSub": "Adding, ordering and removing accounts stays in Hermes, so keys never pass through hpk.",
+      "add": "Add an account",
+      "order2": "Change the order",
+      "remove": "Remove an account",
+      "reset": "Clear \"exhausted\"",
+      "ledeManage": "Hermes' credential pool. Changes run hermes auth, so keys stay in Hermes; hpk never stores, logs or shows a key.",
+      "up": "Try earlier",
+      "moved": "Order changed.",
+      "resetOne": "Clear exhausted",
+      "resetDone": "Cleared.",
+      "removeOne": "Remove",
+      "removeConfirm": "Remove {label} from {provider}? Hermes stops using it at once.",
+      "removed": "Removed.",
+      "addTitle": "Add an API key",
+      "addSub": "For providers that sign in with a key. The key goes to Hermes and is not kept by hpk.",
+      "provider": "Provider",
+      "labelPh": "e.g. team key",
+      "key": "API key",
+      "keyHint": "Sent once over this connection to hermes auth add. Over the network the Console must use HTTPS.",
+      "first": "Try this one first",
+      "addBtn": "Add key",
+      "needBoth": "Give a provider and a key.",
+      "added": "Key added to {provider}.",
+      "oauthNote": "Accounts that sign in through a browser (Claude, Codex, Nous) are added in a terminal: hermes auth add <provider>.",
+      "windowsNote": "On Windows Hermes reads keys from the keyboard, so add keys in a terminal. You can reorder, reset and remove them here."
+    },
+    "setupNote": "Profiles are your real Hermes profiles. hpk has one process (its defaults) until processes ship. You can change a project's mode, board and language here; the model stays in Hermes because changing it is a red line.",
+    "notYet": "not built yet",
+    "channelNote": "Reports go to the Console. Other channels are not built yet; private and isolated projects stay local anyway.",
+    "batchNote": "Notices are batched: at most one per kind every 5 minutes, except duplicate-work alerts.",
+    "nightlyCap": "Nightly job cap (tokens)",
+    "nightlyHint": "A run that goes over this is stopped at its next tool call, then the job pauses. Cache reads count a tenth.",
+    "moneyNote": "Costs come from the usage Hermes reports for each request, at the models.dev prices Hermes keeps. At a cap, agents get no more tools, the Console starts no sessions and scheduled jobs pause, until a person raises it or the day or month ends.",
+    "wholeNumber": "Use whole numbers.",
+    "dataLive": "live, from hpk serve",
+    "soloTitle": "Just you for now",
+    "soloBody": "Team mode (sign-in, roles, approvers) comes in v0.2. Until then this Console belongs to the person running hpk serve.",
+    "localOk": "Profile {profile} uses {where}, which is on this machine. Console sessions may start.",
+    "localBad": "Profile {profile} sends requests to {where}. Console sessions and scheduled jobs for this project are refused until that profile uses a local model.",
+    "dailyCap": "All scheduled jobs, per 24 hours (tokens)",
+    "dailyHint": "Every job pauses when the project's jobs together go over this. Cache reads count a tenth, like the price.",
+    "moneyDay": "Money cap per day (USD, 0 = none)",
+    "moneyMonth": "Money cap per month (USD, 0 = none)",
+    "spentToday": "Spent today: {usd}",
+    "spentMonth": "Spent this month: {usd}",
+    "usdNumber": "Use an amount in USD, such as 5 or 2.50.",
+    "notifyTo": "Also send notices to",
+    "notifyHint": "A Hermes send target: telegram, slack:#builds, discord:#ops … Sent with hermes send, so the token stays in Hermes. Empty = Console only. You get: approvals waiting, chats that finished a turn.",
+    "notifyLocal": "This project is private or isolated: notices stay in the Console, on this machine.",
+    "notifyTest": "Send a test",
+    "notifySent": "Sent. Check the channel.",
+    "runNowConfirm": "Run the {name} job now? Its script runs first (0 tokens); if there is new work, Hermes runs a model, up to {budget} tokens.",
+    "editRedactHint": "This is the copy that goes to the shared wiki. Remove anything that points back to this project. Text that looks like a secret is refused."
+  },
+  "git": {
+    "title": "Git",
+    "lede": "The project history as a picture. Every command shows the exact git it runs; history rewrites get an undo point first; red lines ask a person.",
+    "sample": "Sample data — not connected to a repository yet",
+    "hint": "Click a commit to inspect it, right-click for actions. Drag a branch label onto another to merge, rebase or open a draft PR.",
+    "history": "Commit history",
+    "commandsBar": "Git commands",
+    "branches": "Branches",
+    "stashes": "Stashes",
+    "task": "task {n}",
+    "claim": "claims {p}",
+    "prLine": "PR #{n} · {ci}",
+    "ci": {
+      "fail": "CI failing",
+      "pass": "CI passing",
+      "running": "CI running"
+    },
+    "inSync": "Same as on the remote",
+    "ahead": "Has commits not pushed yet",
+    "localOnly": "Only on this machine",
+    "remoteHint": "Where the remote branch is",
+    "dragHint": "Click for actions · drag onto another branch to merge, rebase or open a PR",
+    "commitActions": "Commit actions",
+    "more": "More",
+    "mergeTag": "merge",
+    "filesChanged": "{n} files changed",
+    "before": "Before",
+    "after": "After",
+    "commands": "Commands hpk runs",
+    "undoPoint": "Undo point saved first",
+    "undoPointBody": "hpk records where every branch pointed (refs/hpk/undo/…), so Undo puts it all back.",
+    "rewritePushed": "This branch is already pushed: the new history replaces it on the remote (git push --force-with-lease, which refuses if someone else pushed meanwhile). A person approves.",
+    "redLineBody": "A person approves before this runs.",
+    "newBranchName": "Name of the new branch",
+    "stashMsg": "work in progress",
+    "mergeCommit": "Merge {a}",
+    "irbResult": "{n} commits after ({was} before)",
+    "irb": {
+      "pick": "Keep",
+      "reword": "Reword",
+      "squash": "Squash",
+      "fixup": "Fixup",
+      "drop": "Drop"
+    },
+    "action": "Action",
+    "up": "Move up",
+    "down": "Move down",
+    "startRebase": "Start rebase",
+    "showCommands": "Copy commands",
+    "cmdCopied": "Commands copied.",
+    "updateFromBase": "Update from main (merge)",
+    "rebaseOnBase": "Rebase onto main",
+    "deleteBranch": "Delete branch",
+    "copySha": "Copy commit id",
+    "dropMerge": "Merge {a} into {b}",
+    "dropRebase": "Rebase {a} onto {b}",
+    "dropPR": "Open a draft PR: {a} → {b}",
+    "restore": "Restore",
+    "noUndo": "No undo points yet. hpk saves one before every rebase, reset and branch delete.",
+    "conflictTitle": "Conflict in {f}",
+    "conflictStop": "The rebase stopped: both sides changed the same lines",
+    "conflictBody": "{a} and {b} both edited this part. Pick what the file should say, then continue — or abort and nothing changes.",
+    "theirs": "Theirs ({b})",
+    "mine": "Mine ({b})",
+    "result": "Result",
+    "take": {
+      "theirs": "Take theirs",
+      "mine": "Take mine",
+      "both": "Take both"
+    },
+    "unresolved": "not resolved yet",
+    "conflictCmds": "when resolved",
+    "orAbort": "or give up and go back",
+    "abort": "Abort rebase",
+    "continue": "Continue rebase",
+    "pickFirst": "Pick a side first.",
+    "a": {
+      "fetch": "Fetch",
+      "pull": "Pull",
+      "push": "Push",
+      "branch": "New branch",
+      "stash": "Stash",
+      "pop": "Pop",
+      "undo": "Undo",
+      "checkout": "Switch to",
+      "merge": "Merge",
+      "rebase": "Rebase",
+      "interactive": "Interactive rebase",
+      "cherry": "Cherry-pick",
+      "revert": "Revert",
+      "resetsoft": "Reset here (keep changes staged)",
+      "resetmixed": "Reset here (keep changes unstaged)",
+      "resethard": "Reset here (discard changes)",
+      "pr": "Open draft PR"
+    },
+    "tip": {
+      "fetch": "Download new commits; changes nothing of yours",
+      "pull": "Bring the current branch up to date (fast-forward only)",
+      "push": "Send your commits to the remote (red line)",
+      "branch": "Start a branch from the current commit",
+      "interactive": "Reorder, squash, reword or drop commits on this branch",
+      "stash": "Put uncommitted changes aside",
+      "undo": "Go back to an undo point"
+    },
+    "w": {
+      "fetch": "Downloads new commits and branches from the remote. Nothing you have is changed.",
+      "pull": "Brings {b} up to date with the remote, only if it can move forward without a merge.",
+      "push": "Sends the commits of {b} to the remote.",
+      "branch": "Creates {b} at {c} and switches to it.",
+      "stash": "Puts your uncommitted changes aside so the working folder is clean.",
+      "pop": "Brings back \"{m}\" and removes it from the stash list.",
+      "undo": "Each risky step saved an undo point. Restoring puts every branch back where it was then.",
+      "checkout": "Switches the working folder to {b}.",
+      "merge": "Adds the {n} commits of {a} into {b} with a merge commit. History is kept as it was.",
+      "rebase": "Replays the {n} commits of {a} on top of {b}, so the history is a straight line. The commits get new ids.",
+      "interactive": "Edit the commits of {b} since {base}: drag to reorder, then keep, reword, squash into the one above, or drop.",
+      "cherry": "Copies \"{c}\" onto {b} as a new commit.",
+      "revert": "Adds a new commit that undoes \"{c}\". History is kept.",
+      "resetsoft": "Moves {b} back to \"{c}\". The later changes stay, staged.",
+      "resetmixed": "Moves {b} back to \"{c}\". The later changes stay in the folder, unstaged.",
+      "resethard": "Moves {b} back to \"{c}\" and throws away the later changes in the folder.",
+      "pr": "Opens a draft pull request from {a} into {b}, with the task report as its text.",
+      "delete": "Deletes {b} here and on the remote."
+    },
+    "done": {
+      "fetch": "Fetched. Nothing new.",
+      "upToDate": "Already up to date.",
+      "pushed": "Pushed.",
+      "undo": "Restored.",
+      "rebased": "Rebased {n} commits.",
+      "interactive": "History rewritten. Undo is available.",
+      "aborted": "Rebase aborted. Nothing changed.",
+      "branch": "Branch {b} created."
+    },
+    "nb": {
+      "from": "From",
+      "task": "What is this branch for?",
+      "taskPh": "e.g. export bookings as PDF",
+      "taskHint": "Fills in the name below. Leave it and type a name yourself if you prefer.",
+      "name": "Branch name",
+      "nameHint": "Pattern: hpk/<project>/<task>-<what>-<you>. Letters, digits, - _ . /",
+      "switch": "Switch to it now",
+      "empty": "Give the branch a name.",
+      "space": "Branch names cannot contain spaces.",
+      "bad": "git does not allow this name (.., ~ ^ : ? * [ \\, //, a trailing / or .lock).",
+      "exists": "A branch with this name already exists."
+    },
+    "adv": {
+      "title": "Advice ({n})",
+      "sub": "From fixed rules on the repository: no AI, 0 tokens",
+      "none": "Nothing to do: every branch is up to date, pushed and tidy.",
+      "more": "Show {n} more",
+      "less": "Show fewer",
+      "ruleHint": "The rule that produced this advice (docs/plans/git-sync.md §14)",
+      "openPRNote": "Opens PR #{n} and its CI log in the browser.",
+      "onBase": "{n} commit(s) made straight on {b}",
+      "onBaseWhy": "Work on the base branch skips review and the board. Move it to a branch, then open a PR.",
+      "merged": "{b} is already in main",
+      "mergedWhy": "Every commit of this branch is in main. Deleting it keeps the list short; an undo point is saved first.",
+      "ciFail": "CI is failing on {b} (PR #{n})",
+      "ciFailWhy": "The PR cannot be merged until the checks pass. Read the CI log, fix, and push again.",
+      "behindRebase": "{b} is {n} commit(s) behind {base}: rebase it",
+      "behindMerge": "{b} is {n} commit(s) behind {base}: merge {base} in",
+      "behindClean": "No file is touched on both sides, so no conflict is expected. {reason}",
+      "behindClash": "Expect a conflict in {files}: both sides changed it. Doing it now, while it is small, is easier. {reason}",
+      "reason": {
+        "local": "The branch is only on this machine, so rebasing rewrites nothing anyone else has.",
+        "pushedSolo": "It is pushed but only you use it: rebasing needs a force-push (with lease), which a person approves.",
+        "shared": "Others see it (open PR or someone else's branch): merging keeps its history instead of rewriting it."
+      },
+      "wip": "{n} work-in-progress commit(s) on {b}",
+      "wipWhy": "Commits like {msgs} make the history hard to read. Squash or reword them before review.",
+      "behindRemote": "{b} is {n} commit(s) behind its remote copy",
+      "behindRemoteWhy": "Someone pushed to this branch. Pull before you add more, or your push will be refused.",
+      "divergedWhy": "It has also {ahead} commit(s) of yours that the remote does not: pull (merge) first, then push.",
+      "ahead": "{n} commit(s) on {b} are not pushed",
+      "aheadWhy": "Push so the team (and CI) can see them. A person approves the push.",
+      "notPushed": "{b} exists only on this machine ({n} commit(s))",
+      "notPushedWhy": "If this machine is lost, so is the work. Push it, then open a draft PR when it is ready to show.",
+      "big": "{b} is large: {n} commits, {lines} changed lines",
+      "bigWhy": "Over {max} lines is hard to review well. Consider a new branch for the next part.",
+      "stale": "No commits on {b} for {d} days",
+      "staleWhy": "Is it still needed? Finish it, hand it over, or delete it so its claim stops blocking others.",
+      "overlap": "{a} and {b} change the same files",
+      "overlapWhy": "Both touch {files}. Agree who goes first; the second one rebases after the first is merged.",
+      "oldStash": "{id} has been waiting {d} days",
+      "oldStashWhy": "\"{m}\": bring it back or drop it, so it is not lost or forgotten.",
+      "act": {
+        "rebase": "Rebase onto {b}",
+        "merge": "Merge {a} in",
+        "interactive": "Tidy commits",
+        "push": "Push",
+        "pull": "Pull",
+        "delete": "Delete branch",
+        "checkout": "Open {a}",
+        "branchFrom": "New branch",
+        "pop": "Bring it back",
+        "openPR": "Open PR"
+      }
+    },
+    "live": {
+      "running": "Running…",
+      "ok": "Done.",
+      "failed": "Git refused",
+      "ran": "Commands that ran",
+      "output": "What git said",
+      "stopped": "Stopped on a conflict.",
+      "fetched": "Fetched.",
+      "pulled": "Pulled.",
+      "deleted": "{b} deleted. Undo is available.",
+      "stashed": "Changes put aside.",
+      "popped": "Changes brought back.",
+      "switched": "On {b} now.",
+      "merged": "{a} merged into {b}.",
+      "picked": "Commit copied here.",
+      "reverted": "Commit undone with a new commit.",
+      "reset": "Branch moved. Undo is available.",
+      "prOpened": "Draft PR opened.",
+      "refresh": "Read the repository again",
+      "notRepo": "This project folder is not a git repository.",
+      "noCommits": "No commits yet.",
+      "detached": "Detached HEAD",
+      "dirty": "uncommitted",
+      "stoppedShort": "{kind} stopped",
+      "resolve": "Resolve",
+      "conflictTitle": "{kind}: {n} file(s) in conflict",
+      "leftToResolve": "{n} file(s) left",
+      "oursHead": "Already there",
+      "theirsHead": "Coming in",
+      "ours": "Keep what is there",
+      "theirs": "Take the incoming change",
+      "noFile": "(file deleted)",
+      "resolved": "{f} resolved.",
+      "allResolved": "Every file is resolved. Continue to finish.",
+      "aborted": "Stopped. Nothing changed.",
+      "continued": "Finished."
+    }
+  },
+  "mcp": {
+    "title": "MCP connections",
+    "lede": "Give the agent tools from other programs (Blender, Roblox Studio, game engines) and web services. Hermes keeps the setting; new chats get the tools.",
+    "local": "This machine",
+    "server": "Team server",
+    "placeLocal": "This machine: web MCPs and local programs",
+    "placeServer": "Team server: web MCPs only",
+    "allowWeb": "Web MCPs (a URL): allowed",
+    "allowLocal": "Local programs: allowed on your own machine",
+    "noLocal": "Local programs: not on a server. Connect them in hpk on your own machine.",
+    "blockLocal": "A local program runs only on a person's own machine. Connect it in hpk on your computer.",
+    "blockLoop": "This URL is an app on a person's machine. Connect it in hpk on your computer.",
+    "connected": "Connected ({n})",
+    "connectedSub": "Green: on. Grey: saved but off (test it to switch on). Red: not allowed here. New chats get the tools; open chats need /reload-mcp.",
+    "none": "No MCP yet. Pick one below.",
+    "state": {
+      "on": "On",
+      "off": "Saved, off: test it when the program is open",
+      "blocked": "Not allowed here"
+    },
+    "toolsN": "{n} tools",
+    "auth": {
+      "token": "Uses a token (kept by Hermes)",
+      "oauth": "Signs in with OAuth"
+    },
+    "test": "Test {name}",
+    "testTip": "Connect now and list its tools",
+    "testOk": "{name}: connected, {n} tools",
+    "testBad": "{name}: no answer. {why}",
+    "remove": "Remove {name}",
+    "removeTip": "Remove",
+    "removeConfirm": "Remove MCP \"{name}\"? The agent loses its tools in new chats.",
+    "removed": "Removed {name}",
+    "addTitle": "Add",
+    "addSub": "Ready-made settings; every field can be changed before connecting.",
+    "addSubServer": "Server: web MCPs only. Locked cards connect from hpk on your own machine.",
+    "addTip": "Connect {name}",
+    "have": "Already added: open it to change",
+    "custom": "Web MCP (URL)",
+    "customLocal": "Local program",
+    "group": {
+      "apps": "Apps on your machine",
+      "dev": "Development",
+      "web": "Web services",
+      "custom": "Your own"
+    },
+    "kind": {
+      "local": "Local program",
+      "url": "Web MCP"
+    },
+    "docs": "Guide",
+    "connect": "Connect",
+    "probing": "Connecting and listing tools…",
+    "added": "{name} connected: {n} tools",
+    "savedOff": "Saved, but switched off: it did not answer",
+    "failed": "Not connected",
+    "reloadNote": "Open chats keep their tools; type /reload-mcp in a chat or start a new one.",
+    "viewOnly": "Only an owner can add or remove MCPs.",
+    "f": {
+      "name": "Name",
+      "nameHint": "Short, a-z 0-9 - _. Tools appear as mcp__<name>__<tool>.",
+      "nameBad": "Use a short name: a-z, 0-9, - and _",
+      "command": "Program",
+      "commandHint": "The command Hermes starts, or the full path to it.",
+      "args": "Arguments",
+      "argsHint": "Separated by spaces; quote one that has spaces.",
+      "fillArgs": "Replace the <…> placeholder first.",
+      "env": "Environment",
+      "token": "Token",
+      "tokenHint": "Optional. Goes to Hermes (its .env), never to hpk or the page.",
+      "tokenWin": "On Windows Hermes reads tokens from the keyboard: add this one in a terminal with hermes mcp add.",
+      "kind": "Type",
+      "state": "State"
+    },
+    "need": {
+      "local": "Runs on this machine. Install the program first; Hermes starts it when a chat needs it.",
+      "blender": "Needs uv (for uvx) and the Blender add-on from the guide, enabled in Blender, with Blender open.",
+      "roblox": "Needs Roblox's Studio MCP server installed (see the guide) and Studio open with its plugin. Use the full path to rbx-studio-mcp if it is not on PATH.",
+      "godot": "Needs Node.js (npx). Set GODOT_PATH to your Godot program.",
+      "figma": "Needs the Figma desktop app with its local MCP server switched on. Only on your own machine.",
+      "playwright": "Needs Node.js (npx). Opens a browser the agent can drive.",
+      "files": "Needs Node.js (npx). Replace <folder> with the one folder the agent may use.",
+      "context7": "Up-to-date library docs. No key needed for light use.",
+      "deepwiki": "Answers questions about public GitHub repositories. No key needed.",
+      "github": "Needs a GitHub token. Remember: pushing and merging are red lines in hpk."
+    },
+    "u": {
+      "calls": "calls",
+      "projects": "projects",
+      "chats": "chats",
+      "running": "running",
+      "blocked": "blocked",
+      "days14": "Calls per day, last 14 days",
+      "last": "last used {when}",
+      "never": "Not used yet. Counting starts with the first call in a chat.",
+      "projectsT": "Projects and repositories",
+      "toolsT": "Tools used",
+      "chatsT": "Chats that used it",
+      "skillsT": "Skills that call it",
+      "runningT": "Running now",
+      "noProjects": "No project has used it yet.",
+      "noTools": "No tool has been called yet.",
+      "noChats": "No chat has used it yet.",
+      "noSkills": "No skill names its tools (mcp__name__tool).",
+      "config": "Setting",
+      "runningN": "{n} running now",
+      "sparkTip": "{n} calls in all; bars: last 14 days"
+    }
+  },
+  "bg": {
+    "title": "Background jobs",
+    "sub": "What runs for the agent right now: commands Hermes started in the background and local MCP programs. Refreshes every 5 s.",
+    "loading": "Looking…",
+    "none": "Nothing runs in the background.",
+    "noneHere": "Not running.",
+    "countTip": "{n} running",
+    "stop": "Stop",
+    "stopTip": "Stop pid {pid} and what it started",
+    "confirm": "Stop \"{what}\" (pid {pid}) and what it started? Unsaved work in it is lost.",
+    "stopped": "Stopped {what}",
+    "running": "Running",
+    "ended": "Ended",
+    "sandbox": "Runs in Hermes' sandbox: stop it from its chat",
+    "session": "Chat that started it",
+    "children": "{n} child processes",
+    "kind": {
+      "process": "Background command (Hermes)",
+      "mcp": "Local MCP program"
+    }
+  },
+  "media": {
+    "kind": {
+      "image": "Image",
+      "video": "Video",
+      "audio": "Audio",
+      "model": "3D model",
+      "pdf": "PDF",
+      "data": "Data file",
+      "chart": "Chart",
+      "table": "Table"
+    },
+    "open": "Open in a new tab",
+    "remote": "On another website: the Console only shows files from the project",
+    "outside": "Outside the project folder: not shown",
+    "openSite": "Open the site",
+    "inline": "Embedded {type}",
+    "cannotPlay": "This browser cannot play this video format.",
+    "cannotLoad": "The file could not be loaded.",
+    "zoom": "Zoom",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "zoomFit": "Fit",
+    "showAll": "Show all {n} rows",
+    "table": "Table",
+    "chart": "Chart",
+    "tableN": "Table · {r} rows × {c} columns",
+    "chartType": "Chart type",
+    "label": "Label",
+    "type": {
+      "bar": "Bars",
+      "stacked": "Stacked bars",
+      "line": "Line",
+      "area": "Area",
+      "pie": "Pie",
+      "scatter": "Scatter"
+    },
+    "loading": "Loading…",
+    "tooBig": "Larger than 5 MB: open it in a new tab instead.",
+    "load3d": "Show 3D",
+    "compressed": "this glTF uses compressed meshes or textures (Draco, Meshopt or Basis), which need a decoder the Console does not load. Export without compression.",
+    "cannot3d": "Cannot show this model: {why}",
+    "resume": "Paused to save memory: click to show again",
+    "st": {
+      "meshes": "Meshes",
+      "triangles": "Triangles",
+      "vertices": "Vertices",
+      "materials": "Materials",
+      "textures": "Textures",
+      "bones": "Bones",
+      "lights": "Lights",
+      "clips": "Animations"
+    },
+    "playPause": "Play / pause",
+    "scrub": "Animation time",
+    "clip": "Animation",
+    "clipN": "Animation {n}",
+    "speed": "Speed",
+    "lights": "Lights",
+    "light": {
+      "both": "Model + studio light",
+      "scene": "Model lights only",
+      "studio": "Studio light only"
+    },
+    "wire": "Wireframe",
+    "grid": "Floor grid",
+    "bg": "Background",
+    "bgs": {
+      "theme": "Background: page",
+      "dark": "Background: dark",
+      "light": "Background: light"
+    },
+    "quality": "Quality",
+    "q": {
+      "low": "Low (fastest)",
+      "medium": "Medium",
+      "high": "High",
+      "ultra": "Ultra (sharpest)"
+    },
+    "qDefault": "Make default",
+    "qDefaultTip": "Use this quality for every new 3D view. It starts at Low.",
+    "qSaved": "New 3D views start at {q}",
+    "stats": "Model details",
+    "fit": "Fit to view",
+    "shot": "Save a screenshot (PNG)",
+    "full": "Full screen"
+  },
+  "browser": {
+    "title": "Browser",
+    "lede": "The AI's built-in browser on this machine. Watch every step live; take over any time. Recordings stay private to you.",
+    "dockTip": "Show the AI's browser beside the page",
+    "dockSwap": "Dock on the right / along the top",
+    "full": "Open full size",
+    "idle": "The browser is closed. It opens when the AI starts browsing, or start it yourself.",
+    "start": "Start browser",
+    "needServe": "The built-in browser runs in hpk serve on your own machine. Open the Console from hpk serve to use it.",
+    "screenAria": "Live view of the browser. When you drive, clicks, scrolling and keys go to the page.",
+    "url": "Address",
+    "back": "Back",
+    "reload": "Reload",
+    "close": "Close the browser",
+    "loading": "Loading…",
+    "steps": "Steps",
+    "aiDrives": "AI is driving",
+    "youDrive": "You are driving",
+    "takeOver": "Take over",
+    "handBack": "Hand back to AI",
+    "byAI": "By the AI",
+    "byYou": "By you",
+    "tool": {
+      "open": "Open",
+      "click": "Click",
+      "type": "Type",
+      "fill_secret": "Fill secret",
+      "press": "Press",
+      "scroll": "Scroll",
+      "back": "Back",
+      "forward": "Forward",
+      "reload": "Reload",
+      "wait": "Wait",
+      "screenshot": "Screenshot",
+      "snapshot": "Read page",
+      "driver": "Driver"
+    },
+    "autoOpen": "Open the browser panel when the AI starts browsing",
+    "runs": "Recordings",
+    "runsSub": "Every browsing session: steps with a screenshot after each. Private to you, kept 30 days unless pinned, never put into the wiki.",
+    "loadingRuns": "Loading recordings…",
+    "noRuns": "No recordings yet.",
+    "run": "Recording",
+    "step": "Step",
+    "prev": "Previous step",
+    "next": "Next step",
+    "kept": "Pinned: kept past 30 days",
+    "keep": "Pin",
+    "unkeep": "Unpin",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this recording and its screenshots?",
+    "privateNote": "Private to you. Fields hpk filled from the vault are masked; values are never stored."
+  },
+  "vault": {
+    "title": "Vault",
+    "lede": "Passwords, logins, tokens and .env values for the AI to use without ever seeing them. Kept on this machine only.",
+    "add": "Add secret",
+    "save": "Save",
+    "saved": "{name} saved",
+    "deleted": "Secret deleted",
+    "delete": "Delete",
+    "deleteConfirm": "Delete {{secret:{name}}}? The AI can no longer use it.",
+    "reveal": "Show value",
+    "revealConfirm": "Show the value of {name} on this screen for 20 seconds?",
+    "show": "Show while typing",
+    "keepSame": "leave empty to keep",
+    "length": "{n} characters",
+    "noSites": "no sites yet",
+    "noSitesTip": "The AI cannot use it until you add the sites it may be filled on.",
+    "neverUsed": "Not used yet",
+    "lastUsed": "Last used {when}",
+    "none": "No secrets yet. Add one; the AI will only see its name.",
+    "listTitle": "Secrets ({n})",
+    "listSub": "Click one to change it. The AI sees only {{secret:name}} and the sites.",
+    "shortWarn": "Values shorter than 4 characters cannot be hidden from page text.",
+    "aiNever": "The AI never sees the value. hpk types it into the page itself, only on the sites listed here, and hides it from everything the AI reads and from recordings.",
+    "kind": {
+      "login": "Login",
+      "password": "Password",
+      "token": "Token",
+      "env": ".env value",
+      "note": "Note"
+    },
+    "f": {
+      "kind": "Type",
+      "name": "Name",
+      "nameHint": "The AI writes {{secret:name}}; a login's user name is {{secret:name.user}}.",
+      "user": "User name",
+      "value": "Value",
+      "sites": "Allowed sites",
+      "sitesHint": "Comma separated. example.com is that site only; write *.example.com to include its subdomains. https only.",
+      "envKey": "Variable",
+      "envFile": "File",
+      "project": "Project",
+      "note": "Note (for you)"
+    },
+    "envTitle": ".env files",
+    "envSub": "hpk writes the values into the project's .env; the AI is blocked from reading those files.",
+    "envKeys": "{n} variables",
+    "writeEnv": "Write .env",
+    "envWritten": "Wrote {files} in {p}",
+    "mcpPanel": "AI access",
+    "mcpTitle": "Give the AI the built-in browser",
+    "mcpBody": "Adds the hpk-browser MCP to Hermes (on this machine). New chats get open, click, type, fill_secret and screenshot.",
+    "mcpConnect": "Connect to Hermes",
+    "mcpDone": "Connected: {n} browser tools",
+    "keeper": {
+      "dpapi": "Windows protection",
+      "keychain": "macOS Keychain",
+      "secret-service": "System keyring",
+      "file": "Key file",
+      "demo": "Demo",
+      "dpapiTip": "Encrypted with a key only your Windows account can open (DPAPI).",
+      "keychainTip": "The key is in your macOS Keychain.",
+      "secret-serviceTip": "The key is in your desktop keyring.",
+      "fileTip": "No OS keyring here: the key is a file only your account can read. Weaker than an OS keyring.",
+      "demoTip": "Sample data"
+    },
+    "how1": "AI asks by name",
+    "how2": "hpk types it",
+    "how2s": "only on allowed sites",
+    "how3": "the site gets it",
+    "how3s": "login works",
+    "how4": "AI reads back",
+    "how4s": "the name again, never the value",
+    "pin": {
+      "needed": "The vault stays locked.",
+      "setTitle": "Set a vault PIN",
+      "unlockTitle": "Unlock the vault",
+      "setBody": "Changing, deleting or showing a secret needs this PIN. Type it only here: the AI never sees it, so programs it runs cannot unlock the vault.",
+      "unlockBody": "Unlocked for 10 minutes on this screen.",
+      "pin": "PIN (8 or more characters; 10+ if digits only)",
+      "again": "Same PIN again",
+      "mismatch": "The two PINs differ.",
+      "unlock": "Unlock",
+      "setBtn": "Set PIN",
+      "set": "PIN set, vault unlocked",
+      "unlocked": "Vault unlocked for 10 minutes",
+      "lock": "Lock",
+      "lockTip": "Unlocked: lock it now",
+      "unlockTip": "Locked: changes, deletes and showing values need your PIN"
+    }
+  },
+  "ts": {
+    "title": "Team server",
+    "lede": "Join your team's hpk server from this machine. Work stays here; the team's board, wiki, approvals and people come from the server.",
+    "notHere": "This page is for hpk on a person's own machine. A team server does not join another server.",
+    "joinTitle": "Join a team server",
+    "joinSub": "An owner gives you the address and a one-time code",
+    "url": "Server address",
+    "urlHint": "Starts with https://. hpk checks the certificate as usual.",
+    "code": "Invite code",
+    "codeHint": "Ten letters and digits, one use, expires 15 minutes after it was made.",
+    "device": "Name of this device",
+    "devicePh": "e.g. Work laptop",
+    "deviceHint": "Shown in the device list, so you know which one to revoke. Empty = the computer name.",
+    "join": "Join",
+    "joined": "Joined as {name} ({role})",
+    "safeTitle": "Where the key lives",
+    "safeBody": "The server gives this machine its own device token. hpk keeps it in your vault, hidden: it is not in the vault list, the AI cannot name it or read it, and it never goes into a page or a log. The server keeps only its SHA-256.",
+    "ownerTitle": "No code yet?",
+    "ownerBody": "An owner makes one on the server, or from their own hpk on this page once they joined:",
+    "status": "Connection",
+    "server": "Server",
+    "state": "State",
+    "you": "You",
+    "thisDevice": "This device",
+    "joinedAt": "Joined",
+    "st": {
+      "ok": "Connected",
+      "offline": "Cannot reach the server",
+      "revoked": "This device was revoked",
+      "noToken": "The device token is missing"
+    },
+    "revokedHelp": "The server no longer accepts this device. Leave, then join again with a new code from an owner.",
+    "refresh": "Check again",
+    "leave": "Leave this server",
+    "leaveConfirm": "Leave {url}? This device is revoked on the server and its token removed from this machine.",
+    "pinAsk": "Vault PIN (removing the device token needs it):",
+    "left": "Left the team server",
+    "myDevices": "My devices",
+    "myDevicesSub": "Every machine you joined from. Revoke one you lost or no longer use.",
+    "allDevices": "Joined devices",
+    "allowIPs": "Only from: {list}",
+    "noAllowIPs": "Any address (no allow_ips in team.yaml)",
+    "people": "People ({n})",
+    "work": "Team work",
+    "workSub": "Project {project} · {n} on the server",
+    "noWork": "The server sent no board for you (your projects may be limited).",
+    "noClaims": "Nobody holds a claim right now.",
+    "task": "Task",
+    "who": "Who",
+    "lane": "Lane",
+    "heartbeat": "Last heartbeat",
+    "approvals": "Waiting for approval ({n})",
+    "noApprovals": "Nothing waiting.",
+    "lastSeen": "Last seen",
+    "lastIP": "Last address",
+    "thisOne": "this one",
+    "added": "Added {when}",
+    "never": "never",
+    "revoke": "Revoke",
+    "revokeConfirm": "Revoke {name}? That device stops working at once and needs a new code to join again.",
+    "noDevices": "No devices yet.",
+    "inviteTitle": "Invite code",
+    "inviteSub": "For someone already in the team",
+    "inviteHint": "A one-time code (15 minutes) to join from their own hpk.",
+    "makeCode": "Invite code",
+    "codeFor": "Invite code for {id}",
+    "codeOnce": "One use. Works until {time}. Send it privately, with the server address.",
+    "ownerOnServer": "Invite codes, people, roles and revoking someone else's device are done in the team server's own Console. Your hpk here never makes credentials: any program on this machine, the AI included, can call it.",
+    "openServer": "Open the team server"
+  },
+  "pwa": {
+    "label": "App",
+    "install": "Install as app",
+    "installed": "Running as an installed app",
+    "why": "Opens HPK Console in its own window, from the Start menu, Dock or app list. It is the same web app: nothing native is added.",
+    "done": "Installed. Open HPK Console from your apps.",
+    "later": "Not installed. You can do it later here.",
+    "hint": {
+      "chrome": "To install: the install icon at the right of the address bar, or ⋮ → Cast, save and share → Install page as app.",
+      "edge": "To install: ⋯ → Apps → Install this site as an app.",
+      "safari": "To install: File → Add to Dock (Safari 17 or newer).",
+      "ios": "To install: Share → Add to Home Screen.",
+      "firefox": "Firefox does not install web apps on the desktop. Keep it in a pinned tab, or open the Console in Chrome or Edge to install it.",
+      "other": "If your browser can install web apps, look for \"Install\" or \"Add to home screen\" in its menu."
+    }
+  },
+  "login": {
+    "label": "Start hpk when I log in",
+    "hint": "Runs hpk serve in the background after you log in, for you only. No window opens.",
+    "how": {
+      "windows": "Windows: a Task Scheduler task named \"hpk\" for your account (no administrator rights).",
+      "darwin": "macOS: a launchd agent in ~/Library/LaunchAgents (local.hpk.serve).",
+      "linux": "Linux: a systemd user unit, ~/.config/systemd/user/hpk.service."
+    },
+    "unsupported": "Start at login is not available on {os}.",
+    "unavailable": "Start at login can be set only in hpk on your own machine.",
+    "on": "hpk will start when you log in",
+    "off": "hpk will no longer start at login"
+  },
+  "desk": {
+    "title": "Desktop notices on this computer",
+    "enable": "Show desktop notices",
+    "hint": "Through your browser, on any OS. The browser asks once for permission.",
+    "blocked": "Notices are blocked for this site in the browser. Allow them in the site settings (the icon left of the address), then turn this on.",
+    "unsupported": "This browser cannot show desktop notices here (it needs notification support and a secure page: 127.0.0.1 or HTTPS).",
+    "denied": "The browser did not allow notices.",
+    "kind": {
+      "approval": "Approvals waiting",
+      "redline": "Red lines",
+      "chat": "A chat finished",
+      "browser": "The browser needs you"
+    },
+    "away": "Only when the Console is in the background",
+    "quiet": "Quiet hours",
+    "quietFrom": "Quiet from",
+    "quietTo": "Quiet until",
+    "test": "Send a test notice",
+    "testTitle": "HPK Console",
+    "testBody": "Desktop notices work on this computer.",
+    "approval": "The agent is waiting for you",
+    "redline": "Red line: {line}",
+    "chatDone": "A chat finished",
+    "browser": "The built-in browser needs you",
+    "browserDriver": "The agent wants the browser back. Hand it back in the Console.",
+    "browserVault": "The agent needs the vault unlocked."
+  },
+  "key": {
+    "title": "This browser can look but not change anything",
+    "body": "Changes need the Console opened from hpk. In a terminal run"
+  }
+}

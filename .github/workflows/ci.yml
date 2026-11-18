@@ -1,0 +1,99 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: gofmt
+        if: runner.os == 'Linux'
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - run: go vet ./...
+      - run: go test ./...
+      - name: build
+        run: go build -trimpath -ldflags "-s -w" -o dist/hpk${{ runner.os == 'Windows' && '.exe' || '' }} ./cmd/hpk
+      # docs/DESIGN.md §21.5: one hook call must stay fast (< 30 ms Linux, < 80 ms Windows).
+      - name: hook latency budget
+        shell: bash
+        run: |
+          bin=dist/hpk; [ "$RUNNER_OS" = Windows ] && bin=dist/hpk.exe
+          budget=30; [ "$RUNNER_OS" = Windows ] && budget=80; [ "$RUNNER_OS" = macOS ] && budget=60
+          for i in $(seq 1 21); do
+            s=$(date +%s%N); echo '{"event":"pre_tool_call"}' | "$bin" hook noop >/dev/null; e=$(date +%s%N)
+            echo $(( (e - s) / 1000000 ))
+          done | sort -n | sed -n 11p > median.txt
+          echo "median hook ms: $(cat median.txt) (budget $budget)"
+          [ "$(cat median.txt)" -lt "$budget" ]
+      - name: binary size budget (< 30 MB)
+        shell: bash
+        run: |
+          f=dist/hpk; [ "$RUNNER_OS" = Windows ] && f=dist/hpk.exe
+          size=$(wc -c < "$f"); echo "binary bytes: $size"; [ "$size" -lt 31457280 ]
+
+  # Nothing private ships: personal paths, real emails, keys, tokens (tools/leakcheck.mjs).
+  leaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tools/leakcheck.mjs
+
+  # Console: every script parses; English and Thai have the same strings.
+  console:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tools/check-console.mjs
+      - run: node --test tools/
+
+  # The release config stays valid between releases (no publishing here).
+  release-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: check
+
+  # The image builds and starts healthy (no publishing here).
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o dist/docker/hpk-linux-amd64 ./cmd/hpk
+      - run: docker build -t hpk:ci .
+      - name: starts healthy, refuses the network without team mode
+        run: |
+          ! docker run --rm hpk:ci
+          docker run -d --name hpk -e HPK_OWNER=ci@example.com -e HPK_BEHIND_PROXY=1 --read-only --tmpfs /tmp --cap-drop ALL hpk:ci
+          for i in $(seq 1 20); do [ "$(docker inspect -f '{{.State.Health.Status}}' hpk)" = healthy ] && break; sleep 3; done
+          docker inspect -f '{{.State.Health.Status}}' hpk | grep -q healthy
+          test "$(docker exec hpk stat -c %a /data/hpk/owner-token)" = 600
