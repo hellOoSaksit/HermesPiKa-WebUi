@@ -14,12 +14,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
+	"hpk.local/hpk/internal/isolate"
 	"hpk.local/hpk/internal/project"
 )
 
@@ -63,7 +63,7 @@ func CheckTarget(p *project.Project, to string) error {
 
 // Sender runs the actual send; tests replace it.
 var Sender = func(ctx context.Context, to, text string) error {
-	cmd := exec.CommandContext(ctx, "hermes", "send", "--to", to, "--quiet", "--file", "-")
+	cmd := isolate.CommandContext(ctx, "hermes", "send", "--to", to, "--quiet", "--file", "-")
 	cmd.Stdin = strings.NewReader(text)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -120,7 +120,7 @@ func Send(p *project.Project, kind, text string, now time.Time) (bool, error) {
 
 // Targets lists what `hermes send --list --json` offers, for the Console's picker.
 func Targets(ctx context.Context) ([]string, error) {
-	out, err := exec.CommandContext(ctx, "hermes", "send", "--list", "--json").Output()
+	out, err := isolate.CommandContext(ctx, "hermes", "send", "--list", "--json").Output()
 	if err != nil {
 		return nil, err
 	}

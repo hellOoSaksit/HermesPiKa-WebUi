@@ -12,7 +12,7 @@ import (
 )
 
 // `hpk open` opens the Console with the one-time link `hpk serve` keeps in
-// <home>/hpk/console-link, so this browser may make changes (the Console key).
+// <private>/console-link (internal/isolate), so this browser may make changes (the Console key).
 func openConsole(stdout, stderr io.Writer) int {
 	link, ok := launch.ConsoleLink(project.Home(), time.Time{})
 	if !ok {

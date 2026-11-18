@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -125,7 +126,18 @@ func callBrowser(name string, args map[string]any) map[string]any {
 		body[k] = v
 	}
 	b, _ := json.Marshal(body)
-	req, _ := http.NewRequest(http.MethodPost, cfg.URL+"/api/browser/agent", bytes.NewReader(b))
+	target := cfg.URL
+	if h := os.Getenv("HPK_AGENT_HOST"); h == "host.docker.internal" {
+		// Hermes in hpk's container (hpk isolate setup --docker): the person's
+		// hpk serve is on the host; the Host header stays loopback for its check
+		if u, err := url.Parse(cfg.URL); err == nil {
+			target = "http://" + h + ":" + u.Port()
+		}
+	}
+	req, _ := http.NewRequest(http.MethodPost, target+"/api/browser/agent", bytes.NewReader(b))
+	if u, err := url.Parse(cfg.URL); err == nil {
+		req.Host = u.Host
+	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-HPK", "1")
 	req.Header.Set("X-HPK-Agent-Key", cfg.Key)

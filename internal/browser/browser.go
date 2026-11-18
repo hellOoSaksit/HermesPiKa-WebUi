@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"os/exec"
@@ -28,6 +29,7 @@ import (
 	"sync"
 	"time"
 
+	"hpk.local/hpk/internal/isolate"
 	"hpk.local/hpk/internal/procs"
 	"hpk.local/hpk/internal/vault"
 )
@@ -41,16 +43,17 @@ type Event struct {
 
 // State is what the Console shows above the live view.
 type State struct {
-	Running bool   `json:"running"`
-	URL     string `json:"url"`
-	Title   string `json:"title"`
-	Driver  string `json:"driver"` // agent | human
-	Run     string `json:"run,omitempty"`
-	Busy    string `json:"busy,omitempty"` // what the agent is doing now
-	Width   int    `json:"width"`
-	Height  int    `json:"height"`
-	Exe     string `json:"exe,omitempty"`
-	Loading bool   `json:"loading"`
+	Running  bool   `json:"running"`
+	URL      string `json:"url"`
+	Title    string `json:"title"`
+	Driver   string `json:"driver"` // agent | human
+	Run      string `json:"run,omitempty"`
+	Busy     string `json:"busy,omitempty"` // what the agent is doing now
+	Width    int    `json:"width"`
+	Height   int    `json:"height"`
+	Exe      string `json:"exe,omitempty"`
+	Loading  bool   `json:"loading"`
+	DevTools string `json:"devtools,omitempty"` // pipe | tcp: how hpk talks to the browser
 }
 
 // Manager owns the one browser of this hpk.
@@ -151,7 +154,11 @@ func FindExe() (string, error) {
 	return "", errors.New("no Chrome, Edge or Chromium found; install one or set HPK_BROWSER to its path")
 }
 
-// Start launches the browser (headless, its own profile under <home>/hpk/browser).
+// Dir holds the browser's profile and recordings: <home>/hpk/browser, or the
+// person's private folder when the AI is isolated (docs/isolation.md).
+func Dir(home string) string { return filepath.Join(isolate.PrivateDir(home), "browser") }
+
+// Start launches the browser (headless, its own profile under Dir).
 func (m *Manager) Start(ctx context.Context) error {
 	m.mu.Lock()
 	if m.conn != nil {
@@ -163,7 +170,7 @@ func (m *Manager) Start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	dir := filepath.Join(m.home, "hpk", "browser")
+	dir := Dir(m.home)
 	os.MkdirAll(filepath.Join(dir, "profile"), 0o700)
 	pruneRuns(dir, 30*24*time.Hour)
 	st := m.State()
@@ -180,12 +187,29 @@ func (m *Manager) Start(ctx context.Context) error {
 	stopStale(profile)
 	_ = os.Remove(filepath.Join(profile, "DevToolsActivePort"))
 	noPasswordSaving(profile)
+	args := []string{"--headless=new", "--user-data-dir=" + profile, "--no-first-run", "--no-default-browser-check", "--disable-sync",
+		"--disable-background-networking", "--password-store=basic", "--disable-features=Translate,AutofillServerCommunication",
+		fmt.Sprintf("--window-size=%d,%d", st.Width, st.Height)}
+	// DevTools over a pipe only hpk holds: a TCP port on 127.0.0.1 could be
+	// reached by every program and every OS account on this machine,
+	// including the AI's own account when it is isolated (docs/isolation.md).
 	var conn *cdp
-	{
-		cmd = exec.Command(exe, "--headless=new", "--remote-debugging-port=0", "--remote-debugging-address=127.0.0.1",
-			"--user-data-dir="+profile, "--no-first-run", "--no-default-browser-check", "--disable-sync",
-			"--disable-background-networking", "--password-store=basic", "--disable-features=Translate,AutofillServerCommunication",
-			fmt.Sprintf("--window-size=%d,%d", st.Width, st.Height), "about:blank")
+	how := os.Getenv("HPK_BROWSER_DEVTOOLS") // pipe | tcp; empty: pipe, TCP only as a fallback
+	if how != "tcp" {
+		cmd, conn, err = m.startPipe(ctx, exe, args)
+		switch {
+		case err == nil:
+			how = "pipe"
+		case how == "pipe" || isolate.Active():
+			return fmt.Errorf("the browser did not answer on its DevTools pipe (%v); with the AI isolated hpk does not open a DevTools port instead", err)
+		default:
+			log.Printf("browser: DevTools pipe failed (%v); using a 127.0.0.1 port instead", err)
+			stopStale(profile)
+		}
+	}
+	if conn == nil {
+		how = "tcp"
+		cmd = exec.Command(exe, append(append([]string{"--remote-debugging-port=0", "--remote-debugging-address=127.0.0.1"}, args...), "about:blank")...)
 		stderr, err := cmd.StderrPipe()
 		if err != nil {
 			return err
@@ -267,7 +291,7 @@ func (m *Manager) Start(ctx context.Context) error {
 	m.filled = map[string]string{}
 	m.mu.Unlock()
 	m.setState(func(s *State) {
-		s.Running, s.Exe, s.Run, s.URL, s.Title = true, filepath.Base(exe), rec.id, "about:blank", ""
+		s.Running, s.Exe, s.Run, s.URL, s.Title, s.DevTools = true, filepath.Base(exe), rec.id, "about:blank", "", how
 	})
 	exited := make(chan struct{})
 	m.mu.Lock()
@@ -293,6 +317,37 @@ func (m *Manager) Start(ctx context.Context) error {
 	return nil
 }
 
+// startPipe starts the browser with --remote-debugging-pipe and checks that
+// it answers there.
+func (m *Manager) startPipe(ctx context.Context, exe string, args []string) (*exec.Cmd, *cdp, error) {
+	d, err := newDevtoolsPipes()
+	if err != nil {
+		return nil, nil, err
+	}
+	cmd := exec.Command(exe)
+	extra, err := attachPipes(cmd, d)
+	if err != nil {
+		d.closeAll()
+		return nil, nil, err
+	}
+	cmd.Args = append(append(append([]string{exe}, extra...), args...), "about:blank")
+	if err := cmd.Start(); err != nil {
+		d.closeAll()
+		return nil, nil, fmt.Errorf("start %s: %w", filepath.Base(exe), err)
+	}
+	d.afterStart()
+	conn := newCDP(newPipeConn(d.ourIn, d.ourOut), m.onEvent)
+	pctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	if err := conn.call(pctx, "", "Browser.getVersion", nil, nil); err != nil {
+		conn.close()
+		_ = cmd.Process.Kill()
+		_ = cmd.Wait()
+		return nil, nil, err
+	}
+	return cmd, conn, nil
+}
+
 // Stop closes the browser and ends the recording.
 func (m *Manager) Stop() {
 	m.mu.Lock()
@@ -315,10 +370,42 @@ func (m *Manager) Stop() {
 			}
 		}
 	}
+	// Chrome's helper processes (network, storage) outlive the main one for a
+	// moment and still hold files in the profile
+	if cmd != nil {
+		waitHelpers(filepath.Join(Dir(m.home), "profile"), 3*time.Second)
+	}
 	if rec != nil {
 		rec.close()
 	}
 	m.setState(func(s *State) { s.Running, s.Busy, s.Loading = false, "", false })
+}
+
+// waitHelpers waits for every process on the profile to end, then kills what is left.
+func waitHelpers(profile string, d time.Duration) {
+	needle := "--user-data-dir=" + profile
+	left := func() []procs.Proc {
+		list, err := procs.List(context.Background())
+		if err != nil {
+			return nil
+		}
+		var out []procs.Proc
+		for _, p := range list {
+			if strings.Contains(p.Cmd, needle) {
+				out = append(out, p)
+			}
+		}
+		return out
+	}
+	for end := time.Now().Add(d); time.Now().Before(end); time.Sleep(200 * time.Millisecond) {
+		if len(left()) == 0 {
+			return
+		}
+	}
+	for _, p := range left() {
+		_ = procs.Kill(context.Background(), p.PID, p.Start)
+	}
+	time.Sleep(300 * time.Millisecond)
 }
 
 func (m *Manager) onEvent(method, session string, params json.RawMessage) {

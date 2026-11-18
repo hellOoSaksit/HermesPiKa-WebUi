@@ -74,7 +74,7 @@ func runLaunch(args []string, stdout, stderr io.Writer) int {
 }
 
 // openConsoleLink opens the one-time Console link that hpk serve writes to
-// <hermes home>/hpk/console-link (this browser then gets the Console key), and
+// <private>/console-link (internal/isolate) (this browser then gets the Console key), and
 // the bare URL only when there is no link. A link written before since is from
 // an earlier run and ignored; wait is how long to wait for serve to write it.
 // `hpk open` can share this with since = time.Time{} and wait = 0.

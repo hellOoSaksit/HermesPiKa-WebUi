@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -76,6 +77,15 @@ func TestRealBrowserSecretsNeverReachTheAgent(t *testing.T) {
 	}
 	if !strings.Contains(res.Text, "Sign in to Harbor") || !strings.Contains(res.Text, "textbox") || !strings.Contains(res.Text, "password") {
 		t.Fatalf("snapshot:\n%s", res.Text)
+	}
+	// DevTools over the pipe: no port another program or OS account could reach
+	if os.Getenv("HPK_BROWSER_DEVTOOLS") == "" {
+		if st := m.State(); st.DevTools != "pipe" {
+			t.Errorf("DevTools over %q, want pipe", st.DevTools)
+		}
+		if _, err := os.Stat(filepath.Join(Dir(home), "profile", "DevToolsActivePort")); err == nil {
+			t.Error("the browser opened a DevTools port")
+		}
 	}
 	ref := func(snap, word string) string {
 		for _, l := range strings.Split(snap, "\n") {

@@ -5,7 +5,6 @@ package hermes
 import (
 	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -15,6 +14,8 @@ import (
 	"time"
 
 	"gopkg.in/yaml.v3"
+
+	"hpk.local/hpk/internal/isolate"
 )
 
 // Profile is one Hermes profile as the Console shows it. Only the model is read
@@ -129,7 +130,7 @@ func Credentials(ctx context.Context) ([]Credential, error) {
 	}
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	out, err := exec.CommandContext(ctx, "hermes", "auth", "list").Output()
+	out, err := isolate.CommandContext(ctx, "hermes", "auth", "list").Output()
 	credAt, credErr = time.Now(), err
 	credList = ParseAuthList(string(out))
 	return credList, credErr

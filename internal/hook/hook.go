@@ -544,8 +544,8 @@ const tooBig = "\x00hpk:input-too-big"
 // privateTouch: the person's vault, browser profile, recordings and agent key,
 // and hpk's own Console API, are not for the AI. Paths are normalised first
 // (case, slashes, %-escapes, ./ and //) so spelling variants match too. This
-// is a guard against accidents and simple attempts, not a sandbox: the AI runs
-// as the person's OS account (docs/browser.md).
+// is a guard against accidents and simple attempts, not a sandbox; the real
+// boundary is running the AI under its own OS account (docs/isolation.md).
 func privateTouch(in []string) string {
 	port := consolePort()
 	for _, s := range in {
@@ -553,7 +553,12 @@ func privateTouch(in []string) string {
 			return "this tool input is too large for hpk to check; split it into smaller calls"
 		}
 		l := normPath(s)
-		for _, bad := range []string{"hpk/vault", "vault.bin", "key.dpapi", "hpk/browser/agent.json", "hpk/browser/runs", "hpk/browser/profile", "/api/vault", "/api/browser/control", "devtoolsactiveport"} {
+		for _, bad := range []string{"isolate setup", "isolate teardown", "isolate run", "ai-relay", "ai-account", "ai-exec", "isolation.json"} {
+			if strings.Contains(l, bad) {
+				return "who the AI runs as (hpk isolate) is the person's decision; ask them to run it in their own terminal"
+			}
+		}
+		for _, bad := range []string{"hpk/vault", "vault.bin", "key.dpapi", "hpk/browser/agent.json", "hpk/browser/runs", "hpk/browser/profile", "hpk/private/", "ai-account.dpapi", "/api/vault", "/api/browser/control", "devtoolsactiveport"} {
 			if strings.Contains(l, bad) {
 				return "the person's vault, browser profile and recordings are not for the AI; use secrets by name ({{secret:name}}) through the hpk-browser tools"
 			}

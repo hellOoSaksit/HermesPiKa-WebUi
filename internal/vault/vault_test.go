@@ -4,6 +4,7 @@ package vault
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -206,6 +207,33 @@ func TestScrubForms(t *testing.T) {
 	} {
 		if got := v.Scrub(in); strings.Contains(strings.ToLower(got), "github_pat_1") {
 			t.Errorf("leaked: %s → %s", in, got)
+		}
+	}
+}
+
+// With the AI isolated (docs/isolation.md) the vault and its key live in the
+// person's private folder, not in the Hermes home the AI shares.
+func TestIsolatedVaultLivesInThePrivateFolder(t *testing.T) {
+	home, priv := t.TempDir(), t.TempDir()
+	cfg := filepath.Join(t.TempDir(), "isolation.json")
+	t.Setenv("HPK_ISOLATION_FILE", cfg)
+	raw, _ := json.Marshal(map[string]string{"mode": "user", "user": "hpk-ai", "home": home, "private": priv})
+	os.WriteFile(cfg, raw, 0o600)
+	v, err := Open(home)
+	if err != nil {
+		t.Fatal(err)
+	}
+	v.SetPIN("", "orchid-garden-42")
+	if _, err := os.Stat(filepath.Join(priv, "vault", "vault.bin")); err != nil {
+		t.Fatalf("vault.bin not in the private folder: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(home, "hpk", "vault", "vault.bin")); err == nil {
+		t.Fatal("vault.bin in the shared Hermes home")
+	}
+	ents, _ := os.ReadDir(filepath.Join(home, "hpk", "vault"))
+	for _, e := range ents {
+		if strings.HasPrefix(e.Name(), "key") {
+			t.Fatalf("vault key in the shared Hermes home: %s", e.Name())
 		}
 	}
 }

@@ -67,16 +67,20 @@ and recorded as the page's doing.
 
 ## Limits (read this)
 
-**Known gaps** (from the security review, 2026-11-18): the browser's DevTools port is a TCP port on
-127.0.0.1 that other programs on this machine can reach while the browser runs (a pipe instead of a
-port is planned); and anything running as your account can decrypt the vault, because the OS
-protects the key per account, not per program.
+**DevTools is a pipe.** hpk talks to the browser over `--remote-debugging-pipe` (fd 3/4 on
+Linux and macOS, inherited handle numbers on Windows): no port, so no other program or OS account
+can connect. If a browser does not answer on the pipe, hpk falls back to a port on 127.0.0.1 only
+while the AI runs in your own account; with the AI isolated it refuses.
 
+**By default the AI runs programs as your OS account.** hpk keeps values out of everything it
+shows the AI, blocks agent tool calls that name the vault, the browser profile, recordings,
+`agent.json`, the vault API or a managed `.env`, and requires the PIN for anything that could
+leak or redirect a secret. That stops accidents and casual attempts. It is **not a sandbox**: the
+OS protects the vault key per account (DPAPI, Keychain, Secret Service), so a program written to
+dig can still decrypt the vault or read what your account can read. `hpk doctor` warns about this.
 
-The AI runs programs as **your** OS account. hpk keeps values out of everything it shows the AI,
-blocks agent tool calls that name the vault, the browser profile, recordings, `agent.json`, the
-vault API or a managed `.env`, and requires the PIN for anything that could leak or redirect a
-secret. That stops accidents and casual attempts. It is **not a sandbox**: a program written to
-dig (for example one that reads a managed `.env` under another name) can still read what your
-account can read. For strong isolation run Hermes as another OS user or in the Docker image
-(`docs/docker.md`) and keep the vault in your own hpk.
+**The fix is `hpk isolate setup`** ([isolation.md](isolation.md)): Hermes then runs as a separate
+local account (Windows) or in a container, and your vault, its key, the browser profile and the
+Console key move to a folder only your account can open. The AI shares only the Hermes home and
+your project folders. Known limits there: the AI can still change hpk's policy files in the shared
+home, and `.env` files hpk writes into a project are readable by it.

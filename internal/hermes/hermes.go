@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+
+	"hpk.local/hpk/internal/isolate"
 )
 
 // Info describes the Hermes install hpk found.
@@ -33,7 +35,7 @@ func Detect(ctx context.Context) Info {
 	}
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := exec.CommandContext(ctx, cli, "--version").Output()
+	out, err := isolate.CommandContext(ctx, cli, "--version").Output()
 	if err != nil {
 		info.Error = "hermes --version failed: " + err.Error()
 		return info

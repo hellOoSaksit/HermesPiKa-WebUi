@@ -54,6 +54,8 @@ func TestVaultFilesAreHiddenFromTheAgent(t *testing.T) {
 		{"command": "curl http://127.0.0.1:7878/api/%76ault"},
 		{"path": "C:\\Users\\x\\hermes\\hpk\\\\vault\\vault.b" + "in"},
 		{"command": "type hpk/./vault/key.dpapi"},
+		{"path": `C:\Users\x\AppData\Local\hpk\private\vault\vault.bin`},
+		{"command": `type %LOCALAPPDATA%\hpk\private\ai-account.dpapi`},
 	} {
 		raw, _ := json.Marshal(map[string]any{"hook_event_name": "pre_tool_call", "tool_name": "terminal", "tool_input": in})
 		var out bytes.Buffer
@@ -89,5 +91,16 @@ func TestHookRefusesConsoleAPIAndHugeInputs(t *testing.T) {
 	var out bytes.Buffer
 	if Run("privacy_guard", bytes.NewReader(raw), &out); strings.Contains(out.String(), "Console API") {
 		t.Fatal("other local ports are fine")
+	}
+}
+
+func TestAgentCannotChangeIsolation(t *testing.T) {
+	t.Setenv("HPK_HOME", t.TempDir())
+	for _, cmd := range []string{"hpk isolate teardown", "hpk.exe isolate setup --docker", "hpk ai-relay -- hermes", "hpk ai-account delete hpk-ai", `notepad %APPDATA%\hpk\isolation.json`} {
+		raw, _ := json.Marshal(map[string]any{"hook_event_name": "pre_tool_call", "tool_name": "terminal", "tool_input": map[string]any{"command": cmd}})
+		var out bytes.Buffer
+		if code := Run("privacy_guard", bytes.NewReader(raw), &out); code == 0 && !strings.Contains(out.String(), "block") {
+			t.Fatalf("not blocked: %s → %s", cmd, out.String())
+		}
 	}
 }

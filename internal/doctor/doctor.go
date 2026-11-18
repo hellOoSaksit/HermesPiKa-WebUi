@@ -20,6 +20,7 @@ import (
 	"hpk.local/hpk/internal/gates"
 	"hpk.local/hpk/internal/hermes"
 	"hpk.local/hpk/internal/install"
+	"hpk.local/hpk/internal/isolate"
 	"hpk.local/hpk/internal/privacy"
 	"hpk.local/hpk/internal/project"
 	"hpk.local/hpk/internal/wiki"
@@ -87,6 +88,11 @@ func Run(ctx context.Context, h, serveURL string) []Check {
 		add("ok", "hook consent", "Hermes has allowed hpk's hooks", "")
 	} else {
 		add("info", "hook consent", "Hermes will ask you once to allow each hpk hook the first time it runs", "run `hermes` in a terminal once, or set hooks_auto_accept: true")
+	}
+
+	// who the AI runs as: the person's account (warn) or its own (docs/isolation.md)
+	for _, f := range isolate.Findings(h) {
+		add(f.Level, f.Name, f.Detail, f.Fix)
 	}
 
 	list, _ := project.List(h)
