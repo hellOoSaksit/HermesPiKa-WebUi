@@ -105,7 +105,22 @@ against Hermes v0.23.1.
 - A Files view (Work → Files): rule folders as cards with their extensions and
   file counts, the project's folders as a list, and **Tidy**: files outside
   their folder, grouped and ticked, moved only on Confirm, with Undo of the
-  last round.
+  last round (Undo, too, lists what goes back and waits for Confirm).
+- The AI asks once: before it saves the first file into a project with no
+  rules, a hook tells it to ask you how to split folders and draft the page;
+  after that it is told the rules once per session, and a note says where a
+  file it just wrote belongs. A scheduled (cron) run has no one to ask, so it
+  is told to keep new files out of the project until you set the rules.
+- A folder picker in the Console (solo mode, needs the Console key) to point a
+  project at another folder, move its wiki (copied, checked, then swapped;
+  recorded in `<home>/hpk/trusted/locations.json`) or move the browser
+  recordings.
+- hpk never follows a link or a Windows junction inside a project when it
+  uploads, lists, serves, tidies or creates folders, re-checks the project
+  folder from `project.yaml` every time, and keeps what you approved and the
+  undo record where an isolated AI cannot change them (`<home>/hpk/trusted`
+  is read-only for it and repaired at start; hpk itself reads its own copy in
+  your private folder).
 
 **Security pass** (2026-11-18 review)
 - Solo mode answers only loopback host names (stops DNS rebinding), and every
