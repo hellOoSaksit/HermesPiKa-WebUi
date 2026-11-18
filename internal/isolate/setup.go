@@ -38,6 +38,11 @@ type Options struct {
 	Image     string   // docker: the image (hpk-hermes:local)
 	Container string   // docker: the container name
 	Compose   string   // docker: where to write the compose file
+
+	// Recordings is the folder the person chose for browser recordings ("" = the default);
+	// ResetRecordings sets it back to the default.
+	Recordings      string
+	ResetRecordings func() error
 }
 
 // SetupPlan lists what setup will do, and the config it will save.
@@ -86,6 +91,9 @@ func SetupPlan(o Options) ([]Step, *Config, error) {
 			}})
 	default:
 		return nil, nil, fmt.Errorf("unknown mode %q (user or docker)", o.Mode)
+	}
+	if st := recordingsStep(o); st != nil {
+		steps = append(steps, *st)
 	}
 	steps = append(steps, Step{Say: "Save these settings in " + ConfigPath() + " (this account only); hpk then starts every hermes and hermes-acp through `hpk ai-relay`",
 		Do: func() error { return Save(c) }})

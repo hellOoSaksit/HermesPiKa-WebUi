@@ -352,3 +352,7 @@ func Ungrant(c *Config, dir string) error {
 // IsUnsupported reports whether Grant or Ungrant refused because this setup
 // (a container, or an account made by hand) has no automatic folder grants.
 func IsUnsupported(err error) bool { return err == errContainer || err == errManual }
+
+// MakePrivate creates dir so that only this account (and the system) can open
+// it. Used for a recordings folder the person chose, once isolation is on.
+func MakePrivate(dir string) error { return makePrivate(dir) }

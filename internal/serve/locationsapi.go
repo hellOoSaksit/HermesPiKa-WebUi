@@ -274,3 +274,17 @@ func (s *Server) locationsAPI(mux *http.ServeMux) {
 		writeJSON(w, map[string]any{"ok": true})
 	})
 }
+
+// forbiddenRecordings refuses a folder for the browser's recordings. They are
+// private to the person: hpk's own folders are off limits as everywhere, and
+// when the AI is isolated the folder may not be one the AI can read (the
+// Hermes home, a project's folder or wiki, or anything holding them).
+func forbiddenRecordings(home, dir string, isolated bool) error {
+	if err := forbiddenLocation(home, nil, dir, false); err != nil {
+		return err
+	}
+	if isolated && stillNeeded(home, dir, "") {
+		return errors.New("the AI can read that folder; recordings are private, choose another")
+	}
+	return nil
+}

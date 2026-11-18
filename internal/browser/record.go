@@ -57,14 +57,12 @@ type recorder struct {
 
 var runIDRE = regexp.MustCompile(`^[0-9]{8}-[0-9]{6}-[0-9a-f]{6}$`)
 
-func runsDir(base string) string { return filepath.Join(base, "runs") }
-
-func newRecorder(base string) (*recorder, error) {
+func newRecorder(runs string) (*recorder, error) {
 	b := make([]byte, 3)
 	rand.Read(b)
 	now := time.Now()
 	id := now.Format("20060102-150405") + "-" + hex.EncodeToString(b)
-	dir := filepath.Join(runsDir(base), id)
+	dir := filepath.Join(runs, id)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
 	}
@@ -127,15 +125,15 @@ func (r *recorder) close() {
 
 // Runs lists recordings, newest first.
 func Runs(home string) []Run {
-	base := Dir(home)
-	ents, _ := os.ReadDir(runsDir(base))
+	runs := RunsDir(home)
+	ents, _ := os.ReadDir(runs)
 	out := []Run{}
 	for _, e := range ents {
 		if !runIDRE.MatchString(e.Name()) {
 			continue
 		}
 		var r Run
-		if raw, err := os.ReadFile(filepath.Join(runsDir(base), e.Name(), "run.json")); err == nil && json.Unmarshal(raw, &r) == nil {
+		if raw, err := os.ReadFile(filepath.Join(runs, e.Name(), "run.json")); err == nil && json.Unmarshal(raw, &r) == nil {
 			out = append(out, r)
 		}
 	}
@@ -147,7 +145,7 @@ func runDir(home, id string) (string, error) {
 	if !runIDRE.MatchString(id) {
 		return "", errors.New("no such recording")
 	}
-	return filepath.Join(Dir(home), "runs", id), nil
+	return filepath.Join(RunsDir(home), id), nil
 }
 
 // RunSteps returns a recording's steps.
@@ -213,13 +211,13 @@ func KeepRun(home, id string, keep bool) error {
 	return os.WriteFile(p, b, 0o600)
 }
 
-func pruneRuns(base string, age time.Duration) {
-	ents, _ := os.ReadDir(runsDir(base))
+func pruneRuns(runs string, age time.Duration) {
+	ents, _ := os.ReadDir(runs)
 	for _, e := range ents {
 		if !runIDRE.MatchString(e.Name()) {
 			continue
 		}
-		dir := filepath.Join(runsDir(base), e.Name())
+		dir := filepath.Join(runs, e.Name())
 		var r Run
 		if raw, err := os.ReadFile(filepath.Join(dir, "run.json")); err == nil && json.Unmarshal(raw, &r) == nil && (r.Saved || time.Since(r.Started) < age) {
 			continue

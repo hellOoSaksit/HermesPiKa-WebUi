@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"hpk.local/hpk/internal/browser"
 	"hpk.local/hpk/internal/folders"
 	"hpk.local/hpk/internal/install"
 	"hpk.local/hpk/internal/isolate"
@@ -118,6 +119,9 @@ func isolateSetup(args []string, stdin io.Reader, stdout, stderr io.Writer) int 
 		if _, err := os.Stat(p.Root); err == nil {
 			o.Projects = append(o.Projects, p.Root)
 		}
+	}
+	if rd := browser.RunsDir(home); rd != filepath.Join(browser.Dir(home), "runs") { // a folder the person chose
+		o.Recordings, o.ResetRecordings = rd, func() error { return browser.SetRunsDir("") }
 	}
 	steps, _, err := isolate.SetupPlan(o)
 	if err != nil {
