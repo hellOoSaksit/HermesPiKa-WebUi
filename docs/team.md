@@ -1,5 +1,7 @@
 # Team mode
 
+> **v1 is solo-first.** In the Console the Team pages are greyed out ("Comes in a later version"), and in solo mode the join and team-management APIs answer 404. `hpk serve --team` is unaffected, and `HPK_FEATURES=team` turns the pages back on. See [ROADMAP.md](ROADMAP.md).
+
 By default hpk is **solo**: `hpk serve` listens on this machine only, with no
 sign-in, and the person running it is the owner. Team mode lets several
 people share one Console, each with a role. It is written from scratch and

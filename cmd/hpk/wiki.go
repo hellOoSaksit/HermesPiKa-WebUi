@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"hpk.local/hpk/assets"
+	"hpk.local/hpk/internal/folders"
 	"hpk.local/hpk/internal/project"
 	"hpk.local/hpk/internal/wiki"
 )
@@ -87,9 +88,11 @@ func runWiki(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		}
 		return promote(h, *project_, pos, *to, stdout, stderr)
 	}
+	var proj *project.Project
 	wikiDir := resolveWikiDir(*dir)
 	if *dir == "" && *project_ != "" && cmd != "init" {
 		if p, err := project.Load(h, *project_); err == nil {
+			proj = p
 			wikiDir = p.WikiDir()
 		}
 	}
@@ -184,6 +187,11 @@ func runWiki(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		var res []wiki.Result
 		if cmd == "approve" {
 			res, err = w.Approve(nums, who)
+			if err == nil && proj != nil {
+				if ferr := folders.AfterApprove(h, proj, res); ferr != nil {
+					fmt.Fprintln(stderr, "hpk wiki approve: folder rules:", ferr)
+				}
+			}
 		} else {
 			res, err = w.Discard(nums, who, *why)
 		}
@@ -221,6 +229,17 @@ func runWiki(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		for _, f := range fs {
 			if f.Level == "error" {
 				errs++
+			}
+		}
+		if proj != nil {
+			if fr, _ := folders.Load(h, proj); len(fr.Bad) > 0 {
+				for _, m := range fr.Bad {
+					if *asJSON {
+						fmt.Fprintln(stderr, "decisions/folders.md: "+m)
+					} else {
+						fmt.Fprintln(stdout, "decisions/folders.md: "+m)
+					}
+				}
 			}
 		}
 		if *asJSON {

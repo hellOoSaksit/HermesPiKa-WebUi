@@ -602,6 +602,7 @@ func (s *Server) pages(mux *http.ServeMux) {
 			}
 		}
 		now := time.Now()
+		out["root"], out["wikiDir"] = p.Root, p.WikiDir()
 		out["spentToday"] = privacy.Spent(s.home, p, time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()))
 		out["spentMonth"] = privacy.Spent(s.home, p, time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()))
 		writeJSON(w, out)

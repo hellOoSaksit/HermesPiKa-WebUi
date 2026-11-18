@@ -68,6 +68,13 @@ func Findings(home string) []Finding {
 	if left := Leftovers(home); len(left) > 0 {
 		fs = append(fs, Finding{"warn", "private files", "still in the Hermes home, where the AI can read them: " + strings.Join(left, ", "), "stop hpk, then hpk isolate setup moves them"})
 	}
+	if why := trustedFinding(c); why != "" {
+		fix := "hpk isolate status (or starting hpk serve) repairs it"
+		if c.Mode == ModeDocker {
+			fix = "hpk isolate teardown, then hpk isolate setup --docker (the new compose file mounts it read-only)"
+		}
+		fs = append(fs, Finding{"warn", "trusted folder", TrustedDir(home) + " can be changed by the AI: " + why + ". hpk itself trusts only its own copy in " + OwnTrustedDir(home), fix})
+	}
 	return fs
 }
 

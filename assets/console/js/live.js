@@ -63,6 +63,7 @@ function apply(snap) {
   st.projectId = projectId;
   st.mode = snap.mode || { value: 'ask', autoUntil: null, scope: 'project' };
   st.teamMode = teamOn;
+  st.features = snap.features || { team: false };
   const cur = (snap.projects || []).find((x) => x.id === snap.projectId) || {};
   st.budget = { daily: cur.moneyDaily || 0, monthly: cur.moneyMonthly || 0, spentToday: cur.spentToday || 0 };
   clearObject(store.people);
@@ -183,12 +184,47 @@ function patch() {
 
   api.chat = async (sid) => delay(await loadChat(sid).catch(() => (store.chat[sid] = store.chat[sid] || [])));
 
-  api.sendMessage = (sid, text, how = 'send') => {
-    postJSON(`/api/sessions/${encodeURIComponent(sid)}/prompt`, { text, how }).catch((e) => {
+  api.sendMessage = (sid, text, how = 'send', attachments = []) => {
+    postJSON(`/api/sessions/${encodeURIComponent(sid)}/prompt`, { text, how, attachments }).catch((e) => {
       (store.chat[sid] = store.chat[sid] || []).push({ t: 'note', at: Date.now(), kind: 'info', text: e.message });
       emit('chat', sid);
     });
   };
+
+  // Files: upload into the folder the project's rules name (XHR, for progress), and list a folder.
+  api.uploadFiles = (project, files, onProgress) => new Promise((resolve, reject) => {
+    const fd = new FormData();
+    [...files].forEach((f) => fd.append('file', f, f.name));
+    const x = new XMLHttpRequest();
+    x.open('POST', '/api/files/upload' + (project ? '?project=' + encodeURIComponent(project) : ''));
+    x.setRequestHeader('X-HPK', '1');
+    x.responseType = 'json';
+    x.upload.onprogress = (e) => { if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total); };
+    x.onerror = () => reject(new Error('network'));
+    x.onload = () => {
+      if (x.status >= 200 && x.status < 300) { resolve(x.response || { files: [] }); return; }
+      // a failure part-way through still says which files were saved before it
+      const e = new Error((x.response && x.response.error) || x.statusText);
+      e.files = (x.response && x.response.files) || [];
+      reject(e);
+    };
+    x.send(fd);
+  });
+  api.listFiles = (project, path = '') => getJSON('/api/files/list?' + new URLSearchParams({ ...(project ? { project } : {}), path }));
+  // Folder rules and tidy. A tidy plan answers 409 {state} while the rules are not approved.
+  const pq = (project) => (project ? '?project=' + encodeURIComponent(project) : '');
+  api.folderRules = (project) => getJSON('/api/files/rules' + pq(project));
+  api.tidyPlan = async (project) => {
+    const res = await fetch('/api/files/tidy' + pq(project), { headers: { Accept: 'application/json' } });
+    const out = await res.json().catch(() => ({}));
+    if (res.status === 409 && out.state) return { state: out.state, moves: [], homeless: [], canUndo: false };
+    if (!res.ok) throw new Error(out.error || res.statusText);
+    return { state: 'ok', ...out };
+  };
+  api.tidyApply = (project, moves) => postJSON('/api/files/tidy', { project, moves });
+  // Undo shows what it would put back first; the POST names that round (at).
+  api.tidyUndoPlan = (project) => getJSON('/api/files/tidy/undo' + pq(project));
+  api.tidyUndo = (project, at) => postJSON('/api/files/tidy/undo', { project, at });
 
   // Model switching: hpk serve plans with Hermes' model list and models.dev facts.
   const sp = (sid) => `/api/sessions/${encodeURIComponent(sid)}`;
@@ -314,6 +350,12 @@ function patchPages() {
   api.setProjectSetting = (key, value) => postJSON('/api/project/settings', { key, value });
   api.projectSettings = () => getJSON(withProject('/api/project/settings'));
 
+  // Folders: the picker lists folders on this machine; the moves are solo-only.
+  api.listDirs = (path) => getJSON('/api/fs/dirs?path=' + encodeURIComponent(path || ''));
+  api.setWikiDir = (project, dir) => postJSON('/api/project/wiki-dir', { project, dir });
+  api.setProjectRoot = (project, dir) => postJSON('/api/project/root', { project, dir });
+  api.setRecordingsDir = (dir) => postJSON('/api/browser/recordings-dir', { dir });
+
   // Settings: the doctor is the same one `hpk doctor` runs.
   api.doctor = () => getJSON('/api/doctor');
   api.version = async () => (await getJSON('/api/health')).version;
@@ -355,6 +397,8 @@ export async function connect() {
     if (projectId && snap.projectId !== projectId) { projectId = null; snap = await getJSON('/api/snapshot'); }
     live = true;
     apply(snap);
+    // A machine that already joined a team server keeps that page live while the team feature is off.
+    if (!snap.features?.team) api.state().teamJoined = !!(await getJSON('/api/teamserver').catch(() => ({}))).connected;
     patch();
     listen();
     return true;

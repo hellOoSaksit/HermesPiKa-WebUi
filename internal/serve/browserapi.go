@@ -21,10 +21,15 @@ import (
 	"time"
 
 	"hpk.local/hpk/internal/browser"
+	"hpk.local/hpk/internal/isolate"
 	"hpk.local/hpk/internal/project"
+	"hpk.local/hpk/internal/relocate"
 	"hpk.local/hpk/internal/team"
 	"hpk.local/hpk/internal/vault"
 )
+
+// makePrivate is isolate.MakePrivate; tests swap it.
+var makePrivate = isolate.MakePrivate
 
 // The built-in browser and the personal vault live on a person's own machine
 // only: on a team server both are switched off (the server runs no programs and
@@ -87,7 +92,7 @@ func (s *Server) browserAPI(mux *http.ServeMux) {
 		v, m, err := s.openPersonal()
 		exe, exeErr := browser.FindExe()
 		self, _ := os.Executable()
-		out := map[string]any{"enabled": true, "state": m.State(), "exe": filepath.Base(exe), "runs": len(browser.Runs(s.home)), "hpkPath": self}
+		out := map[string]any{"enabled": true, "state": m.State(), "exe": filepath.Base(exe), "runs": len(browser.Runs(s.home)), "recordingsDir": browser.RunsDir(s.home), "hpkPath": self}
 		if exeErr != nil {
 			out["exeError"] = exeErr.Error()
 		}
@@ -267,6 +272,92 @@ func (s *Server) browserAPI(mux *http.ServeMux) {
 			return
 		}
 		writeJSON(w, map[string]any{"ok": true})
+	})
+
+	// POST /api/browser/recordings-dir {dir}: move the recordings; "" = the default place.
+	mux.HandleFunc("POST /api/browser/recordings-dir", func(w http.ResponseWriter, r *http.Request) {
+		var in struct {
+			Dir string `json:"dir"`
+		}
+		if _, ok := s.decodeOnly(w, r, &in); !ok {
+			return
+		}
+		m := mgr(w)
+		if m == nil || !s.can(w, r, team.Admin) {
+			return
+		}
+		if in.Dir != "" && !filepath.IsAbs(in.Dir) {
+			writeErr(w, http.StatusBadRequest, errors.New("give the folder's full path"))
+			return
+		}
+		if m.State().Running {
+			writeErr(w, http.StatusConflict, errors.New("the browser is running; stop it first"))
+			return
+		}
+		src := browser.RunsDir(s.home)
+		dst, custom := filepath.Join(browser.Dir(s.home), "runs"), ""
+		if in.Dir != "" {
+			dst = filepath.Clean(in.Dir)
+			if !samePath(dst, filepath.Join(browser.Dir(s.home), "runs")) {
+				custom = dst
+			}
+		}
+		if samePath(src, dst) {
+			writeJSON(w, map[string]any{"ok": true, "dir": src})
+			return
+		}
+		_, isolated := isolate.Load()
+		if custom != "" {
+			if err := forbiddenRecordings(s.home, dst, isolated); err != nil {
+				writeErr(w, http.StatusBadRequest, err)
+				return
+			}
+		}
+		made := false
+		if _, err := os.Stat(src); err != nil {
+			// nothing recorded yet: only the setting changes, once the folder is
+			// private (a folder that cannot be made private is not chosen)
+			if isolated {
+				if err := makePrivate(dst); err != nil {
+					writeErr(w, http.StatusInternalServerError, fmt.Errorf("cannot make %s private to you: %w", dst, err))
+					return
+				}
+			}
+			if err := browser.SetRunsDir(custom); err != nil {
+				writeErr(w, http.StatusInternalServerError, err)
+				return
+			}
+			writeJSON(w, map[string]any{"ok": true, "dir": dst})
+			return
+		}
+		if _, err := os.Stat(dst); errors.Is(err, os.ErrNotExist) {
+			made = true
+		}
+		if isolated {
+			// private before the first file lands in it
+			if err := makePrivate(dst); err != nil {
+				writeErr(w, http.StatusInternalServerError, fmt.Errorf("cannot make %s private to you: %w", dst, err))
+				return
+			}
+		}
+		warning := ""
+		err := relocate.MoveWith(src, dst, func() error { return browser.SetRunsDir(custom) })
+		var ce *relocate.CleanupError
+		if errors.As(err, &ce) {
+			warning, err = ce.Error(), nil
+		}
+		if err != nil {
+			if made {
+				_ = os.Remove(dst)
+			}
+			writeErr(w, http.StatusBadRequest, err)
+			return
+		}
+		out := map[string]any{"ok": true, "dir": dst}
+		if warning != "" {
+			out["warning"] = warning
+		}
+		writeJSON(w, out)
 	})
 
 	// ---- the vault ----

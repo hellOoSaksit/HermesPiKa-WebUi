@@ -147,7 +147,9 @@ func keyExempt(r *http.Request) bool {
 // requireConsoleKey wraps the API in solo mode: changes need the cookie.
 func (s *Server) requireConsoleKey(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if s.keys == nil || s.teamConfig() != nil || r.Method == http.MethodGet || r.Method == http.MethodHead || keyExempt(r) {
+		// reading is open, except the folder picker: it shows what is on this machine's disks
+		read := (r.Method == http.MethodGet || r.Method == http.MethodHead) && !strings.HasPrefix(r.URL.Path, "/api/fs/")
+		if s.keys == nil || s.teamConfig() != nil || read || keyExempt(r) {
 			next.ServeHTTP(w, r)
 			return
 		}

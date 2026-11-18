@@ -43,7 +43,8 @@
     "mcp": "MCP",
     "browser": "Browser",
     "vault": "Vault",
-    "teamserver": "Team server"
+    "teamserver": "Team server",
+    "files": "Files"
   },
   "common": {
     "apply": "Apply",
@@ -332,6 +333,10 @@
     "compressed": "Context compressed: {from} → {to} tokens. The full conversation is kept.",
     "emptyLog": "No messages yet. Say what you want done.",
     "removeFile": "Remove {f}",
+    "uploadFailed": "Upload failed",
+    "uploading": "Uploading {f}",
+    "stillUploading": "Wait for the files to finish uploading.",
+    "attachOff": "Attaching files needs a connected project on your own computer.",
     "attach": "Attach files",
     "wikiRef": "wiki page",
     "cmd": {
@@ -1674,7 +1679,8 @@
     "mcp": "MCP",
     "browser": "Browser",
     "vault": "Vault",
-    "teamserver": "Team server"
+    "teamserver": "Team server",
+    "files": "Files"
   },
   "ev": {
     "aria": "Evidence: stage and how sure we are",
@@ -2641,5 +2647,109 @@
   "key": {
     "title": "This browser can look but not change anything",
     "body": "Changes need the Console opened from hpk. In a terminal run"
+  },
+  "folders": {
+    "title": "Choose a folder",
+    "browse": "Browse…",
+    "use": "Use this folder",
+    "up": "Up one folder",
+    "empty": "No folders here.",
+    "path": "Folder path",
+    "list": "Folders",
+    "places": "Places",
+    "pickHint": "Pick a place to start",
+    "saved": "Saved: {dir}",
+    "reset": "Reset to default",
+    "root": {
+      "label": "Project folder",
+      "hint": "Where this project’s files are. This only points hpk at another folder; nothing is copied or moved.",
+      "apply": "Use this folder"
+    },
+    "wiki": {
+      "label": "Wiki location",
+      "hint": "The wiki’s files move to the new folder. Not possible while a chat of this project is working.",
+      "apply": "Move wiki here"
+    },
+    "rec": {
+      "label": "Recordings location",
+      "hint": "Browser recordings move to the new folder. Stop the browser first.",
+      "apply": "Move recordings here"
+    }
+  },
+  "files": {
+    "title": "Files",
+    "upload": "Upload",
+    "uploaded": {
+      "one": "1 file saved",
+      "other": "{n} files saved"
+    },
+    "uploadFailed": "Upload failed: {err}",
+    "dropHint": "Drop to save in the right folder",
+    "soloOnly": "Uploads and tidy need a connected project on your own computer.",
+    "root": "Project folder",
+    "count": {
+      "one": "1 file",
+      "other": "{n} files"
+    },
+    "noFolder": "Not created yet",
+    "state": {
+      "none": "The AI will ask how to split folders the first time it saves a file",
+      "pending": "Folder rules wait for your OK",
+      "changed": "The folder rules page changed. Rules are off until you approve it again.",
+      "bad": {
+        "one": "1 row skipped",
+        "other": "{n} rows skipped"
+      }
+    },
+    "openDraft": "Review draft",
+    "openPage": "Open wiki",
+    "empty": "This folder is empty",
+    "loadFailed": "Cannot read this folder",
+    "misplaced": "Belongs in {folder}",
+    "undo": "Undo tidy",
+    "undone": {
+      "one": "Put 1 file back",
+      "other": "Put {n} files back"
+    },
+    "undoTitle": "Undo the last tidy",
+    "undoHint": "These files go back where they were. A file changed since the tidy stays where it is.",
+    "undoConfirm": {
+      "one": "Move 1 file back",
+      "other": "Move {n} files back"
+    },
+    "uploadPartial": {
+      "one": "1 file was saved before the error",
+      "other": "{n} files were saved before the error"
+    },
+    "tidy": {
+      "button": "Tidy",
+      "title": "Tidy files",
+      "off": "Tidy works once the folder rules are approved",
+      "countTip": {
+        "one": "1 file is outside its folder",
+        "other": "{n} files are outside their folder"
+      },
+      "none": "Everything is in its folder",
+      "homeless": "No place yet",
+      "homelessTip": "No rule names these extensions, so they stay where they are.",
+      "more": "+{n} more",
+      "selected": "{n} of {total}",
+      "confirm": {
+        "one": "Move 1 file",
+        "other": "Move {n} files"
+      },
+      "done": {
+        "one": "Moved 1 file",
+        "other": "Moved {n} files"
+      },
+      "skipped": {
+        "one": "1 file changed meanwhile and stayed put",
+        "other": "{n} files changed meanwhile and stayed put"
+      }
+    }
+  },
+  "features": {
+    "later": "Comes in a later version",
+    "laterBody": "hpk v1 is for one person with Hermes on their own machine. Team features are planned; see docs/ROADMAP.md."
   }
 }

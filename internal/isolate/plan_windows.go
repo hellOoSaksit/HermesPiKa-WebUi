@@ -5,6 +5,7 @@
 package isolate
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 )
@@ -51,13 +52,7 @@ func userSetup(o Options, c *Config) ([]Step, error) {
 		if _, err := os.Stat(d); err != nil {
 			continue
 		}
-		steps = append(steps, Step{Say: "Let " + who + " read and run, not change, " + d, Do: func() error {
-			if err := icacls(d, "/inheritance:d"); err != nil {
-				return err
-			}
-			_ = icacls(d, "/remove:g", who)
-			return icacls(d, "/grant", who+":(OI)(CI)RX")
-		}})
+		steps = append(steps, Step{Say: "Let " + who + " read and run, not change, " + d, Do: func() error { return readOnlyDir(who, d) }})
 		c.ReadOnly = append(c.ReadOnly, d)
 	}
 	steps = append(steps,
@@ -127,3 +122,17 @@ func UserStatus(c *Config) (exists, hasPassword bool) {
 	_, err := os.Stat(PasswordFile(c))
 	return AccountExists(c.User), err == nil
 }
+
+func grantDir(c *Config, dir string) error {
+	return icacls(dir, "/grant", c.User+":(OI)(CI)M")
+}
+
+func ungrantDir(c *Config, dir string) error {
+	if _, err := os.Stat(dir); err != nil {
+		return nil
+	}
+	return icacls(dir, "/remove:g", c.User)
+}
+
+// errManual exists so IsUnsupported compiles; folder grants are automated on Windows.
+var errManual = errors.New("not supported")
