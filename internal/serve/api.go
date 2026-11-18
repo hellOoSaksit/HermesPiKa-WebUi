@@ -254,6 +254,8 @@ func (s *Server) api(mux *http.ServeMux) {
 			Project string `json:"project"`
 			Text    string `json:"text"`
 			How     string `json:"how"`
+			// project-relative paths of files uploaded with /api/files/upload
+			Attachments []string `json:"attachments"`
 		}
 		p, ok := s.decode(w, r, &in, func() string { return in.Project })
 		if !ok {
@@ -261,6 +263,11 @@ func (s *Server) api(mux *http.ServeMux) {
 		}
 		if _, ok := s.chatAccess(w, r, p, r.PathValue("id")); !ok {
 			return
+		}
+		for _, a := range in.Attachments {
+			if allowedParts(a) == nil && !filepath.IsAbs(a) {
+				in.Text += "\n\nAttached file (in the project folder): " + a
+			}
 		}
 		if strings.TrimSpace(in.Text) == "" {
 			writeErr(w, http.StatusBadRequest, errors.New("empty message"))

@@ -95,6 +95,7 @@ func (s *Server) Routes(console fs.FS) http.Handler {
 	s.mcpAPI(mux)
 	s.bgAPI(mux)
 	s.filesAPI(mux)
+	s.uploadAPI(mux)
 	s.locationsAPI(mux)
 	s.fsAPI(mux)
 	s.browserAPI(mux)

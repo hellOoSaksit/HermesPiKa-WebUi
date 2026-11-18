@@ -332,6 +332,9 @@
     "compressed": "Context compressed: {from} → {to} tokens. The full conversation is kept.",
     "emptyLog": "No messages yet. Say what you want done.",
     "removeFile": "Remove {f}",
+    "uploadFailed": "Upload failed",
+    "uploading": "Uploading {f}",
+    "stillUploading": "Wait for the files to finish uploading.",
     "attach": "Attach files",
     "wikiRef": "wiki page",
     "cmd": {

@@ -5,7 +5,7 @@
 // scratch for HPK and joined to its own ideas: child sessions, child summaries,
 // "save to wiki" drafts, Ask/Auto per session, red lines.
 import { api, bus } from '../data.js';
-import { teamMode } from '../live.js';
+import { teamMode, isLive } from '../live.js';
 import { t } from '../i18n.js';
 import { planHeadline, planGraph, evTag, evText } from './plan.js';
 import { commandRisks } from '../shell.js';
@@ -391,9 +391,27 @@ export default async function chatView({ params, go, rerender }) {
   const autosize = () => { input.style.height = 'auto'; input.style.height = Math.min(240, input.scrollHeight) + 'px'; };
   const palette = h('div.palette#chatPalette', { role: 'listbox', hidden: true });
   let palItems = []; let palIdx = 0; let palMode = null;
-  const fileIn = h('input', { type: 'file', multiple: true, hidden: true, onchange: (e) => { attachments.push(...[...e.target.files].map((f) => f.name)); e.target.value = ''; drawAtt(); } });
+  // Attaching uploads at once (live, solo): the chip shows progress, then a tick; the
+  // message carries the project-relative paths the server returns. Demo and team
+  // mode keep names only.
+  const canUpload = isLive() && !teamMode();
+  const addFiles = (files) => {
+    for (const file of files) {
+      const a = { name: file.name, pct: 0, path: canUpload ? null : file.name, err: null };
+      attachments.push(a);
+      if (!canUpload) continue;
+      api.uploadFiles(api.project().id, [file], (p) => { a.pct = p; drawAtt(); })
+        .then((r) => { a.path = (r.files && r.files[0] && r.files[0].path) || file.name; a.pct = 1; drawAtt(); })
+        .catch((e) => { a.err = e.message || t('chat.uploadFailed'); drawAtt(); toast(t('chat.uploadFailed') + ': ' + a.err, null, 'deny'); });
+    }
+    drawAtt();
+  };
+  const fileIn = h('input', { type: 'file', multiple: true, hidden: true, onchange: (e) => { addFiles([...e.target.files]); e.target.value = ''; } });
   const attRow = h('div.att-row');
-  const drawAtt = () => attRow.replaceChildren(...attachments.map((f, i) => h('span.att', icon('file'), f, h('button.icon-btn.sm', { type: 'button', 'aria-label': t('chat.removeFile', { f }), onclick: () => { attachments.splice(i, 1); drawAtt(); } }, icon('x')))));
+  const drawAtt = () => attRow.replaceChildren(...attachments.map((a, i) => h('span.att' + (a.err ? '.err' : ''), { title: a.err || a.path || '' },
+    icon('file'), a.name,
+    a.err ? h('span.att-state', '!') : a.path ? h('span.att-state', '✓') : h('progress.att-bar', { max: 1, value: a.pct, 'aria-label': t('chat.uploading', { f: a.name }) }),
+    h('button.icon-btn.sm', { type: 'button', 'aria-label': t('chat.removeFile', { f: a.name }), onclick: () => { attachments.splice(i, 1); drawAtt(); } }, icon('x')))));
 
   function showPalette() {
     const v = input.value;
@@ -445,9 +463,11 @@ export default async function chatView({ params, go, rerender }) {
 
   async function send(how) {
     const v = input.value.trim();
-    if (!v && !attachments.length) { input.focus(); return; }
+    if (attachments.some((a) => !a.path && !a.err)) { toast(t('chat.stillUploading'), null, 'deny'); return; }
+    const sent = attachments.filter((a) => a.path).map((a) => a.path);
+    if (!v && !sent.length) { input.focus(); return; }
     if (v.startsWith('/') && await runSlash(v)) { input.value = ''; api.setChatMeta(sess.id, { draft: '' }); autosize(); return; }
-    api.sendMessage(sess.id, v, how, attachments);
+    api.sendMessage(sess.id, v, how, sent);
     input.value = ''; attachments = []; drawAtt(); autosize();
   }
 
@@ -626,7 +646,7 @@ export default async function chatView({ params, go, rerender }) {
   }
 
   const composer = h('div.composer', { ondragover: (e) => { e.preventDefault(); composer.classList.add('drop'); }, ondragleave: () => composer.classList.remove('drop'),
-    ondrop: (e) => { e.preventDefault(); composer.classList.remove('drop'); attachments.push(...[...e.dataTransfer.files].map((f) => f.name)); drawAtt(); } },
+    ondrop: (e) => { e.preventDefault(); composer.classList.remove('drop'); if (canChat) addFiles([...e.dataTransfer.files]); } },
   palette, attRow, input, fileIn, footer);
 
   // ---- header ----

@@ -854,6 +854,9 @@ html[data-motion="off"] .blk-flow, html[data-motion="off"] .blk-alarm { display:
 .att-row:empty { display: none; }
 .att { display: inline-flex; align-items: center; gap: 6px; padding: 3px 4px 3px 8px; border-radius: 6px; border: 1px solid var(--seam); background: var(--panel-2); font-size: var(--fs-12); font-family: var(--font-data); }
 .att svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.att.err { border-color: var(--danger, currentColor); }
+.att-bar { width: 48px; height: 6px; accent-color: var(--accent, currentColor); }
+.att-state { font-size: var(--fs-12); }
 .worklog { margin-left: 40px; max-width: 820px; border: 1px dashed var(--seam-strong); border-radius: 6px; font-size: var(--fs-12); }
 .worklog > summary { list-style: none; cursor: pointer; padding: 7px 10px; display: flex; gap: 9px; align-items: center; color: var(--text-2); }
 .worklog > summary::-webkit-details-marker { display: none; }

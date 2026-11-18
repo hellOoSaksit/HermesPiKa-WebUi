@@ -183,12 +183,27 @@ function patch() {
 
   api.chat = async (sid) => delay(await loadChat(sid).catch(() => (store.chat[sid] = store.chat[sid] || [])));
 
-  api.sendMessage = (sid, text, how = 'send') => {
-    postJSON(`/api/sessions/${encodeURIComponent(sid)}/prompt`, { text, how }).catch((e) => {
+  api.sendMessage = (sid, text, how = 'send', attachments = []) => {
+    postJSON(`/api/sessions/${encodeURIComponent(sid)}/prompt`, { text, how, attachments }).catch((e) => {
       (store.chat[sid] = store.chat[sid] || []).push({ t: 'note', at: Date.now(), kind: 'info', text: e.message });
       emit('chat', sid);
     });
   };
+
+  // Files: upload into the folder the project's rules name (XHR, for progress), and list a folder.
+  api.uploadFiles = (project, files, onProgress) => new Promise((resolve, reject) => {
+    const fd = new FormData();
+    [...files].forEach((f) => fd.append('file', f, f.name));
+    const x = new XMLHttpRequest();
+    x.open('POST', '/api/files/upload' + (project ? '?project=' + encodeURIComponent(project) : ''));
+    x.setRequestHeader('X-HPK', '1');
+    x.responseType = 'json';
+    x.upload.onprogress = (e) => { if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total); };
+    x.onerror = () => reject(new Error('network'));
+    x.onload = () => (x.status >= 200 && x.status < 300 ? resolve(x.response || { files: [] }) : reject(new Error((x.response && x.response.error) || x.statusText)));
+    x.send(fd);
+  });
+  api.listFiles = (project, path = '') => getJSON('/api/files/list?' + new URLSearchParams({ ...(project ? { project } : {}), path }));
 
   // Model switching: hpk serve plans with Hermes' model list and models.dev facts.
   const sp = (sid) => `/api/sessions/${encodeURIComponent(sid)}`;
