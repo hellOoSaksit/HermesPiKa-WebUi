@@ -63,3 +63,31 @@ func TestEnsureRefusesJunction(t *testing.T) {
 		t.Fatal("made a folder outside the project")
 	}
 }
+
+// The AI swaps the rule folder for a junction after hpk walked it and before
+// the move: the file must not stay outside the project.
+func TestTidySwapDuringMoveIsUndone(t *testing.T) {
+	root, dir, outside := t.TempDir(), t.TempDir(), t.TempDir()
+	rules := Rules{Answered: true, Rows: []Rule{{Folder: "scripts", Exts: []string{".js"}}}}
+	put(t, root, "evil.js", "x")
+	os.Mkdir(filepath.Join(root, "scripts"), 0o755)
+	pl, err := PlanTidy(area(root, dir), rules)
+	if err != nil || len(pl.Moves) != 1 {
+		t.Fatalf("%+v %v", pl, err)
+	}
+	beforePlace = func() {
+		os.Remove(filepath.Join(root, "scripts"))
+		junction(t, filepath.Join(root, "scripts"), outside)
+	}
+	t.Cleanup(func() { beforePlace = func() {} })
+	done, skipped, _ := ApplyTidy(area(root, dir), pl.Moves)
+	if len(done) != 0 || len(skipped) != 1 {
+		t.Fatalf("%v %v", done, skipped)
+	}
+	if ents, _ := os.ReadDir(outside); len(ents) != 0 {
+		t.Fatalf("the file stayed outside the project: %v", ents)
+	}
+	if !exists(root, "evil.js") {
+		t.Fatal("the file was not put back")
+	}
+}

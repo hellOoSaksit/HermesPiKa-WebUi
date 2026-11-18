@@ -310,10 +310,16 @@ type lastRound struct {
 // way is checked with safepath (no link, no junction), the file must still be
 // the one that was planned, and neither path may be in a skipped folder. It
 // returns the final relative path.
+// beforePlace runs between the folder walk and the move; tests use it to swap
+// a folder for a junction in that gap.
+var beforePlace = func() {}
+
 func relocate(realRoot string, skips []string, from, to string, size int64, mtime time.Time) (string, error) {
 	if !planOK(from) || !planOK(to) || inSkipped(from, skips) || inSkipped(to, skips) {
 		return "", errors.New("not a plain project path")
 	}
+	// git runs first: nothing slow between the folder walk and the move
+	tracked := gitTracked(realRoot, from)
 	src, fi, err := safepath.File(realRoot, from)
 	if err != nil {
 		return "", err
@@ -330,14 +336,52 @@ func relocate(realRoot string, skips []string, from, to string, size int64, mtim
 	if err != nil {
 		return "", err
 	}
-	got, err := place(realRoot, src, dir, name, gitTracked(realRoot, from))
+	beforePlace()
+	got, err := place(realRoot, src, dir, name, tracked)
 	if err != nil {
 		return "", err
 	}
-	if dirRel == "" {
-		return got, nil
+	rel := got
+	if dirRel != "" {
+		rel = dirRel + "/" + got
 	}
-	return dirRel + "/" + got, nil
+	// the folder may have been swapped for a link meanwhile: the file must be
+	// reachable at rel by a fresh safe walk, else it goes back where it was
+	placed := filepath.Join(dir, got)
+	if err := insideAfter(realRoot, rel, placed); err != nil {
+		if berr := putBack(placed, src); berr != nil {
+			return "", fmt.Errorf("%v; and it could not be put back from %s: %v", err, placed, berr)
+		}
+		return "", err
+	}
+	return rel, nil
+}
+
+// insideAfter checks that the file just placed at placed is the one a safe
+// walk from the root finds at rel.
+func insideAfter(realRoot, rel, placed string) error {
+	pfi, err := os.Lstat(placed)
+	if err != nil {
+		return err
+	}
+	_, wfi, err := safepath.File(realRoot, rel)
+	if err != nil || !os.SameFile(pfi, wfi) {
+		return errors.New("the folder changed during the move; the file stays where it was")
+	}
+	return nil
+}
+
+// putBack returns a file to src without replacing anything there.
+func putBack(placed, src string) error {
+	if err := os.Link(placed, src); err == nil {
+		return os.Remove(placed)
+	} else if os.IsExist(err) {
+		return err
+	}
+	if _, err := os.Lstat(src); err == nil {
+		return os.ErrExist
+	}
+	return os.Rename(placed, src)
 }
 
 // ApplyTidy moves the files the person confirmed. A file that changed since the
