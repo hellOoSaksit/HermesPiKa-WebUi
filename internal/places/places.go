@@ -90,7 +90,9 @@ func Forbidden(home string, self *project.Project, dir string, wiki bool) error 
 // Root returns the project's folder, resolved, when hpk may act on it as the
 // person: a full path, not one of hpk's own folders (Forbidden), and, while the
 // AI is isolated, a folder the AI was given anyway (the Hermes home or a folder
-// shared with it, not a read-only one) that is not itself a link. So a root the
+// shared with it, not a read-only one) with no link or junction from that
+// folder down to the root. Both checks run on the path as written and again on
+// the path links resolve to. So a root the
 // AI wrote into project.yaml can never make hpk write, move or list a place the
 // AI could not reach by itself.
 func Root(home string, p *project.Project) (string, error) {
@@ -101,39 +103,79 @@ func Root(home string, p *project.Project) (string, error) {
 	if !filepath.IsAbs(root) {
 		return "", errors.New("the project folder in project.yaml is not a full path; set it again in the Console")
 	}
-	if err := Forbidden(home, p, root, false); err != nil {
-		return "", fmt.Errorf("the project folder in project.yaml: %w", err)
-	}
-	if c, ok := isolate.For(home); ok {
-		if !shared(c, root) {
-			return "", errors.New("the project folder in project.yaml is not one you shared with the AI; set it again in the Console (Project, Folder)")
+	c, isolated := isolate.For(home)
+	// check the path as written and, after resolving links, where it really is
+	check := func(dir string) error {
+		if err := Forbidden(home, p, dir, false); err != nil {
+			return fmt.Errorf("the project folder in project.yaml: %w", err)
 		}
-		if fi, err := os.Lstat(root); err == nil && safepath.IsLink(root, fi) {
-			return "", errors.New("the project folder is a link or junction; point the project at the real folder")
+		if !isolated {
+			return nil
 		}
+		base := sharedBase(c, dir)
+		if base == "" {
+			return errors.New("the project folder in project.yaml is not one you shared with the AI; set it again in the Console (Project, Folder)")
+		}
+		// no link or junction from the shared folder down to the root: the AI
+		// could make one lead anywhere (EvalSymlinks leaves junctions alone)
+		rel, err := filepath.Rel(base, dir)
+		if err != nil {
+			return err
+		}
+		cur := base
+		for _, part := range strings.Split(rel, string(filepath.Separator)) {
+			if part == "." || part == "" {
+				continue
+			}
+			cur = filepath.Join(cur, part)
+			if fi, err := os.Lstat(cur); err == nil && safepath.IsLink(cur, fi) {
+				return errors.New("the project folder is, or is inside, a link or junction; point the project at the real folder")
+			}
+		}
+		return nil
 	}
-	return safepath.Root(root)
+	if err := check(root); err != nil {
+		return "", err
+	}
+	real, err := safepath.Root(root)
+	if err != nil {
+		return "", err
+	}
+	if err := check(real); err != nil {
+		return "", err
+	}
+	return real, nil
 }
 
-// shared reports whether the isolated AI can already write dir.
-func shared(c *isolate.Config, dir string) bool {
+// sharedBase returns the folder through which the isolated AI can already
+// write dir (the Hermes home, a granted folder, a read-write mount), or "".
+// Each is tried as written and resolved (macOS /var is /private/var).
+func sharedBase(c *isolate.Config, dir string) string {
 	for _, ro := range c.ReadOnly {
-		if Within(ro, dir) {
-			return false
+		if Within(ro, dir) || Within(resolved(ro), dir) {
+			return ""
 		}
 	}
-	if Within(c.Home, dir) {
-		return true
-	}
-	for _, g := range c.Granted {
-		if Within(g, dir) {
-			return true
-		}
-	}
+	bases := []string{c.Home}
+	bases = append(bases, c.Granted...)
 	for _, m := range c.Mounts {
-		if !m.ReadOnly && Within(m.Host, dir) {
-			return true
+		if !m.ReadOnly {
+			bases = append(bases, m.Host)
 		}
 	}
-	return false
+	for _, b := range bases {
+		for _, cand := range []string{b, resolved(b)} {
+			if cand != "" && Within(cand, dir) {
+				return cand
+			}
+		}
+	}
+	return ""
+}
+
+func resolved(p string) string {
+	if r, err := filepath.EvalSymlinks(p); err == nil {
+		return r
+	}
+	return p
 }

@@ -17,6 +17,7 @@ import (
 	"hpk.local/hpk/internal/board"
 	"hpk.local/hpk/internal/folders"
 	"hpk.local/hpk/internal/gates"
+	"hpk.local/hpk/internal/places"
 	"hpk.local/hpk/internal/project"
 	"hpk.local/hpk/internal/session"
 	"hpk.local/hpk/internal/team"
@@ -268,12 +269,21 @@ func (s *Server) api(mux *http.ServeMux) {
 			writeErr(w, http.StatusBadRequest, errors.New("too many attached files"))
 			return
 		}
+		// the root is checked again like every other path (project.yaml is in the AI's reach)
+		attachRoot := ""
+		if len(in.Attachments) > 0 {
+			var err error
+			if attachRoot, err = places.Root(s.home, p); err != nil {
+				writeErr(w, http.StatusBadRequest, fmt.Errorf("attached files: %w", err))
+				return
+			}
+		}
 		for _, a := range in.Attachments {
 			if strings.ContainsFunc(a, func(r rune) bool { return r < 32 || r == 127 }) {
 				writeErr(w, http.StatusBadRequest, errors.New("bad attached file name"))
 				return
 			}
-			if _, _, err := projectFile(p.Root, a); err != nil {
+			if _, _, err := projectFile(attachRoot, a); err != nil {
 				writeErr(w, http.StatusBadRequest, fmt.Errorf("attached file %q: %w", a, err))
 				return
 			}

@@ -309,4 +309,18 @@ func TestPromptAttachmentsValidated(t *testing.T) {
 	if pr, _ := agent.snapshot(); !strings.Contains(pr[1], "Attached file (in the project folder): ok.txt") {
 		t.Errorf("prompt = %q", pr[1])
 	}
+	// isolated, with the root pointed (by project.yaml) at a folder the AI was
+	// not given: attachments are refused like every other path
+	cfg := filepath.Join(t.TempDir(), "isolation.json")
+	raw, _ := json.Marshal(map[string]any{"mode": "user", "user": "hpk-ai", "home": s.home, "private": t.TempDir(), "granted": []string{s.home}})
+	os.WriteFile(cfg, raw, 0o600)
+	t.Setenv("HPK_ISOLATION_FILE", cfg)
+	elsewhere := t.TempDir()
+	os.WriteFile(filepath.Join(elsewhere, "ok.txt"), []byte("x"), 0o644)
+	if err := project.SetField(s.home, p.Name, []string{"root"}, elsewhere, "the AI edits project.yaml"); err != nil {
+		t.Fatal(err)
+	}
+	if c := try([]string{"ok.txt"}); c != 400 {
+		t.Fatalf("attachment under an unshared root: %d", c)
+	}
 }
