@@ -220,3 +220,35 @@ func TestFindingsSeeLeftoversAndJudgeSeesOpenPrivate(t *testing.T) {
 		t.Fatalf("a clean probe: %v", bad)
 	}
 }
+
+// A spec longer than Windows' 1024-character logon command line goes in a
+// one-time file: read once, then gone; nothing outside hpk/relay is read.
+func TestLongSpecGoesThroughAOneTimeFile(t *testing.T) {
+	home := t.TempDir()
+	s := Spec{Name: "hermes", Args: []string{"--version"}, Env: []string{"PATH=" + strings.Repeat(`C:\tools;`, 300)}}
+	f, err := WriteSpecFile(home, s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := ReadSpecArg("@" + f)
+	if err != nil || got.Name != "hermes" || got.Env[0] != s.Env[0] {
+		t.Fatalf("read back: %+v %v", got, err)
+	}
+	if _, err := os.Stat(f); err == nil {
+		t.Fatal("the spec file is deleted once read")
+	}
+	if _, err := ReadSpecArg("@" + f); err == nil {
+		t.Fatal("a spec file is read only once")
+	}
+	other := filepath.Join(home, "elsewhere.txt")
+	os.WriteFile(other, []byte(s.Encode()), 0o600)
+	if _, err := ReadSpecArg("@" + other); err == nil {
+		t.Fatal("only hpk/relay/spec-* files are read")
+	}
+	if _, err := os.Stat(other); err != nil {
+		t.Fatal("a refused file is left alone")
+	}
+	if got, err := ReadSpecArg(s.Encode()); err != nil || got.Name != "hermes" {
+		t.Fatal("an inline spec still works")
+	}
+}
