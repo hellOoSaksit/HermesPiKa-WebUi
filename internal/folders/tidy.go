@@ -26,16 +26,16 @@ const LastFile = "tidy-last.json"
 // Move is one file going to its rule folder. Paths are project-relative, with
 // forward slashes.
 type Move struct {
-	From  string
-	To    string
-	Size  int64
-	MTime time.Time
+	From  string    `json:"from"`
+	To    string    `json:"to"`
+	Size  int64     `json:"size"`
+	MTime time.Time `json:"mtime"`
 }
 
 // Plan is what a tidy would do: the moves, and the files no rule names.
 type Plan struct {
-	Moves    []Move
-	Homeless []string
+	Moves    []Move   `json:"moves"`
+	Homeless []string `json:"homeless"`
 }
 
 func fold(a string) string {
@@ -297,8 +297,8 @@ func place(root, src, dir, name string, tracked bool) (string, error) {
 }
 
 type lastRound struct {
-	At    time.Time
-	Moves []Move // From = where it was, To = where it is now
+	At    time.Time `json:"at"`
+	Moves []Move    `json:"moves"` // From = where it was, To = where it is now
 }
 
 // relocate moves one file by its project-relative paths, checking links and that

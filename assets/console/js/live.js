@@ -204,6 +204,18 @@ function patch() {
     x.send(fd);
   });
   api.listFiles = (project, path = '') => getJSON('/api/files/list?' + new URLSearchParams({ ...(project ? { project } : {}), path }));
+  // Folder rules and tidy. A tidy plan answers 409 {state} while the rules are not approved.
+  const pq = (project) => (project ? '?project=' + encodeURIComponent(project) : '');
+  api.folderRules = (project) => getJSON('/api/files/rules' + pq(project));
+  api.tidyPlan = async (project) => {
+    const res = await fetch('/api/files/tidy' + pq(project), { headers: { Accept: 'application/json' } });
+    const out = await res.json().catch(() => ({}));
+    if (res.status === 409 && out.state) return { state: out.state, moves: [], homeless: [], canUndo: false };
+    if (!res.ok) throw new Error(out.error || res.statusText);
+    return { state: 'ok', ...out };
+  };
+  api.tidyApply = (project, moves) => postJSON('/api/files/tidy', { project, moves });
+  api.tidyUndo = (project) => postJSON('/api/files/tidy/undo', { project });
 
   // Model switching: hpk serve plans with Hermes' model list and models.dev facts.
   const sp = (sid) => `/api/sessions/${encodeURIComponent(sid)}`;

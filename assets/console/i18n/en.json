@@ -43,7 +43,8 @@
     "mcp": "MCP",
     "browser": "Browser",
     "vault": "Vault",
-    "teamserver": "Team server"
+    "teamserver": "Team server",
+    "files": "Files"
   },
   "common": {
     "apply": "Apply",
@@ -1678,7 +1679,8 @@
     "mcp": "MCP",
     "browser": "Browser",
     "vault": "Vault",
-    "teamserver": "Team server"
+    "teamserver": "Team server",
+    "files": "Files"
   },
   "ev": {
     "aria": "Evidence: stage and how sure we are",
@@ -2672,6 +2674,68 @@
       "label": "Recordings location",
       "hint": "Browser recordings move to the new folder. Stop the browser first.",
       "apply": "Move recordings here"
+    }
+  },
+  "files": {
+    "title": "Files",
+    "upload": "Upload",
+    "uploaded": {
+      "one": "1 file saved",
+      "other": "{n} files saved"
+    },
+    "uploadFailed": "Upload failed: {err}",
+    "dropHint": "Drop to save in the right folder",
+    "soloOnly": "Uploads and tidy need a connected project on your own computer.",
+    "root": "Project folder",
+    "count": {
+      "one": "1 file",
+      "other": "{n} files"
+    },
+    "noFolder": "Not created yet",
+    "state": {
+      "none": "The AI will ask how to split folders the first time it saves a file",
+      "pending": "Folder rules wait for your OK",
+      "changed": "The folder rules page changed. Rules are off until you approve it again.",
+      "bad": {
+        "one": "1 row skipped",
+        "other": "{n} rows skipped"
+      }
+    },
+    "openDraft": "Review draft",
+    "openPage": "Open wiki",
+    "empty": "This folder is empty",
+    "loadFailed": "Cannot read this folder",
+    "misplaced": "Belongs in {folder}",
+    "undo": "Undo tidy",
+    "undone": {
+      "one": "Put 1 file back",
+      "other": "Put {n} files back"
+    },
+    "tidy": {
+      "button": "Tidy",
+      "title": "Tidy files",
+      "off": "Tidy works once the folder rules are approved",
+      "countTip": {
+        "one": "1 file is outside its folder",
+        "other": "{n} files are outside their folder"
+      },
+      "none": "Everything is in its folder",
+      "homeless": "No place yet",
+      "homelessTip": "No rule names these extensions, so they stay where they are.",
+      "more": "+{n} more",
+      "selected": "{n} of {total}",
+      "confirm": {
+        "one": "Move 1 file",
+        "other": "Move {n} files"
+      },
+      "done": {
+        "one": "Moved 1 file",
+        "other": "Moved {n} files"
+      },
+      "skipped": {
+        "one": "1 file changed meanwhile and stayed put",
+        "other": "{n} files changed meanwhile and stayed put"
+      }
     }
   }
 }

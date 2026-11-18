@@ -93,6 +93,17 @@ against Hermes v0.23.1.
   browser profile or recordings are refused.
 - Off on a team server.
 
+**File locations** (docs/files.md)
+- Folder rules per project on the wiki page `decisions/folders.md`
+  (`| Folder | What goes here | Extensions |`), used only while the page is the
+  one a person approved; approving creates the missing folders, nothing more.
+- Uploads (chat attachments, and drops on the Files view) land in the folder
+  their extension's rule names, 2 GB per file by default, never overwriting.
+- A Files view (Work → Files): rule folders as cards with their extensions and
+  file counts, the project's folders as a list, and **Tidy**: files outside
+  their folder, grouped and ticked, moved only on Confirm, with Undo of the
+  last round.
+
 **Security pass** (2026-11-18 review)
 - Solo mode answers only loopback host names (stops DNS rebinding), and every
   change needs the **Console key**: open the Console with `hpk open` (or the

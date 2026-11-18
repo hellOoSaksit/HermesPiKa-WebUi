@@ -37,10 +37,39 @@ type tidyCtx struct {
 	rules     func() (folders.Rules, folders.State)
 }
 
+type ruleOut struct {
+	Folder string   `json:"folder"`
+	What   string   `json:"what"`
+	Exts   []string `json:"exts"`
+}
+
+// GET  /api/files/rules?project=     the folder rules and their state {state, rows, bad}; read-only
 // GET  /api/files/tidy?project=      what a tidy would move (and canUndo); 409 {state} unless the rules are approved
 // POST /api/files/tidy               {project, moves}: move what the person confirmed
 // POST /api/files/tidy/undo          {project}: put the last round back
 func (s *Server) tidyAPI(mux *http.ServeMux) {
+	mux.HandleFunc("GET /api/files/rules", func(w http.ResponseWriter, r *http.Request) {
+		p, err := s.loadFor(r, r.URL.Query().Get("project"))
+		if err != nil {
+			writeErr(w, http.StatusNotFound, err)
+			return
+		}
+		rules, state := folders.Load(s.home, p)
+		rows := make([]ruleOut, 0, len(rules.Rows))
+		for _, x := range rules.Rows {
+			exts := x.Exts
+			if exts == nil {
+				exts = []string{}
+			}
+			rows = append(rows, ruleOut{Folder: x.Folder, What: x.What, Exts: exts})
+		}
+		bad := rules.Bad
+		if bad == nil {
+			bad = []string{}
+		}
+		writeJSON(w, map[string]any{"state": state, "rows": rows, "bad": bad})
+	})
+
 	mux.HandleFunc("GET /api/files/tidy", func(w http.ResponseWriter, r *http.Request) {
 		c, ok := s.tidyProject(w, r, r.URL.Query().Get("project"))
 		if !ok {

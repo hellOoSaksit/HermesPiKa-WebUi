@@ -12,6 +12,7 @@ import { approvalHref } from './views/overview.js';
 import { connect, isLive, needsSignIn, signIn, signOut, teamMode } from './live.js';
 import approvals from './views/approvals.js';
 import wiki from './views/wiki.js';
+import filesView from './views/files.js';
 import board from './views/board.js';
 import gates from './views/gates.js';
 import jobs from './views/jobs.js';
@@ -41,6 +42,7 @@ const ROUTES = [
   { path: 'board', view: board, nav: 'board', section: 'work' },
   { path: 'sessions', view: sessionsView, nav: 'sessions', section: 'work' },
   { path: 'git', view: gitView, nav: 'git', section: 'work' },
+  { path: 'files', view: filesView, nav: 'files', section: 'work' },
   { path: 'wiki/:tab', view: wiki, nav: 'wiki', section: 'wiki' },
   { path: 'wiki', view: wiki, nav: 'wiki', section: 'wiki' },
   { path: 'projects/new', view: wizard, nav: 'projects', section: 'projects' },
@@ -75,7 +77,7 @@ const NAV = [
 ];
 // Tabs shown at the top of sections that hold several pages: [route nav key, path].
 const SECTION_TABS = {
-  work: [['board', 'board'], ['sessions', 'sessions'], ['git', 'git'], ['browser', 'browser']],
+  work: [['board', 'board'], ['sessions', 'sessions'], ['git', 'git'], ['files', 'files'], ['browser', 'browser']],
   projects: [['projects', 'projects'], ['setup', 'setup'], ['jobs', 'jobs']],
   settings: [['settings', 'settings'], ['accounts', 'accounts'], ['mcp', 'mcp'], ['vault', 'vault'], ['gates', 'gates'], ['privacy', 'privacy'], ['team', 'team'], ['teamserver', 'teamserver']],
 };

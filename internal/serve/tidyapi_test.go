@@ -9,6 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"hpk.local/hpk/internal/folders"
+	"hpk.local/hpk/internal/wiki"
 )
 
 func tidyDo(t *testing.T, method, url string, body any) (*http.Response, map[string]any) {
@@ -39,7 +42,7 @@ func TestTidyAPIRejectsForeignMoves(t *testing.T) {
 	os.WriteFile(filepath.Join(p.Root, "a.fbx"), []byte("x"), 0o644)
 	res, out := tidyDo(t, "POST", ts.URL+"/api/files/tidy", map[string]any{
 		"project": "sample-app",
-		"moves":   []map[string]any{{"From": "a.fbx", "To": "../../etc/a.fbx"}},
+		"moves":   []map[string]any{{"from": "a.fbx", "to": "../../etc/a.fbx"}},
 	})
 	if res.StatusCode != 400 {
 		t.Fatalf("%d %v", res.StatusCode, out)
@@ -60,7 +63,7 @@ func TestTidyAPIPlanApplyUndo(t *testing.T) {
 	if res.StatusCode != 200 || plan["canUndo"] != false {
 		t.Fatalf("%d %v", res.StatusCode, plan)
 	}
-	res, out := tidyDo(t, "POST", ts.URL+"/api/files/tidy", map[string]any{"project": "sample-app", "moves": plan["Moves"]})
+	res, out := tidyDo(t, "POST", ts.URL+"/api/files/tidy", map[string]any{"project": "sample-app", "moves": plan["moves"]})
 	if res.StatusCode != 200 || len(out["done"].([]any)) != 1 {
 		t.Fatalf("%d %v", res.StatusCode, out)
 	}
@@ -76,5 +79,50 @@ func TestTidyAPIPlanApplyUndo(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(p.Root, "a.fbx")); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestRulesRouteStates(t *testing.T) {
+	s, ts, p := setup(t)
+	get := func() map[string]any {
+		t.Helper()
+		res, out := tidyDo(t, "GET", ts.URL+"/api/files/rules?project=sample-app", nil)
+		if res.StatusCode != 200 {
+			t.Fatalf("%d %v", res.StatusCode, out)
+		}
+		return out
+	}
+	if out := get(); out["state"] != "none" || len(out["rows"].([]any)) != 0 {
+		t.Fatalf("%v", out)
+	}
+	w := wiki.Open(p.WikiDir())
+	d, err := w.CreateDraft(wiki.DraftInput{Target: folders.Page, Title: "Folders", Sources: []string{"chat"}, Summary: "where files go", Author: "me", Body: folderTable})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out := get(); out["state"] != "pending" {
+		t.Fatalf("%v", out)
+	}
+	res, err := w.Approve([]int{d.N}, "me")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := folders.AfterApprove(s.home, p, res); err != nil {
+		t.Fatal(err)
+	}
+	out := get()
+	if out["state"] != "ok" {
+		t.Fatalf("%v", out)
+	}
+	rows := out["rows"].([]any)
+	row := rows[0].(map[string]any)
+	if len(rows) != 1 || row["folder"] != "Export" || row["what"] != "models" || row["exts"].([]any)[0] != ".fbx" {
+		t.Fatalf("%v", out)
+	}
+	page := filepath.Join(p.WikiDir(), filepath.FromSlash(folders.Page))
+	raw, _ := os.ReadFile(page)
+	os.WriteFile(page, append(raw, []byte("| Bad | x |\n")...), 0o644)
+	if out := get(); out["state"] != "changed" || len(out["bad"].([]any)) != 1 {
+		t.Fatalf("%v", out)
 	}
 }
