@@ -2641,5 +2641,33 @@
   "key": {
     "title": "This browser can look but not change anything",
     "body": "Changes need the Console opened from hpk. In a terminal run"
+  },
+  "folders": {
+    "title": "Choose a folder",
+    "browse": "Browse…",
+    "use": "Use this folder",
+    "up": "Up one folder",
+    "empty": "No folders here.",
+    "path": "Folder path",
+    "list": "Folders",
+    "places": "Places",
+    "pickHint": "Pick a place to start",
+    "saved": "Saved: {dir}",
+    "reset": "Reset to default",
+    "root": {
+      "label": "Project folder",
+      "hint": "Where this project’s files are. This only points hpk at another folder; nothing is copied or moved.",
+      "apply": "Use this folder"
+    },
+    "wiki": {
+      "label": "Wiki location",
+      "hint": "The wiki’s files move to the new folder. Not possible while a chat of this project is working.",
+      "apply": "Move wiki here"
+    },
+    "rec": {
+      "label": "Recordings location",
+      "hint": "Browser recordings move to the new folder. Stop the browser first.",
+      "apply": "Move recordings here"
+    }
   }
 }

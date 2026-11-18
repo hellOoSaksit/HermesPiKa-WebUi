@@ -839,6 +839,7 @@ export const api = {
     return entry;
   },
   stopSession(sid) { const s = sessions.find((x) => x.id === sid); if (s) s.status = 'stopped'; emit('sessions'); },
+  listDirs: () => Promise.reject(new Error('Run hpk serve to browse folders')),
   scanProject: (path) => delay({
     path,
     files: 1843, languages: [['TypeScript', 61], ['Markdown', 14], ['SQL', 9], ['YAML', 6], ['Other', 10]],

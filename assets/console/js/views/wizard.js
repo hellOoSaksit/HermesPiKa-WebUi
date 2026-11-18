@@ -4,6 +4,7 @@ import { isLive, teamMode } from '../live.js';
 import { setupState, setupDone, firstRun } from './firstrun.js';
 import { t, getLang } from '../i18n.js';
 import { h, icon, lamp, pageHead, fmtNum, fmtTokens, fmtCost, toast, rel, privacyTag } from '../ui.js';
+import { pickFolder } from '../folderpick.js';
 
 const STEPS = ['consent', 'setup', 'privacy', 'scan', 'estimate', 'ingest', 'drafts', 'health', 'config'];
 const COST_PER_MTOK = 0.8; // illustrative blended price for the estimate
@@ -236,9 +237,10 @@ async function liveWizard({ go }) {
     }
     if (k === 'consent') {
       const pathIn = h('input.input#wzPath', { value: st.path, placeholder: t('live.pathPh'), oninput: (e) => { st.path = e.target.value; st.scan = null; } });
+      const browseBtn = h('button.btn', { type: 'button', onclick: async () => { const dir = await pickFolder({ title: t('wizard.consent.path'), start: st.path }); if (dir) { st.path = dir; st.scan = null; pathIn.value = dir; } } }, icon('folder'), t('folders.browse'));
       body.replaceChildren(
         h('h2', t('wizard.consent.title')),
-        h('div.field', h('label', { for: 'wzPath' }, t('wizard.consent.path')), pathIn, h('span.hint', t('live.pathHint'))),
+        h('div.field', h('label', { for: 'wzPath' }, t('wizard.consent.path')), h('div.row', { style: { flexWrap: 'nowrap' } }, pathIn, browseBtn), h('span.hint', t('live.pathHint'))),
         h('div.choice', { role: 'radiogroup', 'aria-label': t('wizard.consent.title') }, ['full', 'light', 'skip'].map((v) => h('label',
           h('input', { type: 'radio', name: 'depth', checked: st.depth === v || null, onchange: () => { st.depth = v; st.scan = null; drawStepper(); } }),
           h('span.c-title', t(`wizard.depth.${v}.t`)), h('span.c-desc', t(`wizard.depth.${v}.d`))))),

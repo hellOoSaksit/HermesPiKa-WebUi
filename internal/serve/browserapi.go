@@ -89,7 +89,7 @@ func (s *Server) browserAPI(mux *http.ServeMux) {
 		v, m, err := s.openPersonal()
 		exe, exeErr := browser.FindExe()
 		self, _ := os.Executable()
-		out := map[string]any{"enabled": true, "state": m.State(), "exe": filepath.Base(exe), "runs": len(browser.Runs(s.home)), "hpkPath": self}
+		out := map[string]any{"enabled": true, "state": m.State(), "exe": filepath.Base(exe), "runs": len(browser.Runs(s.home)), "recordingsDir": browser.RunsDir(s.home), "hpkPath": self}
 		if exeErr != nil {
 			out["exeError"] = exeErr.Error()
 		}

@@ -314,6 +314,12 @@ function patchPages() {
   api.setProjectSetting = (key, value) => postJSON('/api/project/settings', { key, value });
   api.projectSettings = () => getJSON(withProject('/api/project/settings'));
 
+  // Folders: the picker lists folders on this machine; the moves are solo-only.
+  api.listDirs = (path) => getJSON('/api/fs/dirs?path=' + encodeURIComponent(path || ''));
+  api.setWikiDir = (project, dir) => postJSON('/api/project/wiki-dir', { project, dir });
+  api.setProjectRoot = (project, dir) => postJSON('/api/project/root', { project, dir });
+  api.setRecordingsDir = (dir) => postJSON('/api/browser/recordings-dir', { dir });
+
   // Settings: the doctor is the same one `hpk doctor` runs.
   api.doctor = () => getJSON('/api/doctor');
   api.version = async () => (await getJSON('/api/health')).version;

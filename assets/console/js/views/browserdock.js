@@ -6,6 +6,8 @@
 import { t } from '../i18n.js';
 import { h, s, icon, toast, rel } from '../ui.js';
 import { isLive } from '../live.js';
+import { folderRow } from '../folderpick.js';
+import { api } from '../data.js';
 
 const read = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
 const write = (k, v) => { try { localStorage.setItem(k, v); } catch { /* ignore */ } };
@@ -181,6 +183,7 @@ export default async function browserPage() {
     pageHead(t('browser.title'), t('browser.lede'), auto),
     !isLive() ? h('div.callout', icon('info'), h('div', h('p', t('browser.needServe')))) : null,
     view,
+    isLive() ? recordingsRow() : null,
     panel(t('browser.runs'), t('browser.runsSub'), runs));
   const obs = new MutationObserver(() => { if (!el.isConnected) { view.close(); obs.disconnect(); } });
   setTimeout(() => obs.observe(document.getElementById('main') || document.body, { childList: true }), 0);
@@ -240,4 +243,16 @@ async function replay(run) {
 async function runOp(op, id) {
   const r = await fetch('/api/browser/runs', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-HPK': '1' }, body: JSON.stringify({ op, id }) });
   if (!r.ok) toast((await r.json().catch(() => ({}))).error || r.statusText, null, 'deny');
+}
+
+// Where recordings are kept; moving them needs the browser stopped (the server says so).
+function recordingsRow() {
+  const box = h('div.panel', { hidden: true, style: { padding: '14px 16px' } });
+  fetch('/api/browser').then((r) => r.json()).then((b) => {
+    if (!b.enabled || !b.recordingsDir) return;
+    box.hidden = false;
+    box.replaceChildren(folderRow({ id: 'brRecDir', label: t('folders.rec.label'), hint: t('folders.rec.hint'), value: b.recordingsDir,
+      applyLabel: t('folders.rec.apply'), onApply: (dir) => api.setRecordingsDir(dir), onReset: () => api.setRecordingsDir(''), resetLabel: t('folders.reset') }));
+  }).catch(() => {});
+  return box;
 }

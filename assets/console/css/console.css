@@ -2209,3 +2209,26 @@ svg.vt-how-arrow { width: 24px; height: 12px; fill: none; stroke: var(--text-3);
 .key-banner { position: fixed; z-index: 130; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; max-width: min(560px, calc(100vw - 32px)); padding: 12px 14px; border-radius: 14px; background: var(--panel); border: 1px solid color-mix(in srgb, var(--caution) 50%, var(--seam)); box-shadow: 0 16px 40px rgba(0,0,0,.35); font-size: var(--fs-13); }
 .key-banner svg { width: 22px; height: 22px; flex: none; fill: none; stroke: var(--caution); stroke-width: 1.8; stroke-linecap: round; }
 .key-banner p { margin: 2px 0 0; color: var(--text-2); }
+
+/* ---------- Folder picker (folderpick.js) ---------- */
+.fp { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.fp-crumbs { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 4px; padding: 10px 16px; border-bottom: 1px solid var(--seam); font-size: var(--fs-13); color: var(--text-2); }
+.fp-crumb { background: none; border: 0; padding: 2px 4px; border-radius: 6px; color: var(--text-2); font: inherit; cursor: pointer; max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-flex; align-items: center; }
+button.fp-crumb:hover { background: var(--panel-2); color: var(--text); }
+.fp-crumb.now { color: var(--text); font-weight: 600; cursor: default; }
+.fp-crumb svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.fp-sep { color: var(--text-3); }
+.fp-list { display: flex; flex-direction: column; padding: 6px 8px; overflow-y: auto; flex: 1; outline: none; }
+.fp-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: 0; border-radius: 8px; padding: 8px 10px; color: var(--text); font: inherit; font-size: var(--fs-13); cursor: pointer; min-width: 0; }
+.fp-item:hover, .fp-item.on { background: var(--panel-2); }
+.fp-list:focus-visible .fp-item.on { outline: 2px solid var(--focus, currentColor); outline-offset: -2px; }
+.fp-item svg { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--text-3); stroke-width: 1.5; }
+.fp-item.up { color: var(--text-2); }
+.fp-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.fp-empty { padding: 12px 10px; margin: 0; }
+.fp-chosen { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center; font-size: var(--fs-12); color: var(--text-2); text-align: left; }
+.fp-row { flex-wrap: nowrap; }
+.fp-cur { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-data); font-size: var(--fs-12); color: var(--text-2); padding: 6px 8px; border: 1px solid var(--seam); border-radius: 8px; background: var(--panel-2); }
+.fp-pending { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.fp-pending[hidden] { display: none; }
+.fp-pending .fp-cur { color: var(--text); }
