@@ -28,7 +28,9 @@ package isolate
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"os"
@@ -225,6 +227,40 @@ func NewSpec(home, name string, args []string) Spec {
 func (s Spec) Encode() string {
 	raw, _ := json.Marshal(s)
 	return base64.RawURLEncoding.EncodeToString(raw)
+}
+
+// WriteSpecFile carries a spec too long for a command line (Windows starts
+// another account's program with at most 1024 characters, and PATH alone is
+// often longer): a one-time file in the shared home, passed as @file, which
+// ai-exec reads and deletes. It holds no secrets: only what Forward lets cross.
+func WriteSpecFile(home string, s Spec) (string, error) {
+	dir := filepath.Join(home, "hpk", "relay")
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return "", err
+	}
+	b := make([]byte, 12)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	f := filepath.Join(dir, "spec-"+hex.EncodeToString(b))
+	return f, os.WriteFile(f, []byte(s.Encode()), 0o600)
+}
+
+// ReadSpecArg decodes ai-exec's argument: the spec itself, or @file from
+// WriteSpecFile (read once, then deleted).
+func ReadSpecArg(arg string) (Spec, error) {
+	if f, ok := strings.CutPrefix(arg, "@"); ok {
+		if filepath.Base(filepath.Dir(f)) != "relay" || !strings.HasPrefix(filepath.Base(f), "spec-") {
+			return Spec{}, errors.New("ai-exec: bad spec file")
+		}
+		raw, err := os.ReadFile(f)
+		_ = os.Remove(f)
+		if err != nil {
+			return Spec{}, errors.New("ai-exec: bad spec file")
+		}
+		arg = strings.TrimSpace(string(raw))
+	}
+	return Decode(arg)
 }
 
 func Decode(arg string) (Spec, error) {

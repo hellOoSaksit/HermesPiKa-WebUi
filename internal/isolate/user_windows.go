@@ -30,6 +30,7 @@ var (
 
 const (
 	logonWithProfile = 0x1
+	maxLogonCmdline  = 1024 // CreateProcessWithLogonW's limit for lpCommandLine
 	nerrUserExists   = 2224
 	nerrUserNotFound = 2221
 )
@@ -66,6 +67,14 @@ func relayUser(c *Config, s Spec) (int, error) {
 	si.StdErr, _ = windows.GetStdHandle(windows.STD_ERROR_HANDLE)
 
 	line := windows.EscapeArg(c.Bin) + " ai-exec " + s.Encode()
+	if len(line) > maxLogonCmdline {
+		f, err := WriteSpecFile(c.Home, s)
+		if err != nil {
+			return 127, fmt.Errorf("spec file: %w", err)
+		}
+		defer os.Remove(f) // ai-exec deletes it on read; this covers a failed start
+		line = windows.EscapeArg(c.Bin) + " ai-exec " + windows.EscapeArg("@"+f)
+	}
 	cmdline, err := windows.UTF16FromString(line) // must be writable
 	if err != nil {
 		return 127, err

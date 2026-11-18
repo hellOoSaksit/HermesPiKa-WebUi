@@ -248,7 +248,7 @@ func runAIExec(args []string, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "hpk ai-exec: internal; hpk starts it")
 		return 2
 	}
-	s, err := isolate.Decode(args[0])
+	s, err := isolate.ReadSpecArg(args[0])
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return 2
