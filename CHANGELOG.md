@@ -5,6 +5,9 @@
 First public release. hpk is an independent add-on for Hermes Agent, tested
 against Hermes v0.23.1.
 
+**Solo-first v1**
+- Team features are greyed out in the Console ("Comes in a later version"); in solo mode `POST /api/join`, `/api/team*` and `POST /api/teamserver/join` answer 404. `hpk serve --team` is unaffected, a machine that already joined keeps its Team server page, and `HPK_FEATURES=team` turns the team pages back on. The snapshot carries `features.team`. New projects default to personal. See docs/ROADMAP.md.
+
 **One program, any OS**
 - `hpk` with no arguments starts HPK Console once per machine (the port is
   the lock; a run file lets `hpk stop` end it with its built-in browser) and

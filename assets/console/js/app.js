@@ -63,7 +63,9 @@ const ROUTES = [
 // Pages that belong to a person's own machine: a team server hides them (and its
 // API refuses them). The Team server page is how a machine joins one.
 const LOCAL_ONLY = new Set(['browser', 'vault', 'teamserver']);
-const shown = (key) => !(LOCAL_ONLY.has(key) && teamMode()) && (key !== 'teamserver' || isLive());
+const shown = (key) => !(LOCAL_ONLY.has(key) && teamMode()) && (key !== 'teamserver' || isLive() || !api.feature('team'));
+// v1 is solo-first: the team pages stay in the tabs but grey (a machine that already joined keeps its Team server page).
+const teamOff = (key) => (key === 'team' || key === 'teamserver') && !api.feature('team') && !(key === 'teamserver' && api.teamJoined());
 // Seven places to go. Order = how often people need them.
 const NAV = [
   { key: 'overview', href: 'overview', icon: 'overview' },
@@ -164,9 +166,11 @@ function sectionTabs(route) {
   if (!list) return null;
   const b = badges();
   return h('nav.section-tabs', { 'aria-label': t('nav.' + route.section) },
-    list.filter(([key]) => (key !== 'team' || api.project().kind === 'team') && shown(key))
+    list.filter(([key]) => (key !== 'team' || teamOff(key) || api.project().kind === 'team') && shown(key))
       // The nav-level "settings" badge belongs to its AI accounts tab, not the General tab.
-      .map(([key, path]) => h('a', { href: '#/' + path, 'aria-current': route.nav === key ? 'page' : null }, t('tabs.' + key), key === 'settings' ? null : b[key] || null)));
+      .map(([key, path]) => (teamOff(key)
+        ? h('span.nav-off', { 'aria-disabled': 'true', tabindex: '0', role: 'link', 'data-tip': t('features.later') }, t('tabs.' + key))
+        : h('a', { href: '#/' + path, 'aria-current': route.nav === key ? 'page' : null }, t('tabs.' + key), key === 'settings' ? null : b[key] || null))));
 }
 
 // Live with no project yet (first run): no nav or counts to show.
@@ -201,7 +205,7 @@ function renderProjectSwitch() {
       onclick: () => { api.setProject(x.id); render(); } },
     lamp(x.privacy === 'shared' ? 'route' : x.privacy === 'private' ? 'caution' : 'danger'), h('span', x.name));
     const menu = h('div.project-menu#projMenu', { role: 'menu' },
-      ['team', 'personal'].map((k) => [h('div.pm-head', t('projects.section.' + k)), list.filter((x) => x.kind === k).map(item)]),
+      ['team', 'personal'].filter((k) => k !== 'team' || list.some((x) => x.kind === 'team')).map((k) => [h('div.pm-head', t('projects.section.' + k)), list.filter((x) => x.kind === k).map(item)]),
       h('button', { type: 'button', role: 'menuitem', onclick: () => go('projects/new') }, icon('plus'), t('projects.add')));
     box.append(menu);
     btn.setAttribute('aria-expanded', 'true');

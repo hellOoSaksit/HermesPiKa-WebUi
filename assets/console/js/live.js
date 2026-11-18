@@ -63,6 +63,7 @@ function apply(snap) {
   st.projectId = projectId;
   st.mode = snap.mode || { value: 'ask', autoUntil: null, scope: 'project' };
   st.teamMode = teamOn;
+  st.features = snap.features || { team: false };
   const cur = (snap.projects || []).find((x) => x.id === snap.projectId) || {};
   st.budget = { daily: cur.moneyDaily || 0, monthly: cur.moneyMonthly || 0, spentToday: cur.spentToday || 0 };
   clearObject(store.people);
@@ -388,6 +389,8 @@ export async function connect() {
     if (projectId && snap.projectId !== projectId) { projectId = null; snap = await getJSON('/api/snapshot'); }
     live = true;
     apply(snap);
+    // A machine that already joined a team server keeps that page live while the team feature is off.
+    if (!snap.features?.team) api.state().teamJoined = !!(await getJSON('/api/teamserver').catch(() => ({}))).connected;
     patch();
     listen();
     return true;

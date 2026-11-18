@@ -128,7 +128,7 @@ func (s *Server) joinWorked(ip string, now time.Time) {
 func (s *Server) devicesAPI(mux *http.ServeMux) {
 	// A person's own hpk joins with an invite code. No sign-in (the code is the
 	// proof), but HTTPS, the IP allowlist (identify) and a limit on wrong codes.
-	mux.HandleFunc("POST /api/join", func(w http.ResponseWriter, r *http.Request) {
+	s.teamRoute(mux, "POST /api/join", func(w http.ResponseWriter, r *http.Request) {
 		c := s.teamConfig()
 		if c == nil {
 			writeErr(w, http.StatusNotFound, errors.New("this hpk is not a team server"))
@@ -165,7 +165,7 @@ func (s *Server) devicesAPI(mux *http.ServeMux) {
 		s.hub.send("changed", "team")
 		writeJSON(w, map[string]any{"token": token, "deviceId": dev.ID, "device": dev.Name, "member": m.ID, "name": m.Label(), "role": m.Role})
 	})
-	mux.HandleFunc("POST /api/team/join-code", func(w http.ResponseWriter, r *http.Request) {
+	s.teamRoute(mux, "POST /api/team/join-code", func(w http.ResponseWriter, r *http.Request) {
 		c := s.teamConfig()
 		if c == nil {
 			writeErr(w, http.StatusBadRequest, errors.New("team mode is off; start it with hpk team init"))
@@ -210,7 +210,7 @@ func (s *Server) devicesAPI(mux *http.ServeMux) {
 		s.hub.send("changed", "team")
 		writeJSON(w, map[string]any{"ok": true})
 	}
-	mux.HandleFunc("GET /api/team/devices", func(w http.ResponseWriter, r *http.Request) {
+	s.teamRoute(mux, "GET /api/team/devices", func(w http.ResponseWriter, r *http.Request) {
 		if s.teamConfig() == nil {
 			writeJSON(w, map[string]any{"devices": []team.PublicDevice{}})
 			return
@@ -221,7 +221,7 @@ func (s *Server) devicesAPI(mux *http.ServeMux) {
 		c := s.teamConfig()
 		writeJSON(w, map[string]any{"devices": list(""), "allowIPs": c.AllowIPs})
 	})
-	mux.HandleFunc("POST /api/team/devices/revoke", func(w http.ResponseWriter, r *http.Request) {
+	s.teamRoute(mux, "POST /api/team/devices/revoke", func(w http.ResponseWriter, r *http.Request) {
 		revoke(w, r, "")
 	})
 	mux.HandleFunc("GET /api/me/devices", func(w http.ResponseWriter, r *http.Request) {

@@ -166,20 +166,21 @@ type jsEvent struct {
 
 // Snapshot is everything the Console shows for one project.
 type Snapshot struct {
-	Live          bool         `json:"live"`
-	Version       string       `json:"version"`
-	Me            jsPerson     `json:"me"`
-	ProjectID     string       `json:"projectId"`
-	Projects      []jsProject  `json:"projects"`
-	Mode          jsMode       `json:"mode"`
-	Sessions      []jsSession  `json:"sessions"`
-	Claims        []jsClaim    `json:"claims"`
-	Overlaps      []jsOverlap  `json:"overlaps"`
-	Approvals     []jsApproval `json:"approvals"`
-	WikiTree      []jsSection  `json:"wikiTree"`
-	Drafts        []jsDraft    `json:"drafts"`
-	Notifications []jsNotice   `json:"notifications"`
-	Events        []jsEvent    `json:"events"`
+	Live          bool            `json:"live"`
+	Version       string          `json:"version"`
+	Me            jsPerson        `json:"me"`
+	Features      map[string]bool `json:"features"`
+	ProjectID     string          `json:"projectId"`
+	Projects      []jsProject     `json:"projects"`
+	Mode          jsMode          `json:"mode"`
+	Sessions      []jsSession     `json:"sessions"`
+	Claims        []jsClaim       `json:"claims"`
+	Overlaps      []jsOverlap     `json:"overlaps"`
+	Approvals     []jsApproval    `json:"approvals"`
+	WikiTree      []jsSection     `json:"wikiTree"`
+	Drafts        []jsDraft       `json:"drafts"`
+	Notifications []jsNotice      `json:"notifications"`
+	Events        []jsEvent       `json:"events"`
 }
 
 type jsPerson struct {
@@ -213,7 +214,7 @@ func strp(s string) *string {
 func (s *Server) BuildSnapshot(r *http.Request, name string) (Snapshot, error) {
 	id := s.who(r)
 	me := id.ID
-	snap := Snapshot{Live: true, Version: s.version, Me: jsPerson{ID: me, Name: orStr(id.Name, me), Initials: initials(orStr(id.Name, me)), Role: id.Role}}
+	snap := Snapshot{Live: true, Version: s.version, Me: jsPerson{ID: me, Name: orStr(id.Name, me), Initials: initials(orStr(id.Name, me)), Role: id.Role}, Features: s.features()}
 	list, err := project.List(s.home)
 	list = s.visible(r, list)
 	if err != nil {

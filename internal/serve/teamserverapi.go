@@ -138,7 +138,7 @@ func (s *Server) teamServerAPI(mux *http.ServeMux) {
 		writeJSON(w, out)
 	})
 
-	mux.HandleFunc("POST /api/teamserver/join", func(w http.ResponseWriter, r *http.Request) {
+	s.teamRoute(mux, "POST /api/teamserver/join", func(w http.ResponseWriter, r *http.Request) {
 		v := open(w)
 		if v == nil {
 			return

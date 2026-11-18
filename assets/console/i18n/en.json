@@ -2737,5 +2737,9 @@
         "other": "{n} files changed meanwhile and stayed put"
       }
     }
+  },
+  "features": {
+    "later": "Comes in a later version",
+    "laterBody": "hpk v1 is for one person with Hermes on their own machine. Team features are planned; see docs/ROADMAP.md."
   }
 }

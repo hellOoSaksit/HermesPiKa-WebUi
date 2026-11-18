@@ -20,7 +20,7 @@ export default async function wizard({ go }) {
     }
     return liveWizard({ go });
   }
-  const st = { step: 0, path: '~/code/orbit-app', name: 'orbit-app', depth: 'full', kind: 'team', profile: 'senior-coder', members: new Set(['mali']), privacy: 'private', modelPolicy: 'any', scan: null, picked: new Set(), progress: 0, health: new Set(['h-1', 'h-2']) };
+  const st = { step: 0, path: '~/code/orbit-app', name: 'orbit-app', depth: 'full', kind: 'personal', profile: 'senior-coder', members: new Set(['mali']), privacy: 'private', modelPolicy: 'any', scan: null, picked: new Set(), progress: 0, health: new Set(['h-1', 'h-2']) };
   const stepper = h('ol.stepper', { 'aria-label': t('wizard.steps') });
   const body = h('div.panel-body.stack');
   const foot = h('div.panel-body.row.between', { style: { borderTop: '1px solid var(--seam)' } });
@@ -69,8 +69,8 @@ export default async function wizard({ go }) {
       }));
       body.replaceChildren(
         h('h2', t('wizard.setup.title')),
-        h('div.choice', { role: 'radiogroup', 'aria-label': t('wizard.setup.kind') }, ['team', 'personal'].map((v) => h('label',
-          h('input', { type: 'radio', name: 'kind', checked: st.kind === v || null, onchange: () => { st.kind = v; if (v === 'personal') st.privacy = 'private'; drawPeople(); } }),
+        h('div.choice', { role: 'radiogroup', 'aria-label': t('wizard.setup.kind') }, ['team', 'personal'].map((v) => h('label', v === 'team' && !api.feature('team') ? { class: 'off', 'data-tip': t('features.later') } : {},
+          h('input', { type: 'radio', name: 'kind', checked: st.kind === v || null, disabled: (v === 'team' && !api.feature('team')) || null, onchange: () => { st.kind = v; if (v === 'personal') st.privacy = 'private'; drawPeople(); } }),
           h('span.c-title', icon(v === 'team' ? 'team' : 'lock'), t('setup.kind.' + v)), h('span.c-desc', t('wizard.setup.kindDesc.' + v))))),
         peopleBox,
         h('div.field', h('span.label', t('wizard.setup.profile')), profileChoice, h('span.hint', t('wizard.setup.profileHint'))));

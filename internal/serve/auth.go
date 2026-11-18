@@ -367,7 +367,7 @@ func (s *Server) teamAPI(mux *http.ServeMux) {
 		Today    float64   `json:"spentToday"`
 		Month    float64   `json:"spentMonth"`
 	}
-	mux.HandleFunc("GET /api/team", func(w http.ResponseWriter, r *http.Request) {
+	s.teamRoute(mux, "GET /api/team", func(w http.ResponseWriter, r *http.Request) {
 		c := s.teamConfig()
 		if c == nil {
 			writeJSON(w, map[string]any{"enabled": false, "members": []row{}})
@@ -404,15 +404,15 @@ func (s *Server) teamAPI(mux *http.ServeMux) {
 		s.hub.send("changed", "team")
 		writeJSON(w, map[string]any{"ok": true, "token": token})
 	}
-	mux.HandleFunc("POST /api/team/invite", func(w http.ResponseWriter, r *http.Request) {
+	s.teamRoute(mux, "POST /api/team/invite", func(w http.ResponseWriter, r *http.Request) {
 		change(w, r, func(c *team.Config, in teamIn) (string, error) {
 			return c.Add(strings.TrimSpace(in.ID), strings.TrimSpace(in.Name), in.Role, in.Projects, time.Now())
 		})
 	})
-	mux.HandleFunc("POST /api/team/role", func(w http.ResponseWriter, r *http.Request) {
+	s.teamRoute(mux, "POST /api/team/role", func(w http.ResponseWriter, r *http.Request) {
 		change(w, r, func(c *team.Config, in teamIn) (string, error) { return "", c.SetRole(in.ID, in.Role) })
 	})
-	mux.HandleFunc("POST /api/team/remove", func(w http.ResponseWriter, r *http.Request) {
+	s.teamRoute(mux, "POST /api/team/remove", func(w http.ResponseWriter, r *http.Request) {
 		change(w, r, func(c *team.Config, in teamIn) (string, error) {
 			if strings.EqualFold(in.ID, s.who(r).ID) {
 				return "", errors.New("you cannot remove yourself; ask another owner")
@@ -425,10 +425,10 @@ func (s *Server) teamAPI(mux *http.ServeMux) {
 			return "", derr
 		})
 	})
-	mux.HandleFunc("POST /api/team/budget", func(w http.ResponseWriter, r *http.Request) {
+	s.teamRoute(mux, "POST /api/team/budget", func(w http.ResponseWriter, r *http.Request) {
 		change(w, r, func(c *team.Config, in teamIn) (string, error) { return "", c.SetBudget(in.ID, in.Daily, in.Monthly) })
 	})
-	mux.HandleFunc("POST /api/team/rotate", func(w http.ResponseWriter, r *http.Request) {
+	s.teamRoute(mux, "POST /api/team/rotate", func(w http.ResponseWriter, r *http.Request) {
 		change(w, r, func(c *team.Config, in teamIn) (string, error) { return c.Rotate(in.ID) })
 	})
 }

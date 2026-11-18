@@ -345,6 +345,8 @@ select.input { appearance: none; padding-right: 30px; background-image: linear-g
 .choice input { margin: 3px 0 0; accent-color: var(--route); grid-row: span 2; width: 16px; height: 16px; }
 .choice .c-title { font-weight: 600; display: flex; align-items: center; gap: 8px; }
 .choice .c-desc { color: var(--text-2); font-size: var(--fs-13); grid-column: 2; }
+.choice label.off { opacity: .55; cursor: not-allowed; }
+.choice label.off:hover { border-color: inherit; }
 .choice label:has(input:checked) { border-color: var(--route); background: var(--route-wash); }
 input[type="checkbox"] { accent-color: var(--route); width: 15px; height: 15px; }
 
@@ -905,6 +907,7 @@ html[data-motion="off"] .blk-flow, html[data-motion="off"] .blk-alarm { display:
 .section-tabs { max-width: 1440px; margin: -6px auto 20px; display: flex; gap: 4px; border-bottom: 1px solid var(--seam); overflow-x: auto; }
 .section-tabs a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 12px; margin-bottom: -1px; color: var(--text-2); text-decoration: none; font-size: var(--fs-13); font-weight: 600; border-bottom: 2px solid transparent; white-space: nowrap; }
 .section-tabs a:hover { color: var(--text); }
+.section-tabs .nav-off { display: inline-flex; align-items: center; gap: 8px; padding: 9px 12px; margin-bottom: -1px; color: var(--text-3, var(--text-2)); opacity: .55; cursor: not-allowed; font-size: var(--fs-13); font-weight: 600; white-space: nowrap; }
 .section-tabs a[aria-current="page"] { color: var(--text); border-bottom-color: var(--route); }
 .section-tabs .count { font-family: var(--font-data); font-size: var(--fs-11); padding: 1px 6px; border-radius: 10px; }
 .section-tabs .count.hot { background: var(--danger); color: var(--on-danger); }
