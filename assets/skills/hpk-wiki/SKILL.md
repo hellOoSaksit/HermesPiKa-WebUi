@@ -44,6 +44,23 @@ Then tell the person, in one line, which draft number is waiting (e.g. "Draft 4 
 - Record notable events with `hpk wiki log "<one line>"`. The log is append-only.
 - In a long session, save a short summary before the context fills up: decisions made, what was tried and failed, open questions, each with its source. Use `hpk wiki raw sessions/<date>-<topic>.md`. When Hermes compacts the context, the details it drops are gone, and hpk only learns that it happened.
 
+## Folder layout
+
+Where files go in this project is the person's decision, kept in `decisions/folders.md`.
+
+- **Not set yet:** before saving the first file into the project, ask the person which folders to use and what goes in each. Then draft `decisions/folders.md` (`hpk wiki draft --target decisions/folders.md`) with this table. If they want no split, draft the page with the header only.
+
+```
+| Folder | What goes here | Extensions |
+|---|---|---|
+| RAW 3D | source scenes | .blend .max |
+| Export | exported models | .fbx .obj |
+```
+
+- **Waiting for approval:** do not ask again.
+- **Approved:** hpk shows the folders at the start of a session. Save each file in the folder its extension belongs to. If you save one elsewhere, hpk adds a note saying where it belongs; it never blocks or moves anything.
+- **Changed outside approval:** ask the person to approve it again, and save files in the project root until then.
+
 ## What you must not do
 
 - Do not run `hpk wiki approve` or `hpk wiki discard`. A person decides (Auto mode may approve lessons, versions and glossary only, through hpk, never through you).

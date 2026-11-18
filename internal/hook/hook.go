@@ -123,7 +123,11 @@ func Run(name string, in io.Reader, out io.Writer) (code int) {
 	case "board_guard":
 		return answer(out, boardGuard(ev))
 	case "board_heartbeat":
-		return answer(out, boardHeartbeat(ev))
+		r := boardHeartbeat(ev)
+		if r.v == Allow {
+			r = misplacedNote(ev)
+		}
+		return answer(out, r)
 	case "child_report":
 		return answer(out, childReport(ev))
 	case "privacy_guard":
@@ -245,18 +249,15 @@ func sessionLink(ev Event) result {
 		return result{Allow, ""}
 	}
 	home := project.Home()
-	if name, _ := project.LinkOf(home, ev.SessionID); name != "" {
-		return result{Allow, ""}
+	if name, _ := project.LinkOf(home, ev.SessionID); name == "" {
+		msg, _ := ev.Extra["user_message"].(string)
+		if name, job, ok := cron.ParseJobTag(msg); ok {
+			if p, err := project.Load(home, name); err == nil {
+				_ = project.LinkJob(p, ev.SessionID, job)
+			}
+		}
 	}
-	msg, _ := ev.Extra["user_message"].(string)
-	name, job, ok := cron.ParseJobTag(msg)
-	if !ok {
-		return result{Allow, ""}
-	}
-	if p, err := project.Load(home, name); err == nil {
-		_ = project.LinkJob(p, ev.SessionID, job)
-	}
-	return result{Allow, ""}
+	return folderContext(ev)
 }
 
 // compactionNote records that Hermes compacted a session's context (post_compaction).
