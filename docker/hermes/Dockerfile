@@ -24,6 +24,8 @@ RUN chmod 0755 /opt/hpk \
  && touch /etc/s6-overlay/s6-rc.d/hpk/dependencies.d/base /etc/s6-overlay/s6-rc.d/user/contents.d/hpk
 
 ENV HPK_ADDR=0.0.0.0:7878
+# Inside the image hpk never installs itself into a data folder.
+ENV HPK_NO_SELFINSTALL=1
 EXPOSE 7878
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
   CMD curl -fsk -o /dev/null "http$([ -n "${HPK_TLS_CERT:-}" ] && echo s)://127.0.0.1:${HPK_ADDR##*:}/api/health"
