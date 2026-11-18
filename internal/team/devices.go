@@ -249,8 +249,10 @@ func (d *Devices) ByToken(c *Config, token, ip string, now time.Time) (*Person, 
 	if !ok {
 		return nil, Device{}, false
 	}
+	first := d.List[at].LastSeen.IsZero()
 	d.List[at].LastSeen, d.List[at].LastIP = now.UTC(), ip
-	if now.Sub(d.saved) > time.Minute {
+	// the first use is written at once, so `hpk team devices` (another process) sees it
+	if first || now.Sub(d.saved) > time.Minute {
 		_ = d.saveLocked()
 	}
 	return m, d.List[at], true
