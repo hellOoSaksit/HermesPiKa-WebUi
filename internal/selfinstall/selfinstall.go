@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"hpk.local/hpk/internal/launch"
+	"hpk.local/hpk/internal/setup"
 )
 
 // Result says what Install did.
@@ -35,6 +36,20 @@ func exeName() string {
 
 // Dir is the folder that holds the installed hpk.
 func Dir() string { return filepath.Join(launch.DataDir(), "bin") }
+
+// PathDirs are the folders put on the user's PATH: hpk's own bin, and the bin
+// of the Hermes that hpk installs (it may not exist yet; a PATH entry for a
+// missing folder is harmless), so `hermes` works in a new terminal.
+func PathDirs() []string {
+	return []string{Dir(), setup.BinDir(launch.DataDir())}
+}
+
+const marker = "# added by hpk"
+
+// profileLine is the one marked line added to shell profiles.
+func profileLine(dirs []string) string {
+	return `export PATH="` + strings.Join(dirs, ":") + `:$PATH" ` + marker
+}
 
 // Target is where the installed copy lives: <DataDir>/bin/hpk(.exe).
 func Target() string { return filepath.Join(Dir(), exeName()) }
@@ -156,13 +171,13 @@ func Install(exe string, out io.Writer) (Result, error) {
 	if dryRun() {
 		return res, nil
 	}
-	added, err := addPath(Dir())
+	added, err := addPath(PathDirs()...)
 	if err != nil {
-		return res, fmt.Errorf("add %s to PATH: %w", Dir(), err)
+		return res, fmt.Errorf("add %s to PATH: %w", strings.Join(PathDirs(), " and "), err)
 	}
 	res.PathAdded = added
 	if added {
-		fmt.Fprintf(out, "Added %s to your PATH (open a new terminal to use `hpk`).\n", Dir())
+		fmt.Fprintf(out, "Added %s to your PATH (open a new terminal to use `hpk` and `hermes`).\n", strings.Join(PathDirs(), " and "))
 	}
 	sc, err := addShortcut(res.Target)
 	if err != nil {
@@ -176,12 +191,12 @@ func Install(exe string, out io.Writer) (Result, error) {
 func Uninstall(out io.Writer) error {
 	stopRunning(out)
 	if !dryRun() {
-		removed, err := removePath(Dir())
+		removed, err := removePath(PathDirs()...)
 		if err != nil {
 			return err
 		}
 		if removed {
-			fmt.Fprintf(out, "Removed %s from your PATH.\n", Dir())
+			fmt.Fprintf(out, "Removed %s from your PATH.\n", strings.Join(PathDirs(), " and "))
 		}
 		if err := removeShortcut(); err != nil {
 			fmt.Fprintf(out, "Could not remove the Start-menu shortcut: %v\n", err)

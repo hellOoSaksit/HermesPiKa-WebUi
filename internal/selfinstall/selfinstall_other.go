@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-const marker = "# added by hpk"
-
 func profiles() []string {
 	h, err := os.UserHomeDir()
 	if err != nil {
@@ -21,15 +19,27 @@ func profiles() []string {
 }
 
 // addPath appends the PATH line to each profile that exists and lacks it.
-func addPath(dir string) (bool, error) {
-	line := `export PATH="` + dir + `:$PATH" ` + marker
+func addPath(dirs ...string) (bool, error) {
+	line := profileLine(dirs)
 	added := false
 	for _, p := range profiles() {
 		b, err := os.ReadFile(p)
-		if err != nil || strings.Contains(string(b), marker) {
+		if err != nil {
 			continue
 		}
 		s := string(b)
+		if strings.Contains(s, line) {
+			continue
+		}
+		if strings.Contains(s, marker) { // an older line without every dir: replace it
+			var keep []string
+			for _, l := range strings.Split(s, "\n") {
+				if !strings.HasSuffix(strings.TrimSpace(l), marker) {
+					keep = append(keep, l)
+				}
+			}
+			s = strings.Join(keep, "\n")
+		}
 		if s != "" && !strings.HasSuffix(s, "\n") {
 			s += "\n"
 		}
@@ -41,7 +51,7 @@ func addPath(dir string) (bool, error) {
 	return added, nil
 }
 
-func removePath(dir string) (bool, error) {
+func removePath(_ ...string) (bool, error) {
 	removed := false
 	for _, p := range profiles() {
 		b, err := os.ReadFile(p)

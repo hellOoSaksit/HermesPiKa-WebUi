@@ -4,9 +4,17 @@
 # No build, no proxy: the Console is on http://127.0.0.1:7878, reachable from this
 # computer only (plain HTTP on loopback).
 #
+# Download it into an empty folder (it is attached to every release):
+#   curl -fsSLO https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml
+#   (Windows PowerShell: irm <same URL> -OutFile compose.release.yaml)
+#
 #   docker compose -f compose.release.yaml up -d
-#   docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token   # once, then delete it
-#   open http://127.0.0.1:7878 and paste the token
+#   docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
+#   open http://127.0.0.1:7878 and paste the token, then delete the token file:
+#   docker compose -f compose.release.yaml exec hermes rm /opt/data/hpk/owner-token
+#
+# Hermes needs a model account:
+#   docker compose -f compose.release.yaml exec -u hermes hermes hermes auth add <provider>
 #
 # Change HPK_OWNER below to your email before the first start. For a server, use
 # docker/hermes/compose.yaml behind a TLS proxy instead (docs/docker.md).

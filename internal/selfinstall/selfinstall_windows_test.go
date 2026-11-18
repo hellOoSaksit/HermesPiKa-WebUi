@@ -24,3 +24,19 @@ func TestWindowsPathNoDuplicate(t *testing.T) {
 		t.Fatalf("got %q %v", got, changed)
 	}
 }
+
+func TestWindowsPathTwoDirs(t *testing.T) {
+	a, b := `C:\d\hpk\bin`, `C:\d\hpk\hermes\bin`
+	got, changed := addDirsToPath(`C:\x`, a, b)
+	if !changed || got != `C:\x;`+a+`;`+b {
+		t.Fatalf("got %q %v", got, changed)
+	}
+	got2, changed := addDirsToPath(got, a, b)
+	if changed || got2 != got {
+		t.Fatalf("duplicate: %q %v", got2, changed)
+	}
+	got3, changed := removeDirsFromPath(got, a, b)
+	if !changed || got3 != `C:\x` {
+		t.Fatalf("removed: %q %v", got3, changed)
+	}
+}

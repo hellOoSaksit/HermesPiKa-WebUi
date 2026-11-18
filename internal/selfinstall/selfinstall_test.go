@@ -140,3 +140,20 @@ func TestUninstallRemovesLine(t *testing.T) {
 		t.Fatal("data dir must stay")
 	}
 }
+
+func TestProfileLineHasBothDirs(t *testing.T) {
+	sandbox(t)
+	dirs := PathDirs()
+	if len(dirs) != 2 {
+		t.Fatalf("want 2 dirs, got %v", dirs)
+	}
+	l := profileLine(dirs)
+	for _, d := range dirs {
+		if !strings.Contains(l, d) {
+			t.Fatalf("%q lacks %q", l, d)
+		}
+	}
+	if !strings.HasSuffix(l, marker) {
+		t.Fatalf("no marker: %q", l)
+	}
+}

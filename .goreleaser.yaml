@@ -55,6 +55,8 @@ checksum:
   extra_files: # the install scripts are checked by the same checksums.txt
     - glob: install.sh
     - glob: install.ps1
+    - glob: docker/compose.release.yaml
+      name_template: compose.release.yaml
 
 sboms:
   - artifacts: archive
@@ -71,6 +73,8 @@ release:
   extra_files: # users fetch these from releases/latest/download/
     - glob: install.sh
     - glob: install.ps1
+    - glob: docker/compose.release.yaml
+      name_template: compose.release.yaml
   footer: |
     Source-available under MIT + Commons Clause: use, change and share it; do not sell it. See LICENSE.
     Verify a download: sha256sum -c checksums.txt

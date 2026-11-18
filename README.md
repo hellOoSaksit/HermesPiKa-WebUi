@@ -36,10 +36,13 @@ irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/in
 curl -fsSL https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/install.sh | sh
 ```
 
-**Docker** (Hermes Agent and hpk together; edit `HPK_OWNER` in
-`docker/compose.release.yaml` first):
+**Docker** (Hermes Agent and hpk together). In an empty folder, download the
+compose file (macOS/Linux; on Windows PowerShell use
+`irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml -OutFile compose.release.yaml`),
+change `HPK_OWNER` in it to your email, then run these in that folder:
 
 ```sh
+curl -fsSLO https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml
 docker compose -f compose.release.yaml up -d
 docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
 # then open http://127.0.0.1:7878 and paste the token

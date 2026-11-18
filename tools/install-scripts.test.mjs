@@ -179,3 +179,19 @@ test("install.md and install.th.md: same Quick install heading structure", () =>
   const nums = (a) => a.map((l) => (l.match(/^### (\d+)\./) || [])[1]);
   assert.deepEqual(nums(th), nums(en));
 });
+
+// The fenced code blocks of the Quick install parts must be identical lists.
+test("install.md and install.th.md: same Quick install code blocks", () => {
+  const blocks = (file) => {
+    const lines = readFileSync(join(root, "docs", file), "utf8").split(/\r?\n/);
+    const start = lines.findIndex((l) => /^## /.test(l));
+    let end = lines.findIndex((l, i) => i > start && /^## /.test(l));
+    if (end < 0) end = lines.length;
+    const part = lines.slice(start, end).join("\n");
+    return [...part.matchAll(/```[a-z]*\n([\s\S]*?)```/g)].map((m) => m[1].trim());
+  };
+  const en = blocks("install.md");
+  const th = blocks("install.th.md");
+  assert.ok(en.length >= 8, `expected several code blocks, got ${en.length}`);
+  assert.deepEqual(th, en);
+});

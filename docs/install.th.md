@@ -21,7 +21,7 @@ English: [install.md](install.md)
 1. เปิด https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest แล้วดาวน์โหลด `hpk.exe`
 2. ดับเบิลคลิก `hpk.exe`
 3. ถ้า Windows ขึ้น "Windows protected your PC" ให้กด **More info** แล้วกด **Run anyway** โปรแกรมยังไม่ได้ลงลายเซ็น Windows จึงถามหนึ่งครั้ง
-4. hpk จะคัดลอกตัวเองไปที่ `%LOCALAPPDATA%\hpk\bin` เพิ่มโฟลเดอร์นั้นใน PATH (รายชื่อโฟลเดอร์ที่ Windows ใช้หาโปรแกรม) เพิ่มทางลัดในเมนู Start ชื่อ "HPK Console" แล้วเปิด HPK Console ในเบราว์เซอร์
+4. hpk จะคัดลอกตัวเองไปที่ `%LOCALAPPDATA%\hpk\bin` เพิ่มโฟลเดอร์นั้นและโฟลเดอร์ของ Hermes (`%LOCALAPPDATA%\hpk\hermes\bin`) ใน PATH (รายชื่อโฟลเดอร์ที่ Windows ใช้หาโปรแกรม) เพิ่มทางลัดในเมนู Start ชื่อ "HPK Console" แล้วเปิด HPK Console ในเบราว์เซอร์
 
 หลังจากนั้นเปิดได้จากเมนู Start หรือพิมพ์ `hpk` ในเทอร์มินัลที่เปิดใหม่
 
@@ -44,35 +44,53 @@ curl -fsSL https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/down
 - ติดตั้งเวอร์ชันที่ระบุ: ตั้ง `HPK_VERSION` (เช่น `HPK_VERSION=0.1.0`)
 - ติดตั้งโดยไม่เปิด HPK Console: ตั้ง `HPK_NO_START=1`
 - บน macOS สคริปต์จะลบเครื่องหมาย "ดาวน์โหลดจากอินเทอร์เน็ต" ออก เพื่อไม่ให้ Gatekeeper ขวาง
-- บน macOS และ Linux hpk เพิ่มโฟลเดอร์ของตัวเองใน PATH ด้วยบรรทัดที่มีเครื่องหมายกำกับหนึ่งบรรทัด ในไฟล์ `~/.profile`, `~/.zshrc` และ `~/.bashrc` (เฉพาะไฟล์ที่มีอยู่แล้ว)
+- บน macOS และ Linux hpk เพิ่มโฟลเดอร์ของตัวเองและของ Hermes ใน PATH ด้วยบรรทัดที่มีเครื่องหมายกำกับหนึ่งบรรทัด ในไฟล์ `~/.profile`, `~/.zshrc` และ `~/.bashrc` (เฉพาะไฟล์ที่มีอยู่แล้ว)
 
 คุณรัน `hpk self-install` เองได้เสมอ ถ้าไม่ต้องการให้ hpk ติดตั้งตัวเองอัตโนมัติ ให้ตั้ง `HPK_NO_SELFINSTALL=1`
 
 ### 4. Docker
 
-ใช้วิธีนี้ถ้าอยากรัน Hermes Agent กับ hpk รวมกันในคอนเทนเนอร์ ต้องมี Docker ที่มี Compose นำไฟล์ `docker/compose.release.yaml` จาก repository นี้มา และแก้ `HPK_OWNER` ในไฟล์เป็นอีเมลของคุณก่อนเริ่มครั้งแรก
+ใช้วิธีนี้ถ้าอยากรัน Hermes Agent กับ hpk รวมกันในคอนเทนเนอร์ ต้องมี Docker ที่มี Compose
 
-1. เริ่มทำงาน:
+1. สร้างโฟลเดอร์ว่างแล้วเปิดเทอร์มินัลในโฟลเดอร์นั้น รันทุกคำสั่งด้านล่างในโฟลเดอร์นี้
+2. ดาวน์โหลดไฟล์ compose บน macOS หรือ Linux:
+
+```sh
+curl -fsSLO https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml
+```
+
+บน Windows (PowerShell):
+
+```powershell
+irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml -OutFile compose.release.yaml
+```
+
+3. เปิด `compose.release.yaml` ด้วยโปรแกรมแก้ข้อความ แล้วแก้ `HPK_OWNER` เป็นอีเมลของคุณ ใช้เฉพาะตอนเริ่มครั้งแรก
+4. เริ่มทำงาน:
 
 ```sh
 docker compose -f compose.release.yaml up -d
 ```
 
-2. แสดง owner token (กุญแจเข้าระบบครั้งแรกของคุณ):
+5. แสดง owner token (กุญแจเข้าระบบครั้งแรกของคุณ):
 
 ```sh
 docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
 ```
 
-3. เปิด http://127.0.0.1:7878 ในเบราว์เซอร์แล้ววาง token จากนั้นลบไฟล์ token ทิ้ง
+6. เปิด http://127.0.0.1:7878 ในเบราว์เซอร์แล้ววาง token จากนั้นลบไฟล์ token ทิ้ง:
 
-แล้วเพิ่มบัญชีโมเดลในคอนเทนเนอร์:
+```sh
+docker compose -f compose.release.yaml exec hermes rm /opt/data/hpk/owner-token
+```
+
+7. เพิ่มบัญชีโมเดลในคอนเทนเนอร์:
 
 ```sh
 docker compose -f compose.release.yaml exec -u hermes hermes hermes auth add <provider>
 ```
 
-ถ้าใช้ Git Bash บน Windows ให้ใส่ `MSYS_NO_PATHCONV=1` นำหน้าคำสั่งเหล่านี้ ดูเพิ่มที่ [docker.md](docker.md) (ภาษาอังกฤษ)
+ถ้าใช้ Git Bash บน Windows ให้ใส่ `MSYS_NO_PATHCONV=1` นำหน้าคำสั่ง `docker` ดูเพิ่มที่ [docker.md](docker.md) (ภาษาอังกฤษ)
 
 ### 5. เปิดใช้ครั้งแรก: พบหรือติดตั้ง Hermes แล้วเพิ่มบัญชีโมเดล
 
@@ -80,7 +98,13 @@ docker compose -f compose.release.yaml exec -u hermes hermes hermes auth add <pr
 2. ถ้าเจอ ก็ใช้ตัวนั้น
 3. ถ้าไม่เจอ จะเสนอติดตั้งเวอร์ชันที่ทดสอบแล้วคือ Hermes v0.23.1 ลงในโฟลเดอร์ของ hpk เอง โดยแสดงขนาดที่ต้องดาวน์โหลดและแหล่งที่มาทั้งหมดก่อน จะไม่ดาวน์โหลดอะไรจนกว่าคุณจะติ๊ก "I agree" และกด Install
 4. จากนั้นจะแสดงการเปลี่ยนแปลงเดียวที่จะทำกับ Hermes (เพิ่ม hpk) กด "Add hpk to Hermes" เพื่อยอมรับ
-5. สุดท้าย เพิ่มบัญชีโมเดล เปิด **Settings** แล้วไปที่ **AI accounts** หน้านั้นบอกวิธีเพิ่มบัญชีของผู้ให้บริการที่คุณใช้ (คำสั่งคือ `hermes auth add <provider>`) ถ้าไม่มีบัญชี เอเจนต์จะตอบไม่ได้
+5. สุดท้าย เพิ่มบัญชีโมเดล เปิดเทอร์มินัล**ใหม่** (เพื่อให้หา `hermes` เจอ) แล้วรัน:
+
+```sh
+hermes auth add <provider>
+```
+
+   บน macOS และ Linux ทำใน Console ได้ด้วย: **Settings** แล้วไปที่ **AI accounts** มีฟอร์มสำหรับเพิ่มคีย์ บน Windows หน้านั้นจะแสดงคำสั่งนี้ ถ้าไม่มีบัญชี เอเจนต์จะตอบไม่ได้
 
 ### 6. อัปเดต
 

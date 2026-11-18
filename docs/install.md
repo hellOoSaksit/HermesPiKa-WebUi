@@ -27,7 +27,7 @@ You do not need administrator rights. hpk installs for your user only.
 1. Open https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest and download `hpk.exe`.
 2. Double-click `hpk.exe`.
 3. If Windows shows "Windows protected your PC", click **More info**, then click **Run anyway**. The program is not code-signed yet, so Windows asks you once.
-4. hpk copies itself to `%LOCALAPPDATA%\hpk\bin`, adds that folder to your PATH (the list of folders where Windows looks for programs), adds a Start menu shortcut called "HPK Console", and opens HPK Console in your browser.
+4. hpk copies itself to `%LOCALAPPDATA%\hpk\bin`, adds that folder and the folder for Hermes (`%LOCALAPPDATA%\hpk\hermes\bin`) to your PATH (the list of folders where Windows looks for programs), adds a Start menu shortcut called "HPK Console", and opens HPK Console in your browser.
 
 After that you can start it from the Start menu, or type `hpk` in a new terminal.
 
@@ -52,37 +52,54 @@ it installs hpk for your user and starts HPK Console.
 - To install a specific version, set `HPK_VERSION` (for example `HPK_VERSION=0.1.0`).
 - To install without starting HPK Console, set `HPK_NO_START=1`.
 - On macOS the script removes the "downloaded from the internet" mark, so Gatekeeper does not block hpk.
-- On macOS and Linux, hpk adds its folder to PATH with one marked line in your `~/.profile`, `~/.zshrc` and `~/.bashrc` (only the ones that already exist).
+- On macOS and Linux, hpk adds its folders (its own and the Hermes one) to PATH with one marked line in your `~/.profile`, `~/.zshrc` and `~/.bashrc` (only the ones that already exist).
 
 You can also run `hpk self-install` yourself at any time. Set
 `HPK_NO_SELFINSTALL=1` if you do not want hpk to install itself automatically.
 
 ### 4. Docker
 
-Use this if you prefer to run Hermes Agent and hpk together in a container.
-You need Docker with Compose. Get `docker/compose.release.yaml` from this repository, and change `HPK_OWNER` in it to your email before the first start.
+Use this if you prefer to run Hermes Agent and hpk together in a container. You need Docker with Compose.
 
-1. Start it:
+1. Make an empty folder and open a terminal in it. Run every command below in that folder.
+2. Download the compose file. On macOS or Linux:
+
+```sh
+curl -fsSLO https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml
+```
+
+On Windows (PowerShell):
+
+```powershell
+irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml -OutFile compose.release.yaml
+```
+
+3. Open `compose.release.yaml` in a text editor and change `HPK_OWNER` to your email. It is used on the first start only.
+4. Start it:
 
 ```sh
 docker compose -f compose.release.yaml up -d
 ```
 
-2. Print your owner token (your first sign-in key):
+5. Print your owner token (your first sign-in key):
 
 ```sh
 docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
 ```
 
-3. Open http://127.0.0.1:7878 in your browser and paste the token. Then delete the token file.
+6. Open http://127.0.0.1:7878 in your browser and paste the token. Then delete the token file:
 
-Then add a model account inside the container:
+```sh
+docker compose -f compose.release.yaml exec hermes rm /opt/data/hpk/owner-token
+```
+
+7. Add a model account inside the container:
 
 ```sh
 docker compose -f compose.release.yaml exec -u hermes hermes hermes auth add <provider>
 ```
 
-If you use Git Bash on Windows, put `MSYS_NO_PATHCONV=1` in front of these commands. More in [docker.md](docker.md).
+If you use Git Bash on Windows, put `MSYS_NO_PATHCONV=1` in front of the `docker` commands. More in [docker.md](docker.md).
 
 ### 5. First run: Hermes is found or installed, then add a model account
 
@@ -90,7 +107,13 @@ If you use Git Bash on Windows, put `MSYS_NO_PATHCONV=1` in front of these comma
 2. If it finds Hermes, it uses it.
 3. If it does not, it offers to install the tested version, Hermes v0.23.1, into hpk's own folder. It first shows the download size and every source. Nothing is downloaded until you tick "I agree" and press Install.
 4. Then it shows the one change it wants to make to Hermes (adding hpk). Press "Add hpk to Hermes" to accept.
-5. Last, add a model account. Open **Settings**, then **AI accounts**. It shows how to add one for your provider (the command is `hermes auth add <provider>`). Without an account, the agent cannot answer.
+5. Last, add a model account. Open a **new** terminal (so it can find `hermes`), then run:
+
+```sh
+hermes auth add <provider>
+```
+
+   On macOS and Linux you can also do it in the Console: **Settings**, then **AI accounts**, has a form to add a key. On Windows that page shows this command. Without an account, the agent cannot answer.
 
 ### 6. Update
 
@@ -162,7 +185,7 @@ The add-project page first checks two things:
      `hermes-acp` in `<hpk data>/hermes/bin`.
 
    hpk puts that `bin` folder first on its own PATH, so the doctor, chats and
-   jobs find it; add it to your shell's PATH to use `hermes` in a terminal. To
+   jobs find it. The installed hpk also puts it on your user PATH, so `hermes` works in a new terminal. To
    remove it, delete `<hpk data>/hermes`. From a terminal: `hpk setup hermes`
    shows the same plan, `hpk setup hermes --yes` runs it. This is hpk's own
    install, not Hermes' official installer (`scripts/install.sh`/`.ps1`, which

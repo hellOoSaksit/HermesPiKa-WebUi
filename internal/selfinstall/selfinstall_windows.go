@@ -65,6 +65,29 @@ func removeFromPath(cur, dir string) (string, bool) {
 	return strings.Join(keep, ";"), changed
 }
 
+// addDirsToPath adds each dir in turn (no duplicates). Pure.
+func addDirsToPath(cur string, dirs ...string) (string, bool) {
+	changed := false
+	for _, d := range dirs {
+		var c bool
+		if cur, c = addToPath(cur, d); c {
+			changed = true
+		}
+	}
+	return cur, changed
+}
+
+func removeDirsFromPath(cur string, dirs ...string) (string, bool) {
+	changed := false
+	for _, d := range dirs {
+		var c bool
+		if cur, c = removeFromPath(cur, d); c {
+			changed = true
+		}
+	}
+	return cur, changed
+}
+
 func editPath(f func(cur string) (string, bool)) (bool, error) {
 	k, err := registry.OpenKey(registry.CURRENT_USER, "Environment", registry.QUERY_VALUE|registry.SET_VALUE)
 	if err != nil {
@@ -94,12 +117,12 @@ func editPath(f func(cur string) (string, bool)) (bool, error) {
 	return true, nil
 }
 
-func addPath(dir string) (bool, error) {
-	return editPath(func(cur string) (string, bool) { return addToPath(cur, dir) })
+func addPath(dirs ...string) (bool, error) {
+	return editPath(func(cur string) (string, bool) { return addDirsToPath(cur, dirs...) })
 }
 
-func removePath(dir string) (bool, error) {
-	return editPath(func(cur string) (string, bool) { return removeFromPath(cur, dir) })
+func removePath(dirs ...string) (bool, error) {
+	return editPath(func(cur string) (string, bool) { return removeDirsFromPath(cur, dirs...) })
 }
 
 // broadcastEnvChange tells open programs (Explorer, new terminals) that the
