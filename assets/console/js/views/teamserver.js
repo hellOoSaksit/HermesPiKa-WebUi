@@ -5,8 +5,12 @@
 // token stays in hpk on this machine: this page only talks to /api/teamserver/…,
 // which adds the token and reaches only a fixed list of server paths.
 import { isLive, teamMode } from '../live.js';
+import { api } from '../data.js';
 import { t } from '../i18n.js';
 import { h, icon, lamp, pageHead, toast, panel, avatar, rel } from '../ui.js';
+
+// v1 is solo-first: the team pages wait for a later version (docs/ROADMAP.md).
+export const laterPanel = () => h('div.callout.route', icon('info'), h('div', h('b', t('features.later')), h('p', t('features.laterBody'))));
 
 const getJSON = async (path) => {
   const r = await fetch(path, { headers: { Accept: 'application/json' } });
@@ -26,6 +30,8 @@ const when = (iso) => (iso && !iso.startsWith('0001') ? rel(Date.parse(iso)) : t
 
 export default async function teamServer({ rerender }) {
   const head = pageHead(t('ts.title'), t('ts.lede'));
+  // Off in v1, unless this machine already joined (then it keeps working: leave, the team view).
+  if (!api.feature('team') && !api.teamJoined()) return { el: h('div.page', head, laterPanel()) };
   if (!isLive() || teamMode()) {
     return { el: h('div.page', head, h('div.callout.route', icon('info'), h('div', t('ts.notHere')))) };
   }

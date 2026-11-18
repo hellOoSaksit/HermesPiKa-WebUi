@@ -1,9 +1,29 @@
 # Changelog
 
-## 0.2.0 (unreleased)
+## 0.1.0 (unreleased)
 
 First public release. hpk is an independent add-on for Hermes Agent, tested
 against Hermes v0.23.1.
+
+**Install**
+- Double-click `hpk.exe` (or run `hpk` from outside its install folder): hpk
+  installs itself for your user (`%LOCALAPPDATA%\hpk\bin` on Windows, in hpk's
+  data folder elsewhere), adds that folder to PATH, adds a Start menu shortcut
+  "HPK Console" on Windows, and starts the Console. `hpk self-install` and
+  `hpk self-uninstall` do it explicitly; `HPK_NO_SELFINSTALL=1` turns the
+  automatic part off.
+- One-line installers `install.ps1` and `install.sh` on every release: they
+  check the SHA-256 against `checksums.txt` and stop on a mismatch;
+  `HPK_VERSION` pins a version. Re-running them updates hpk.
+- Release image `ghcr.io/helloosaksit/hpk-hermes` and
+  `docker/compose.release.yaml`: Hermes Agent and hpk in one container, with
+  the Console on http://127.0.0.1:7878.
+- Beginner install guide in English and Thai (docs/install.md, docs/install.th.md).
+- On a Mac or Linux account with no shell profile, `hpk self-install` creates the one for your shell so `hpk` and `hermes` are on PATH, and says which file it changed. `hpk self-uninstall` also turns off start at login. `install.sh` runs hpk in the foreground at a terminal, or in the background with `--no-open` and a log otherwise.
+- Release checklist for maintainers (docs/release.md); CI builds a release snapshot and checks the asset list.
+
+**Solo-first v1**
+- Team features are greyed out in the Console ("Comes in a later version"); in solo mode `POST /api/join`, `/api/team*` and `POST /api/teamserver/join` answer 404. `hpk serve --team` is unaffected, a machine that already joined keeps its Team server page, and `HPK_FEATURES=team` turns the team pages back on. The snapshot carries `features.team`. New projects default to personal. See docs/ROADMAP.md.
 
 **One program, any OS**
 - `hpk` with no arguments starts HPK Console once per machine (the port is
@@ -92,6 +112,32 @@ against Hermes v0.23.1.
   in the Console. Agent tools that name the vault, a managed `.env`, the
   browser profile or recordings are refused.
 - Off on a team server.
+
+**File locations** (docs/files.md)
+- Folder rules per project on the wiki page `decisions/folders.md`
+  (`| Folder | What goes here | Extensions |`), used only while the page is the
+  one a person approved; approving creates the missing folders, nothing more.
+- Uploads (chat attachments, and drops on the Files view) land in the folder
+  their extension's rule names, 2 GB per file by default, never overwriting.
+- A Files view (Work → Files): rule folders as cards with their extensions and
+  file counts, the project's folders as a list, and **Tidy**: files outside
+  their folder, grouped and ticked, moved only on Confirm, with Undo of the
+  last round (Undo, too, lists what goes back and waits for Confirm).
+- The AI asks once: before it saves the first file into a project with no
+  rules, a hook tells it to ask you how to split folders and draft the page;
+  after that it is told the rules once per session, and a note says where a
+  file it just wrote belongs. A scheduled (cron) run has no one to ask, so it
+  is told to keep new files out of the project until you set the rules.
+- A folder picker in the Console (solo mode, needs the Console key) to point a
+  project at another folder, move its wiki (copied, checked, then swapped;
+  recorded in `<home>/hpk/trusted/locations.json`) or move the browser
+  recordings.
+- hpk never follows a link or a Windows junction inside a project when it
+  uploads, lists, serves, tidies or creates folders, re-checks the project
+  folder from `project.yaml` every time, and keeps what you approved and the
+  undo record where an isolated AI cannot change them (`<home>/hpk/trusted`
+  is read-only for it and repaired at start; hpk itself reads its own copy in
+  your private folder).
 
 **Security pass** (2026-11-18 review)
 - Solo mode answers only loopback host names (stops DNS rebinding), and every

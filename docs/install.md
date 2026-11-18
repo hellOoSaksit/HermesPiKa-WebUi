@@ -1,8 +1,150 @@
+ภาษาไทย: [install.th.md](install.th.md)
+
 # Installing hpk
 
 hpk adds itself to Hermes Agent in one place: the profile's `config.yaml`. It
 registers six hooks and one read-only skills folder. It never edits any other
 Hermes file, it never reads `.env`, and it writes only after you say yes.
+
+## Quick install
+
+This part is for first-time users. It takes about five minutes. The longer
+sections below it explain the details.
+
+### 1. What you need
+
+- A computer with Windows 10 or 11, macOS, or Linux.
+- An internet connection.
+- A web browser (Chrome, Edge, Firefox or Safari).
+- About 1 GB of free disk space, if hpk also has to install Hermes Agent.
+- An account with an AI provider (for example an API key or a login). Hermes
+  Agent uses it to talk to a model. You add it after the first start.
+
+You do not need administrator rights. hpk installs for your user only.
+
+### 2. Windows (double-click)
+
+1. Open https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest and download `hpk.exe`.
+2. Double-click `hpk.exe`.
+3. Your browser (Edge or Chrome) may say that `hpk.exe` "isn't commonly downloaded" or "could harm your device". The program is not code-signed yet, so this is expected. Open the downloads list, click the **...** next to the file, choose **Keep**, then **Keep anyway** (in Chrome, just **Keep**).
+4. If Windows then shows "Windows protected your PC", click **More info**, then click **Run anyway**. It asks you once.
+5. hpk copies itself to `%LOCALAPPDATA%\hpk\bin`, adds that folder and the folder for Hermes (`%LOCALAPPDATA%\hpk\hermes\bin`) to your PATH (the list of folders where Windows looks for programs), adds a Start menu shortcut called "HPK Console", and opens HPK Console in your browser.
+
+The double-click leaves a console window open. That window **is** the HPK Console server: if you close it, the Console stops. To start it again, use the Start menu shortcut "HPK Console", or type `hpk` in a new terminal. To have it start by itself when you log in, run `hpk autostart on` or turn on **Start hpk when I log in** in Settings.
+
+### 3. Windows / macOS / Linux (one command)
+
+Windows: open PowerShell and run:
+
+```powershell
+irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/install.ps1 | iex
+```
+
+macOS and Linux: open a terminal and run:
+
+```sh
+curl -fsSL https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/install.sh | sh
+```
+
+The script downloads hpk, checks it against the published SHA-256 checksum
+(a fingerprint of the file), and stops if the fingerprint does not match. Then
+it installs hpk for your user and starts HPK Console.
+
+- To install a specific version, set `HPK_VERSION` (for example `HPK_VERSION=0.1.0`).
+- To install without starting HPK Console, set `HPK_NO_START=1`.
+- On macOS the script removes the "downloaded from the internet" mark, so Gatekeeper does not block hpk.
+- On macOS and Linux, hpk adds its folders (its own and the Hermes one) to PATH with one marked line in your shell profile files (`~/.profile`, `~/.zshrc`, `~/.bashrc`, `~/.bash_profile`): in each one that already exists. If none exists (a new Mac account, for example), hpk creates the one for your shell (`~/.zshrc` for zsh, `~/.bash_profile` for bash on macOS, `~/.bashrc` for bash on Linux, otherwise `~/.profile`). It tells you which file it changed.
+- At a terminal, the script starts HPK Console in the foreground (Ctrl+C stops it). Without a terminal it starts it in the background and prints the address and a log file.
+
+You can also run `hpk self-install` yourself at any time. Set
+`HPK_NO_SELFINSTALL=1` if you do not want hpk to install itself automatically.
+
+### 4. Docker
+
+Use this if you prefer to run Hermes Agent and hpk together in a container. You need Docker with Compose.
+
+1. Make an empty folder and open a terminal in it. Run every command below in that folder.
+2. Download the compose file. On macOS or Linux:
+
+```sh
+curl -fsSLO https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml
+```
+
+On Windows (PowerShell):
+
+```powershell
+irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml -OutFile compose.release.yaml
+```
+
+3. Open `compose.release.yaml` in a text editor and change `HPK_OWNER` to your email. It is used on the first start only.
+4. Start it:
+
+```sh
+docker compose -f compose.release.yaml up -d
+```
+
+5. Wait a few seconds for it to start, then print your owner token (your first sign-in key). If the token file is missing, wait a little and try again:
+
+```sh
+docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
+```
+
+6. Open http://127.0.0.1:7878 in your browser and paste the token. Then delete the token file:
+
+```sh
+docker compose -f compose.release.yaml exec hermes rm /opt/data/hpk/owner-token
+```
+
+7. Add a model account inside the container:
+
+```sh
+docker compose -f compose.release.yaml exec -u hermes hermes hermes auth add <provider>
+```
+
+If you use Git Bash on Windows, put `MSYS_NO_PATHCONV=1` in front of the `docker` commands. More in [docker.md](docker.md).
+
+### 5. First run: Hermes is found or installed, then add a model account
+
+1. HPK Console looks for Hermes Agent on your computer.
+2. If it finds Hermes, it uses it.
+3. If it does not, it offers to install the tested version, Hermes v0.23.1, into hpk's own folder. It first shows the download size and every source. Nothing is downloaded until you tick "I agree" and press Install.
+4. Then it shows the one change it wants to make to Hermes (adding hpk). Press "Add hpk to Hermes" to accept.
+5. Last, add a model account. Open a **new** terminal (so it can find `hermes`), then run:
+
+```sh
+hermes auth add <provider>
+```
+
+   On macOS and Linux you can also do it in the Console: **Settings**, then **AI accounts**, has a form to add a key. On Windows that page shows this command. Without an account, the agent cannot answer.
+
+### 6. Update
+
+Run the same install again (step 2 or 3). It stops a running hpk first, then replaces the old copy. Your data and projects stay as they are.
+
+### 7. Uninstall
+
+```sh
+hpk self-uninstall
+```
+
+First, if you added hpk to Hermes, take it out again:
+
+```sh
+hpk uninstall --yes
+```
+
+Then `hpk self-uninstall` removes hpk, its PATH entries, the Start menu shortcut and start at login. It leaves your hpk data and your Hermes home alone, so you lose nothing. The folder of the Hermes that hpk installed leaves your PATH too, so the `hermes` command will no longer be found in a new terminal (the files are still in the data folder). To delete everything, remove the data folder yourself: `%LOCALAPPDATA%\hpk` on Windows, `~/Library/Application Support/hpk` on macOS, `~/.local/share/hpk` on Linux (`$XDG_DATA_HOME/hpk` if you set it).
+
+### 8. Troubleshooting
+
+- **"Port 7878 is in use".** Another program, or another hpk, is using the port. Run `hpk stop`, or start on another port: `hpk --addr 127.0.0.1:7879`.
+- **`hpk` is not found after installing.** PATH changes only reach terminals opened afterwards. Close the terminal and open a new one.
+- **macOS says the app cannot be opened (Gatekeeper).** Use the one-command install (step 3), which removes the mark. Or run `xattr -d com.apple.quarantine <path to hpk>`.
+- **Windows SmartScreen blocks it.** Click **More info**, then **Run anyway**.
+- **Over SSH (no browser on that machine).** Forward the port, then open the address on your own computer: `ssh -L 7878:127.0.0.1:7878 you@host`, then open http://127.0.0.1:7878 locally.
+- **Something else.** Run `hpk doctor`. It checks Hermes, hooks, projects and the Console.
+
+---
 
 ## The short way: `hpk`
 
@@ -50,7 +192,7 @@ The add-project page first checks two things:
      `hermes-acp` in `<hpk data>/hermes/bin`.
 
    hpk puts that `bin` folder first on its own PATH, so the doctor, chats and
-   jobs find it; add it to your shell's PATH to use `hermes` in a terminal. To
+   jobs find it. The installed hpk also puts it on your user PATH, so `hermes` works in a new terminal. To
    remove it, delete `<hpk data>/hermes`. From a terminal: `hpk setup hermes`
    shows the same plan, `hpk setup hermes --yes` runs it. This is hpk's own
    install, not Hermes' official installer (`scripts/install.sh`/`.ps1`, which
@@ -59,7 +201,7 @@ The add-project page first checks two things:
 2. **hpk in Hermes.** The same change as `hpk install` (below), shown with its
    diff, applied after you press "Add hpk to Hermes".
 
-Then connect a model account with `hermes setup` in a terminal.
+Then connect a model account with `hermes auth add <provider>` in a terminal.
 
 ### Hermes Agent's licence (checked for an offline bundle)
 

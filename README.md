@@ -1,3 +1,5 @@
+🇹🇭 [คู่มือภาษาไทย](docs/install.th.md)
+
 # Hermes Project Kit (hpk)
 
 > Working name. An independent add-on for [Hermes Agent](https://github.com/NousResearch/hermes-agent) — not an official Nous Research product.
@@ -10,6 +12,8 @@ hpk makes a project's agent work visible and governable:
 - **A board of claims** so two people (or two agents) never do the same work without knowing.
 - **HPK Console**, a web UI served from the same binary.
 
+v1 is solo-first: team features are greyed out for now; see [docs/ROADMAP.md](docs/ROADMAP.md).
+
 Status: **M9** — team mode: people, roles (owner, maintainer, member, viewer), sign-in with personal tokens or through a reverse proxy, and a Console that serves other machines only with sign-in and TLS ([docs/team.md](docs/team.md)), and a Docker image for a team server, tested behind a TLS proxy ([docs/docker.md](docs/docker.md)). Tested for real against Hermes v0.23.1: reading a project into its wiki from a Console chat, red-line approvals, and scheduled jobs that run, skip when nothing changed, and stop mid-run at their budget. hpk counts real tokens and cost per session, enforces money caps, and can send notices through `hermes send` for shared projects ([docs/budgets.md](docs/budgets.md)). `model_policy: local_only` is enforced ([docs/privacy.md](docs/privacy.md)). MCP connections (web MCPs everywhere, local programs such as Blender or Roblox Studio only on your own machine), what uses each MCP, and background jobs you can stop ([docs/mcp.md](docs/mcp.md)). The chat shows what the agent makes: 3D models with textures and animation (FBX, glTF, OBJ, …), images, video, PDF, tables and charts ([docs/chat-media.md](docs/chat-media.md)). Earlier: M8 install, doctor and selftest ([docs/install.md](docs/install.md)), M7 Console on real data, M6 cron, M5.5 board, M5 sessions, M4 gates, M3 add-project, M2 privacy, M1 wiki core, M0 skeleton. See [docs/DESIGN.md](docs/DESIGN.md) (Thai) for the full design and [docs/m0-findings.md](docs/m0-findings.md) for what we verified against Hermes.
 - [Built-in browser and vault](docs/browser.md): the AI browses on your machine and uses your passwords without seeing them.
 - [Run the AI under its own OS account](docs/isolation.md): `hpk isolate setup` keeps the vault, the browser and the Console key out of the AI's reach (Windows: a separate local account; or a container).
@@ -17,22 +21,51 @@ Status: **M9** — team mode: people, roles (owner, maintainer, member, viewer),
 ## Install
 
 hpk is one program, and HPK Console is a web app, so it works the same on
-Windows, macOS and Linux:
+Windows, macOS and Linux. Pick one way:
 
-1. Download `hpk` for your OS from the releases page (or build it, below) and
-   put it anywhere on PATH.
-2. Run `hpk`. It starts HPK Console on http://127.0.0.1:7878 (once per
-   machine: a second `hpk` just opens it) and opens it in your browser.
-   Stop it with Ctrl+C or `hpk stop`.
-3. First run: the Console checks for Hermes Agent. If it is missing, it offers
-   to install the tested version (v0.23.1) into hpk's own folder with its own
-   portable Python, showing the size and every source first. Then it adds hpk
-   to Hermes (the same change `hpk install` shows) after you agree.
-4. Optional, in Settings › General: **Install as app** (its own window and
-   icon, from Chrome, Edge or Safari), desktop notices with quiet hours, and
-   **Start hpk when I log in** (the only OS-specific part).
+**Windows.** Download `hpk.exe` from the
+[Releases page](https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest)
+and double-click it (your browser may ask you to Keep the file, and SmartScreen may warn: More info, then Run anyway). Or, in
+PowerShell:
 
-Details: [docs/install.md](docs/install.md).
+```powershell
+irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/install.ps1 | iex
+```
+
+**macOS / Linux:**
+
+```sh
+curl -fsSL https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/install.sh | sh
+```
+
+**Docker** (Hermes Agent and hpk together). In an empty folder, download the
+compose file (macOS/Linux; on Windows PowerShell use
+`irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml -OutFile compose.release.yaml`),
+change `HPK_OWNER` in it to your email, then run these in that folder:
+
+```sh
+curl -fsSLO https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml
+docker compose -f compose.release.yaml up -d
+docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
+# then open http://127.0.0.1:7878 and paste the token
+```
+
+hpk installs itself for your user (no administrator rights), adds itself to
+PATH and starts HPK Console on http://127.0.0.1:7878 in your browser (once per
+machine: a second `hpk` just opens it). Stop it with Ctrl+C or `hpk stop`;
+remove it with `hpk self-uninstall`. Update by running the same install again.
+
+First run: the Console checks for Hermes Agent. If it is missing, it offers
+to install the tested version (v0.23.1) into hpk's own folder with its own
+portable Python, showing the size and every source first. Then it adds hpk
+to Hermes (the same change `hpk install` shows) after you agree. Then add a
+model account: on macOS and Linux in Settings, AI accounts (a form); on Windows run `hermes auth add <provider>` in a new terminal (that page shows the command).
+
+Optional, in Settings › General: **Install as app** (its own window and
+icon, from Chrome, Edge or Safari), desktop notices with quiet hours, and
+**Start hpk when I log in**.
+
+Step by step for beginners: [docs/install.md](docs/install.md) ([คู่มือภาษาไทย](docs/install.th.md)).
 
 ## Build
 
@@ -42,6 +75,8 @@ Requires Go 1.27+.
 go test ./...
 go build -o dist/hpk ./cmd/hpk
 ```
+
+While developing, set `HPK_NO_SELFINSTALL=1` so a bare `dist/hpk` runs from where it is instead of installing itself into your data folder.
 
 ## Use
 

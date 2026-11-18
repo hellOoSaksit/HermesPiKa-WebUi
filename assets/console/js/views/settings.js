@@ -7,6 +7,7 @@ import { KINDS } from '../notifyrules.js';
 import { t, LANGS, getLang, setLang } from '../i18n.js';
 import { h, icon, lamp, pageHead, toast, panel } from '../ui.js';
 import { appearancePanel } from './appearance.js';
+import { folderRow } from '../folderpick.js';
 
 export default async function settings({ rerender }) {
   const doctorBox = h('div', h('p.muted', { style: { padding: '16px' } }, t('settings.checking')));
@@ -28,7 +29,8 @@ export default async function settings({ rerender }) {
         LANGS.map((l) => h('option', { value: l.code, selected: l.code === getLang() || null }, l.label))),
       h('span.hint', t('settings.languageHint'))),
     appRow(rerender),
-    isLive() && !teamMode() ? loginRow() : null);
+    isLive() && !teamMode() ? loginRow() : null,
+    isLive() && !teamMode() ? projectFolders() : null);
   const appearance = panel(t('settings.ap.title'), t('settings.ap.sub'), appearancePanel());
 
   const notify = isLive() ? liveNotify() : h('div.stack',
@@ -189,5 +191,18 @@ function deskNotices() {
         h('div.row', h('button.btn.sm', { type: 'button', onclick: () => testNotice() }, icon('bell'), t('desk.test')))) : null);
   };
   draw();
+  return box;
+}
+
+// Where this project's folder and wiki live (solo mode): pick, then confirm the move.
+function projectFolders() {
+  const box = h('div.stack');
+  const p = api.project();
+  api.projectSettings().then((cur) => {
+    if (!cur.root && !cur.wikiDir) return;
+    box.replaceChildren(
+      folderRow({ id: 'setRoot', label: t('folders.root.label'), hint: t('folders.root.hint'), value: cur.root, applyLabel: t('folders.root.apply'), onApply: (dir) => api.setProjectRoot(p.id, dir) }),
+      folderRow({ id: 'setWiki', label: t('folders.wiki.label'), hint: t('folders.wiki.hint'), value: cur.wikiDir, applyLabel: t('folders.wiki.apply'), onApply: (dir) => api.setWikiDir(p.id, dir) }));
+  }).catch(() => {});
   return box;
 }

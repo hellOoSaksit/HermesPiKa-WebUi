@@ -38,6 +38,11 @@ type Options struct {
 	Image     string   // docker: the image (hpk-hermes:local)
 	Container string   // docker: the container name
 	Compose   string   // docker: where to write the compose file
+
+	// Recordings is the folder the person chose for browser recordings ("" = the default);
+	// ResetRecordings sets it back to the default.
+	Recordings      string
+	ResetRecordings func() error
 }
 
 // SetupPlan lists what setup will do, and the config it will save.
@@ -72,7 +77,9 @@ func SetupPlan(o Options) ([]Step, *Config, error) {
 			o.Image = "hpk-hermes:local"
 		}
 		c.Container, c.Compose = o.Container, o.Compose
-		c.Mounts = append(c.Mounts, Mount{Host: o.Home, Container: ContainerHome})
+		c.Mounts = append(c.Mounts, Mount{Host: o.Home, Container: ContainerHome},
+			// what the person decided stays read-only for the AI inside the shared home
+			Mount{Host: TrustedDir(o.Home), Container: ContainerHome + "/hpk/trusted", ReadOnly: true})
 		for _, p := range o.Projects {
 			c.Mounts = append(c.Mounts, Mount{Host: p, Container: ContainerPath(p)})
 		}
@@ -86,6 +93,9 @@ func SetupPlan(o Options) ([]Step, *Config, error) {
 			}})
 	default:
 		return nil, nil, fmt.Errorf("unknown mode %q (user or docker)", o.Mode)
+	}
+	if st := recordingsStep(o); st != nil {
+		steps = append(steps, *st)
 	}
 	steps = append(steps, Step{Say: "Save these settings in " + ConfigPath() + " (this account only); hpk then starts every hermes and hermes-acp through `hpk ai-relay`",
 		Do: func() error { return Save(c) }})
@@ -146,7 +156,11 @@ func firstClause(s string) string {
 func mountList(ms []Mount) string {
 	var l []string
 	for _, m := range ms {
-		l = append(l, m.Host+" → "+m.Container)
+		ro := ""
+		if m.ReadOnly {
+			ro = " (read-only)"
+		}
+		l = append(l, m.Host+" → "+m.Container+ro)
 	}
 	return strings.Join(l, ", ")
 }
@@ -161,7 +175,21 @@ func moveSteps(home, private string, toPrivate bool) []Step {
 		from, to = to, from
 		say = "Move the vault, browser profile and recordings and Console sessions back to " + to
 	}
+	trustFrom, trustTo := TrustedDir(home), filepath.Join(private, "trusted")
+	if !toPrivate {
+		trustFrom, trustTo = trustTo, trustFrom
+	}
+	say += "; copy what you approved (" + trustFrom + ") to " + trustTo
 	return []Step{{Say: say + "; delete " + filepath.Join(home, "hpk", "console-link"), Do: func() error {
+		// the copy hpk trusts: in the private folder while the AI is isolated
+		// (isolate.OwnTrustedDir); back in the home when it is not
+		// never through a link or junction the AI planted in the home
+		if err := sharedGuard(home); err != nil {
+			return err
+		}
+		if err := copyTrusted(trustFrom, trustTo); err != nil {
+			return err
+		}
 		for _, rel := range Private {
 			src, dst := filepath.Join(from, filepath.FromSlash(rel)), filepath.Join(to, filepath.FromSlash(rel))
 			if _, err := os.Stat(src); err != nil {
@@ -211,7 +239,11 @@ func writeCompose(file, image, container string, ms []Mount) error {
 	b.WriteString("    extra_hosts:\n      - \"host.docker.internal:host-gateway\"\n")
 	b.WriteString("    volumes:\n")
 	for _, m := range ms {
-		fmt.Fprintf(&b, "      - %q\n", m.Host+":"+m.Container)
+		v := m.Host + ":" + m.Container
+		if m.ReadOnly {
+			v += ":ro"
+		}
+		fmt.Fprintf(&b, "      - %q\n", v)
 	}
 	b.WriteString("    restart: unless-stopped\n")
 	if err := os.MkdirAll(filepath.Dir(file), 0o700); err != nil {
@@ -234,14 +266,15 @@ func run(name string, args ...string) error {
 
 // ProbeResult is what `hpk ai-probe` reports, run as the AI.
 type ProbeResult struct {
-	User          string   `json:"user"`
-	PrivateRead   []string `json:"privateRead"` // private paths the AI could open (must be empty)
-	HomeWritable  bool     `json:"homeWritable"`
-	HomeWriteNote string   `json:"homeWriteNote,omitempty"`
+	User           string   `json:"user"`
+	PrivateRead    []string `json:"privateRead"` // private paths the AI could open (must be empty)
+	HomeWritable   bool     `json:"homeWritable"`
+	HomeWriteNote  string   `json:"homeWriteNote,omitempty"`
+	TrustedWritten []string `json:"trustedWritten,omitempty"` // places in <home>/hpk/trusted the AI could change (must be empty)
 }
 
-// Probe checks, from the AI's side, that the private folder is closed and the
-// Hermes home is open.
+// Probe checks, from the AI's side, that the private folder is closed, the
+// Hermes home is open and <home>/hpk/trusted is read-only.
 func Probe(private, home string) ProbeResult {
 	var r ProbeResult
 	if u, err := user.Current(); err == nil {
@@ -263,7 +296,32 @@ func Probe(private, home string) ProbeResult {
 	} else {
 		r.HomeWriteNote = err.Error()
 	}
+	r.TrustedWritten = probeTrusted(TrustedDir(home))
 	return r
+}
+
+// probeTrusted tries, as the AI, to add a file to dir and to open each file in
+// it for writing (nothing is changed: the new file is removed, the opened ones
+// are closed untouched). It returns what it could write.
+func probeTrusted(dir string) []string {
+	var out []string
+	if f, err := os.CreateTemp(dir, ".hpk-ai-probe-*"); err == nil {
+		f.Close()
+		os.Remove(f.Name())
+		out = append(out, dir)
+	}
+	ents, _ := os.ReadDir(dir)
+	for _, e := range ents {
+		if !e.Type().IsRegular() {
+			continue
+		}
+		p := filepath.Join(dir, e.Name())
+		if f, err := os.OpenFile(p, os.O_WRONLY, 0); err == nil {
+			f.Close()
+			out = append(out, p)
+		}
+	}
+	return out
 }
 
 // PrintProbe writes a probe result as JSON (ai-probe's output).
@@ -283,6 +341,9 @@ func Judge(c *Config, r ProbeResult) []string {
 	}
 	if !r.HomeWritable {
 		bad = append(bad, "the AI cannot write the Hermes home: "+r.HomeWriteNote)
+	}
+	for _, p := range r.TrustedWritten {
+		bad = append(bad, "the AI can change "+p+" (it must be read-only for the AI; hpk serve or hpk isolate status repairs it)")
 	}
 	return bad
 }

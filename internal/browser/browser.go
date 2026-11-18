@@ -172,7 +172,9 @@ func (m *Manager) Start(ctx context.Context) error {
 	}
 	dir := Dir(m.home)
 	os.MkdirAll(filepath.Join(dir, "profile"), 0o700)
-	pruneRuns(dir, 30*24*time.Hour)
+	runs := RunsDir(m.home)
+	_ = os.MkdirAll(runs, 0o700)
+	pruneRuns(runs, 30*24*time.Hour)
 	st := m.State()
 	profile := filepath.Join(dir, "profile")
 	var cmd *exec.Cmd
@@ -281,7 +283,7 @@ func (m *Manager) Start(ctx context.Context) error {
 			return err
 		}
 	}
-	rec, err := newRecorder(dir)
+	rec, err := newRecorder(runs)
 	if err != nil {
 		kill()
 		return err

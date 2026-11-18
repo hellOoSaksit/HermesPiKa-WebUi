@@ -36,7 +36,7 @@ export default async function projects({ go }) {
     pageHead(t('projects.title'), t('projects.lede'), [
       h('a.btn', { href: '#/setup' }, icon('sessions'), t('projects.manageChain')),
       h('a.btn.primary', { href: '#/projects/new' }, icon('plus'), t('projects.add'))]),
-    section('team'),
+    list.some((p) => p.kind === 'team') ? section('team') : null,
     section('personal'),
     h('div.callout.route', icon('info'), h('div', t('projects.chainNote')))) };
 }

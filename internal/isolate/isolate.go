@@ -65,10 +65,12 @@ type Config struct {
 	Created   time.Time `json:"created"`
 }
 
-// Mount maps a host folder into the container.
+// Mount maps a host folder into the container; ReadOnly mounts it read-only
+// (hpk/trusted over the read-write home).
 type Mount struct {
 	Host      string `json:"host"`
 	Container string `json:"container"`
+	ReadOnly  bool   `json:"readOnly,omitempty"`
 }
 
 // ConfigPath is isolation.json in the person's config folder
@@ -142,6 +144,17 @@ func PrivateDir(home string) string {
 	}
 	return filepath.Join(home, "hpk")
 }
+
+// TrustedDir is <home>/hpk/trusted: what the person decided (approved folder
+// rules, where a wiki was moved), for the AI's side to read. The AI's account
+// gets it read-only, but it sits in a home the AI can write.
+func TrustedDir(home string) string { return filepath.Join(home, "hpk", "trusted") }
+
+// OwnTrustedDir is the copy hpk itself trusts: <private>/trusted while the AI
+// is isolated (out of the AI's reach, in every mode), else TrustedDir. hpk
+// writes both and reads only this one. The AI's own hpk (hooks) has no
+// isolation settings, so it reads TrustedDir.
+func OwnTrustedDir(home string) string { return filepath.Join(PrivateDir(home), "trusted") }
 
 // Private names, relative to PrivateDir: they move out of the Hermes home when
 // the AI is isolated, and back when it is not.
@@ -308,3 +321,51 @@ func Exec(s Spec) int {
 	}
 	return 0
 }
+
+// errContainer: folders are mounted into the container, not granted to an account.
+var errContainer = errors.New("not supported while the AI runs in a container")
+
+// Grant lets the AI's account read and write dir (a project folder or wiki the
+// person moved) and records it for teardown. Windows with a dedicated account
+// only; the container mode and other systems report why not.
+func Grant(c *Config, dir string) error {
+	if c.Mode == ModeDocker {
+		return errContainer
+	}
+	if err := grantDir(c, dir); err != nil {
+		return err
+	}
+	for _, g := range c.Granted {
+		if g == dir {
+			return Save(c)
+		}
+	}
+	c.Granted = append(c.Granted, dir)
+	return Save(c)
+}
+
+// Ungrant takes the AI's account off dir again.
+func Ungrant(c *Config, dir string) error {
+	if c.Mode == ModeDocker {
+		return errContainer
+	}
+	if err := ungrantDir(c, dir); err != nil {
+		return err
+	}
+	var kept []string
+	for _, g := range c.Granted {
+		if g != dir {
+			kept = append(kept, g)
+		}
+	}
+	c.Granted = kept
+	return Save(c)
+}
+
+// IsUnsupported reports whether Grant or Ungrant refused because this setup
+// (a container, or an account made by hand) has no automatic folder grants.
+func IsUnsupported(err error) bool { return err == errContainer || err == errManual }
+
+// MakePrivate creates dir so that only this account (and the system) can open
+// it. Used for a recordings folder the person chose, once isolation is on.
+func MakePrivate(dir string) error { return makePrivate(dir) }

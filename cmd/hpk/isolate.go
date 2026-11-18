@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"hpk.local/hpk/internal/browser"
 	"hpk.local/hpk/internal/install"
 	"hpk.local/hpk/internal/isolate"
 	"hpk.local/hpk/internal/launch"
@@ -98,9 +99,13 @@ func isolateSetup(args []string, stdin io.Reader, stdout, stderr io.Writer) int 
 		fmt.Fprintf(stderr, "hpk isolate: already set up (%s, home %s); run hpk isolate teardown first to change it\n", c.Mode, c.Home)
 		return 1
 	}
+	if err := os.MkdirAll(isolate.TrustedDir(home), 0o755); err != nil {
+		fmt.Fprintln(stderr, "hpk isolate:", err)
+		return 1
+	}
 	o := isolate.Options{Mode: isolate.ModeUser, User: *user, Home: home, Private: privateDefault(),
 		Bin: install.Resolve(home, "").Bin, HermesDir: setup.Dir(launch.DataDir()), Image: *image,
-		ReadOnly: []string{filepath.Join(home, "bin"), filepath.Join(home, "hermes-agent"), filepath.Join(home, "installs")}}
+		ReadOnly: []string{filepath.Join(home, "bin"), filepath.Join(home, "hermes-agent"), filepath.Join(home, "installs"), isolate.TrustedDir(home)}}
 	if *docker {
 		o.Mode, o.Container = isolate.ModeDocker, isolate.DefaultUser
 		o.Compose = filepath.Join(launch.DataDir(), "isolate", "compose.yaml")
@@ -113,6 +118,9 @@ func isolateSetup(args []string, stdin io.Reader, stdout, stderr io.Writer) int 
 		if _, err := os.Stat(p.Root); err == nil {
 			o.Projects = append(o.Projects, p.Root)
 		}
+	}
+	if rd := browser.RunsDir(home); rd != filepath.Join(browser.Dir(home), "runs") { // a folder the person chose
+		o.Recordings, o.ResetRecordings = rd, func() error { return browser.SetRunsDir("") }
 	}
 	steps, _, err := isolate.SetupPlan(o)
 	if err != nil {
@@ -218,6 +226,14 @@ func isolateStatus(stdout io.Writer) int {
 		}
 		fmt.Fprintf(stdout, "home      %s (shared with the AI)\nprivate   %s (yours only)\nsettings  %s\nsince     %s\n\n",
 			c.Home, c.Private, isolate.ConfigPath(), c.Created.Local().Format("2006-01-02 15:04"))
+		if cc, ok := isolate.For(home); ok {
+			// what the person approved must stay read-only for the AI
+			if fixed, err := isolate.RepairTrusted(cc); err != nil {
+				fmt.Fprintf(stdout, "! could not make %s read-only for the AI: %v\n\n", isolate.TrustedDir(home), err)
+			} else if fixed {
+				fmt.Fprintf(stdout, "✓ made %s read-only for %s again\n\n", isolate.TrustedDir(home), cc.User)
+			}
+		}
 	}
 	fail := false
 	mark := map[string]string{"ok": "✓", "warn": "!", "fail": "✗", "info": "·"}

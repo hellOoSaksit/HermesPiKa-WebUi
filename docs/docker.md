@@ -5,6 +5,53 @@ as a non-root user, works with a read-only root filesystem and no Linux
 capabilities, and keeps everything in the `/data` volume (the Hermes home hpk
 uses).
 
+## Quick start (one person, one computer)
+
+Use the released image with `compose.release.yaml`, which is attached to every
+release (`ghcr.io/helloosaksit/hpk-hermes:0.1.0`, Hermes Agent and hpk
+together, the Console on http://127.0.0.1:7878). In an empty folder, download
+it (macOS/Linux):
+
+```bash
+curl -fsSLO https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml
+```
+
+On Windows (PowerShell):
+
+```powershell
+irm https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml -OutFile compose.release.yaml
+```
+
+Change `HPK_OWNER` in the file to your email, then run these in that folder:
+
+```bash
+docker compose -f compose.release.yaml up -d
+```
+
+Wait a few seconds for it to start. If the token file is missing, wait a
+little and run it again:
+
+```bash
+docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
+```
+
+Open http://127.0.0.1:7878 and paste the token, then delete the token file:
+
+```bash
+docker compose -f compose.release.yaml exec hermes rm /opt/data/hpk/owner-token
+```
+
+Hermes needs a model account:
+
+```bash
+docker compose -f compose.release.yaml exec -u hermes hermes hermes auth add <provider>
+```
+
+In Git Bash on Windows, put `MSYS_NO_PATHCONV=1` before these commands. Data
+lives in the `hermes-data` volume. For a team server with TLS, read on. Beginner
+guide: [install.md](install.md) (Thai: [install.th.md](install.th.md)).
+Publishing a release (maintainers): [release.md](release.md).
+
 ## Build
 
 The Dockerfile packages a Linux binary built outside the image, so the image

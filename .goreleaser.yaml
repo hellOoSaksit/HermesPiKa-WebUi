@@ -17,16 +17,46 @@ builds:
       - -X hpk.local/hpk/internal/version.Commit={{.ShortCommit}}
       - -X hpk.local/hpk/internal/version.Date={{.Date}}
 
+  # The same Windows build again, only so it can ship as a bare hpk.exe
+  # (double-click to install; no unzip). Not part of the archives.
+  - id: hpk-exe
+    main: ./cmd/hpk
+    binary: hpk
+    env:
+      - CGO_ENABLED=0
+    goos: [windows]
+    goarch: [amd64]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w
+      - -X hpk.local/hpk/internal/version.Version={{.Version}}
+      - -X hpk.local/hpk/internal/version.Commit={{.ShortCommit}}
+      - -X hpk.local/hpk/internal/version.Date={{.Date}}
+
 archives:
-  - formats: [tar.gz]
+  - id: hpk
+    ids: [hpk]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
     format_overrides:
       - goos: windows
         formats: [zip]
     files: [LICENSE, README.md, CHANGELOG.md, docs/*.md]
 
+  # The bare Windows binary, uploaded as hpk.exe (the binary format adds the .exe).
+  - id: hpk-exe
+    ids: [hpk-exe]
+    formats: [binary]
+    name_template: hpk
+
 checksum:
   name_template: checksums.txt
   algorithm: sha256
+  extra_files: # the install scripts are checked by the same checksums.txt
+    - glob: install.sh
+    - glob: install.ps1
+    - glob: docker/compose.release.yaml
+      name_template: compose.release.yaml
 
 sboms:
   - artifacts: archive
@@ -40,6 +70,11 @@ changelog:
 release:
   draft: true # a person reviews and publishes
   prerelease: auto
+  extra_files: # users fetch these from releases/latest/download/
+    - glob: install.sh
+    - glob: install.ps1
+    - glob: docker/compose.release.yaml
+      name_template: compose.release.yaml
   footer: |
     Source-available under MIT + Commons Clause: use, change and share it; do not sell it. See LICENSE.
-    Verify a download: sha256sum -c checksums.txt
+    Verify a download: sha256sum --ignore-missing -c checksums.txt

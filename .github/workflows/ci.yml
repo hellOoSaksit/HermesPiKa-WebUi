@@ -79,6 +79,38 @@ jobs:
         with:
           version: "~> v2"
           args: check
+      # Build the whole release without publishing, then check the asset list the
+      # install scripts and docs rely on.
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --snapshot --clean --skip=publish,sbom
+      - name: release assets are all there
+        shell: bash
+        run: |
+          set -u
+          cd dist
+          ls -1
+          missing=0
+          # Archives: a real file, listed in checksums.txt.
+          archive() {
+            set -- $1
+            if [ ! -f "$1" ]; then echo "MISSING: $1"; missing=1; return; fi
+            grep -q "  $(basename "$1")\$" checksums.txt || { echo "NOT IN checksums.txt: $1"; missing=1; }
+          }
+          for os in linux darwin; do for a in amd64 arm64; do archive "hpk_*_${os}_${a}.tar.gz"; done; done
+          for a in amd64 arm64; do archive "hpk_*_windows_${a}.zip"; done
+          # The bare exe is built into its own folder and uploaded as hpk.exe;
+          # the scripts and compose file are uploaded from the repo. Each must
+          # exist and be listed in checksums.txt.
+          [ -n "$(find . -name hpk.exe -path '*hpk-exe*' | head -n 1)" ] || { echo "MISSING: hpk.exe build"; missing=1; }
+          for f in hpk.exe install.sh install.ps1 compose.release.yaml; do
+            grep -q "  $f\$" checksums.txt || { echo "NOT IN checksums.txt: $f"; missing=1; }
+          done
+          for f in ../install.sh ../install.ps1 ../docker/compose.release.yaml; do
+            [ -f "$f" ] || { echo "MISSING in repo: $f"; missing=1; }
+          done
+          [ "$missing" = 0 ]
 
   # The image builds and starts healthy (no publishing here).
   docker:

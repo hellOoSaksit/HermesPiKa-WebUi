@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: MIT AND LicenseRef-Commons-Clause-1.0
+#
+# Hermes Agent + hpk from the released image, for one person on one computer.
+# No build, no proxy: the Console is on http://127.0.0.1:7878, reachable from this
+# computer only (plain HTTP on loopback).
+#
+# Download it into an empty folder (it is attached to every release):
+#   curl -fsSLO https://github.com/hellOoSaksit/HermesPiKa-WebUi/releases/latest/download/compose.release.yaml
+#   (Windows PowerShell: irm <same URL> -OutFile compose.release.yaml)
+#
+#   docker compose -f compose.release.yaml up -d
+#   (wait a few seconds; if the token file is missing in the next step, try again)
+#   docker compose -f compose.release.yaml exec hermes cat /opt/data/hpk/owner-token
+#   open http://127.0.0.1:7878 and paste the token, then delete the token file:
+#   docker compose -f compose.release.yaml exec hermes rm /opt/data/hpk/owner-token
+#
+# Hermes needs a model account:
+#   docker compose -f compose.release.yaml exec -u hermes hermes hermes auth add <provider>
+#
+# Change HPK_OWNER below to your email before the first start. For a server, use
+# docker/hermes/compose.yaml behind a TLS proxy instead (docs/docker.md).
+name: hpk-hermes
+services:
+  hermes:
+    image: ghcr.io/helloosaksit/hpk-hermes:0.1.0
+    environment:
+      HPK_OWNER: you@example.com # first start only
+      HPK_BEHIND_PROXY: "1" # serve plain HTTP; safe here because the port is loopback-only
+      HERMES_UID: "10000"
+      HERMES_GID: "10000"
+    volumes:
+      - hermes-data:/opt/data # Hermes home: config, sessions, hpk projects and wikis
+    ports:
+      - "127.0.0.1:7878:7878"
+    restart: unless-stopped
+
+volumes:
+  hermes-data:

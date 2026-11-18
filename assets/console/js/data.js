@@ -462,6 +462,8 @@ let state = {
   projectId: 'atlas-web',
   mode: { value: 'ask', autoUntil: null, scope: 'project' },
   teamMode: true,
+  features: { team: false }, // v1 is solo-first: team features are greyed out
+  teamJoined: false,
   budget: { daily: 12, monthly: 200 },
 };
 
@@ -477,6 +479,8 @@ export const api = {
     state.mode = { value, autoUntil: minutes ? Date.now() + minutes * 60_000 : null, scope };
     emit('mode', state.mode);
   },
+  feature: (name) => !!state.features?.[name],
+  teamJoined: () => !!state.teamJoined,
   setTeamMode(on) { state.teamMode = on; emit('team', on); },
   projects: () => delay(projects),
   projectsSync: () => projects,
@@ -839,6 +843,7 @@ export const api = {
     return entry;
   },
   stopSession(sid) { const s = sessions.find((x) => x.id === sid); if (s) s.status = 'stopped'; emit('sessions'); },
+  listDirs: () => Promise.reject(new Error('Run hpk serve to browse folders')),
   scanProject: (path) => delay({
     path,
     files: 1843, languages: [['TypeScript', 61], ['Markdown', 14], ['SQL', 9], ['YAML', 6], ['Other', 10]],

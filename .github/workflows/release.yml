@@ -32,3 +32,59 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # The Hermes + hpk image on GHCR (linux/amd64 and linux/arm64), tagged with the
+  # release version, and with latest only for a final release (no "-rc1" suffix).
+  # It runs after the release job, so an image is published only when the tests
+  # and the GoReleaser run passed.
+  docker:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Version, image name and tags
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/hpk-hermes"
+          {
+            echo "VERSION=${VERSION}"
+            echo "IMAGE=${IMAGE}"
+            echo "COMMIT=$(git rev-parse --short HEAD)"
+            echo "DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "TAGS<<EOF"
+            echo "${IMAGE}:${VERSION}"
+            if [[ "${GITHUB_REF_NAME}" != *-* ]]; then echo "${IMAGE}:latest"; fi
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+      - name: Build hpk for linux/amd64 and linux/arm64
+        run: |
+          for arch in amd64 arm64; do
+            CGO_ENABLED=0 GOOS=linux GOARCH=$arch go build -trimpath \
+              -ldflags "-s -w \
+                -X hpk.local/hpk/internal/version.Version=${VERSION} \
+                -X hpk.local/hpk/internal/version.Commit=${COMMIT} \
+                -X hpk.local/hpk/internal/version.Date=${DATE}" \
+              -o "dist/docker/hpk-linux-${arch}" ./cmd/hpk
+          done
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/hermes/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ env.TAGS }}

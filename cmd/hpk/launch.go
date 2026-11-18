@@ -34,6 +34,7 @@ func runLaunch(args []string, stdout, stderr io.Writer) int {
 	fs.SetOutput(stderr)
 	addr := fs.String("addr", launch.DefaultAddr, "listen address (this machine only)")
 	noOpen := fs.Bool("no-open", false, "do not open the browser")
+	fs.Bool("no-install", false, "do not install hpk for you (accepted for scripts; only a bare `hpk` self-installs)")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}

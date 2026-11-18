@@ -53,6 +53,16 @@ home, where the AI could plant a file that points hpk somewhere else.
    nothing else. The file sits in the shared home, so the AI's account and you
    can read it, and the hooks still refuse agent tool calls that name it.
 
+
+**What you decided** (approved folder rules, where a wiki was moved) is kept in
+`<home>/hpk/trusted/`, which the AI may read but not change: read and run only
+for `hpk-ai` (set up with inheritance off, and checked and repaired every time
+`hpk serve` starts and on `hpk isolate status`), mounted read-only in the
+container. hpk itself never trusts that copy: it writes a second one to
+`<private>/trusted/` and reads only that, so a file the AI places in the home
+cannot make hpk treat a page as approved or write a wiki elsewhere. The last
+tidy's undo record lives in `<private>/tidy/` for the same reason.
+
 Nothing else is shared: no DevTools port (below), no vault, no Console cookie.
 
 ## Options per OS
@@ -153,7 +163,8 @@ guard then); isolated, it refuses and says why. `HPK_BROWSER_DEVTOOLS=pipe` or
   isolated and the account (or container) and its password are there, **fail**
   when the setup is broken, and a warning for private files left in the home.
 - `hpk isolate status`: the settings and the same checks.
-- `hpk isolate check`: starts hpk as the AI and tests what it can open.
+- `hpk isolate check`: starts hpk as the AI and tests what it can open, and
+  that it cannot change `<home>/hpk/trusted`.
 
 ## Limits
 

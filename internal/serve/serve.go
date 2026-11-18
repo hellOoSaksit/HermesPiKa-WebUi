@@ -21,6 +21,7 @@ import (
 	"sync"
 	"time"
 
+	"hpk.local/hpk/internal/isolate"
 	"hpk.local/hpk/internal/launch"
 	"hpk.local/hpk/internal/project"
 	"hpk.local/hpk/internal/version"
@@ -95,6 +96,10 @@ func (s *Server) Routes(console fs.FS) http.Handler {
 	s.mcpAPI(mux)
 	s.bgAPI(mux)
 	s.filesAPI(mux)
+	s.uploadAPI(mux)
+	s.tidyAPI(mux)
+	s.locationsAPI(mux)
+	s.fsAPI(mux)
 	s.browserAPI(mux)
 	s.consoleKeyRoutes(mux)
 	s.lifecycleAPI(mux)
@@ -139,6 +144,15 @@ func Run(ctx context.Context, o Options) error {
 		defer done()
 	}
 	if s.personalOn() {
+		// <home>/hpk/trusted must stay read-only for the AI (setups made before
+		// it existed let it inherit the home's grant)
+		if c, ok := isolate.For(s.home); ok {
+			if fixed, err := isolate.RepairTrusted(c); err != nil {
+				log.Printf("hpk serve: %s: %v", isolate.TrustedDir(s.home), err)
+			} else if fixed {
+				log.Printf("hpk serve: made %s read-only for %s again", isolate.TrustedDir(s.home), c.User)
+			}
+		}
 		s.writeAgentFile(ln.Addr().String())
 		s.keys = newConsoleKeys(s.home)
 		s.keys.addr = ln.Addr().String()

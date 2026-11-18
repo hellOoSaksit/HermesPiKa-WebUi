@@ -3,7 +3,7 @@ import { api } from '../data.js';
 import { isLive, teamMode } from '../live.js';
 import { t } from '../i18n.js';
 import { h, icon, lamp, pageHead, toast, avatar, panel, openDrawer, closeDrawer } from '../ui.js';
-import { devTable, inviteBox } from './teamserver.js';
+import { devTable, inviteBox, laterPanel } from './teamserver.js';
 
 const ROLES = ['owner', 'maintainer', 'member', 'viewer'];
 const APPROVE = {
@@ -15,6 +15,7 @@ const APPROVE = {
 };
 
 export default async function team() {
+  if (!api.feature('team')) return { el: h('div.page', pageHead(t('team.title'), t('team.lede')), laterPanel()) };
   if (isLive() && teamMode()) return liveTeam();
   if (isLive()) {
     // One person until team mode (docs/DESIGN.md §19, M9): say so instead of showing made-up members.

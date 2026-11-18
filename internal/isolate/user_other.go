@@ -58,3 +58,10 @@ func UserStatus(c *Config) (exists, hasPassword bool) { return AccountExists(c.U
 func CreateAccount(name, pw string) error { return errManual }
 func DeleteAccount(name string) error     { return errManual }
 func RunElevated(args ...string) error    { return errManual }
+
+func grantDir(c *Config, dir string) error   { return errManual }
+func ungrantDir(c *Config, dir string) error { return errManual }
+
+// Outside Windows a separate account is set up by hand (docs/isolation.md).
+func trustedOpen(c *Config) string          { return "" }
+func repairTrusted(c *Config) (bool, error) { return false, nil }

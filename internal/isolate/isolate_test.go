@@ -109,7 +109,7 @@ func TestDockerArgsMapPaths(t *testing.T) {
 		home, proj = `C:\Users\p\AppData\Local\hermes`, `D:\code\app`
 	}
 	c := &Config{Mode: ModeDocker, Container: "hpk-ai", Home: home,
-		Mounts: []Mount{{home, ContainerHome}, {proj, ContainerPath(proj)}}}
+		Mounts: []Mount{{Host: home, Container: ContainerHome}, {Host: proj, Container: ContainerPath(proj)}}}
 	s := Spec{Name: "hermes-acp", Args: []string{"--x"}, Dir: filepath.Join(proj, "src"),
 		Env: []string{"PATH=/x", "HERMES_HOME=" + home, "WIKI_PATH=" + filepath.Join(home, "hpk", "projects", "app", "wiki"), "HPK_PROJECT=app"}}
 	got := strings.Join(DockerArgs(c, s), " ")
@@ -140,7 +140,7 @@ func TestSetupPlanRules(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(c.Mounts) != 2 || c.Container != DefaultUser {
+	if len(c.Mounts) != 3 || c.Container != DefaultUser || !c.Mounts[1].ReadOnly || c.Mounts[1].Host != TrustedDir(home) {
 		t.Fatalf("config: %+v", c)
 	}
 	var said []string

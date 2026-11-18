@@ -20,6 +20,7 @@ import (
 
 // A team server (HTTPS) and a person's own hpk that joins it with an invite code.
 func TestJoinTeamServerWithInviteCode(t *testing.T) {
+	t.Setenv("HPK_FEATURES", "team") // the join flow is gated off in v1 solo mode
 	// ---- the team server ----
 	srvHome := t.TempDir()
 	c := &team.Config{Enabled: true}
