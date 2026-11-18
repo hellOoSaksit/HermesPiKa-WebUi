@@ -127,3 +127,14 @@ func UserStatus(c *Config) (exists, hasPassword bool) {
 	_, err := os.Stat(PasswordFile(c))
 	return AccountExists(c.User), err == nil
 }
+
+func grantDir(c *Config, dir string) error {
+	return icacls(dir, "/grant", c.User+":(OI)(CI)M")
+}
+
+func ungrantDir(c *Config, dir string) error {
+	if _, err := os.Stat(dir); err != nil {
+		return nil
+	}
+	return icacls(dir, "/remove:g", c.User)
+}

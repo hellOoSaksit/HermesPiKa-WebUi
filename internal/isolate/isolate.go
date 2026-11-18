@@ -308,3 +308,43 @@ func Exec(s Spec) int {
 	}
 	return 0
 }
+
+// errContainer: folders are mounted into the container, not granted to an account.
+var errContainer = errors.New("not supported while the AI runs in a container")
+
+// Grant lets the AI's account read and write dir (a project folder or wiki the
+// person moved) and records it for teardown. Windows with a dedicated account
+// only; the container mode and other systems report why not.
+func Grant(c *Config, dir string) error {
+	if c.Mode == ModeDocker {
+		return errContainer
+	}
+	if err := grantDir(c, dir); err != nil {
+		return err
+	}
+	for _, g := range c.Granted {
+		if g == dir {
+			return Save(c)
+		}
+	}
+	c.Granted = append(c.Granted, dir)
+	return Save(c)
+}
+
+// Ungrant takes the AI's account off dir again.
+func Ungrant(c *Config, dir string) error {
+	if c.Mode == ModeDocker {
+		return errContainer
+	}
+	if err := ungrantDir(c, dir); err != nil {
+		return err
+	}
+	var kept []string
+	for _, g := range c.Granted {
+		if g != dir {
+			kept = append(kept, g)
+		}
+	}
+	c.Granted = kept
+	return Save(c)
+}

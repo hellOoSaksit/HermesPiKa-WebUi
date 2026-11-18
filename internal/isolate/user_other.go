@@ -58,3 +58,6 @@ func UserStatus(c *Config) (exists, hasPassword bool) { return AccountExists(c.U
 func CreateAccount(name, pw string) error { return errManual }
 func DeleteAccount(name string) error     { return errManual }
 func RunElevated(args ...string) error    { return errManual }
+
+func grantDir(c *Config, dir string) error   { return errManual }
+func ungrantDir(c *Config, dir string) error { return errManual }

@@ -41,8 +41,14 @@ type Project struct {
 	Dir string `yaml:"-"` // <home>/hpk/projects/<name>
 }
 
-// WikiDir is where this project's wiki lives.
-func (p *Project) WikiDir() string { return filepath.Join(p.Dir, "wiki") }
+// WikiDir is where this project's wiki lives: where the person moved it to
+// (hpk/trusted/locations.json), else inside the project's own hpk folder.
+func (p *Project) WikiDir() string {
+	if d := WikiLocations(HomeOf(p))[p.Name]; d != "" {
+		return d
+	}
+	return filepath.Join(p.Dir, "wiki")
+}
 
 // Mode returns the privacy mode, treating a missing value as the default (shared).
 func (p *Project) Mode() string {
