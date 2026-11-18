@@ -63,7 +63,7 @@ jobs:
         with:
           node-version: 22
       - run: node tools/check-console.mjs
-      - run: node --test tools/
+      - run: node --test tools/*.test.mjs
 
   # The release config stays valid between releases (no publishing here).
   release-config:

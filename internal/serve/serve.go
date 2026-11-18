@@ -27,7 +27,18 @@ import (
 )
 
 // The Console bundles its font; some systems have no MIME entry for it.
-func init() { _ = mime.AddExtensionType(".woff2", "font/woff2") }
+// MIME types are registered when the server is built, not in init(): on
+// Windows the first mime call reads the registry (tens of ms), and every
+// `hpk hook` run would pay for it.
+var typesOnce sync.Once
+
+func registerTypes() {
+	typesOnce.Do(func() {
+		_ = mime.AddExtensionType(".woff2", "font/woff2")
+		_ = mime.AddExtensionType(".webmanifest", "application/manifest+json")
+		registerFileTypes()
+	})
+}
 
 // Options configure the daemon.
 type Options struct {
@@ -72,6 +83,7 @@ func Handler(o Options) http.Handler { return NewServer(o).Routes(o.Console) }
 
 // Routes wires the Console and the API.
 func (s *Server) Routes(console fs.FS) http.Handler {
+	registerTypes()
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, map[string]string{"status": "ok", "version": version.Version})
